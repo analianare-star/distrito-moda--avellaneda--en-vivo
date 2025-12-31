@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planes de Suscripción - Distrito Moda</title>
+    <!-- Carga de Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuración para usar Roboto Condensed y Playfair Display (simulando Bodoni MT) -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+        body {
+            /* Tipografía Principal: Roboto Condensed */
+            font-family: 'Roboto Condensed', sans-serif;
+            background-color: #f7f7f7; 
+        }
+        .serif-header {
+            /* Tipografía Secundaria: Simulación de Bodoni MT con Playfair Display */
+            font-family: 'Playfair Display', serif; 
+        }
+
+        /* Estilos Tooltip: Estética Distrito Moda */
+        .tooltip-container {
+            position: relative;
+            cursor: pointer; 
+        }
+        .tooltip-text {
+            visibility: hidden;
+            width: 300px; /* Ancho más grande */
+            background-color: #ed1650; /* Carmesí DM */
+            color: #fff;
+            text-align: center;
+            border-radius: 8px; /* Bordes un poco más redondeados */
+            padding: 12px 16px; 
+            position: absolute;
+            z-index: 50; /* Z-index alto */
+            bottom: 125%; 
+            left: 50%;
+            margin-left: -150px; /* Centra el tooltip (mitad del nuevo ancho) */
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none; 
+            font-weight: 400; /* Regular */
+            line-height: 1.4;
+            text-transform: none; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Sombra suave */
+        }
+        
+        /* Contenido interno del tooltip para jerarquía */
+        .tooltip-system-name {
+            font-weight: 700; /* Bold */
+            color: #f0f0f0; /* Gris muy claro (para contraste en Carmesí) */
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(-8px); /* Pequeño desplazamiento más notorio */
+        }
+        /* Flecha del tooltip */
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #ed1650 transparent transparent transparent; /* Flecha Carmesí */
+        }
+    </style>
+    <script>
+        // Configuración de colores estrictos del Manual de Identidad Visual
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                'dm-carmesi': '#ed1650', // Pantone 1925 C - Carmesí DM (Botón Máxima)
+                'dm-dark-gray': '#6a5e56', // Pantone Warm Gray 11 C - Gris Oscuro DM (Botón Alta)
+                'dm-light-gray': '#c1b5ab', // Pantone Warm Gray 4 C - Gris Claro DM
+                'dm-button-std': '#f0f0f0', // Gris muy claro (Botón Estándar)
+              }
+            }
+          }
+        }
+
+        const REDIRECT_URL = 'https://www.distritomoda.com.ar/contact/sumate';
+
+        // Función para mostrar un mensaje de éxito y redirigir
+        function selectPlan(plan) {
+            const messageBox = document.getElementById('success-message');
+            messageBox.textContent = `¡Plan ${plan} seleccionado! Redirigiendo a ${REDIRECT_URL}...`;
+            messageBox.classList.remove('hidden');
+            messageBox.classList.add('opacity-100', 'translate-y-0');
+            
+            // Simulación de redirección después de un breve momento
+            setTimeout(() => {
+                window.location.href = REDIRECT_URL;
+            }, 1000); 
+        }
+    </script>
+</head>
+<body class="antialiased">
+
+    <!-- Mensaje de confirmación personalizado (Reemplazo de alert()) -->
+    <div id="success-message" class="hidden fixed top-0 left-1/2 -translate-x-1/2 mt-4 px-6 py-3 bg-dm-dark-gray text-white font-bold rounded-lg shadow-xl transition-all duration-500 ease-in-out opacity-0 translate-y-4 z-50 text-sm">
+        
+    </div>
+
+    <div class="container mx-auto px-4 py-16">
+        
+        <!-- Encabezado de la Sección con tipografía elegante -->
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-6xl font-extrabold text-dm-dark-gray serif-header mb-4 uppercase tracking-widest">
+                PLANES DE SUSCRIPCIÓN
+            </h1>
+            <p class="text-xl text-dm-dark-gray max-w-2xl mx-auto font-light">
+                Encuentra el plan que impulsará tu negocio al siguiente nivel de visibilidad.
+            </p>
+        </header>
+
+        <!-- Contenedor de las Tarjetas de Precios (Responsive Grid) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+
+            <!-- Card 1: Estándar -->
+            <div class="flex flex-col">
+                <h3 class="text-xl font-bold uppercase text-dm-dark-gray text-center tracking-widest mb-4">Estándar</h3>
+                
+                <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition duration-300 flex flex-col border border-dm-light-gray flex-grow">
+                    <div class="p-8 flex-grow">
+                        <p class="text-sm text-dm-dark-gray text-center mb-6 font-light italic">Ideal para empezar</p>
+                        <ul class="space-y-3 text-dm-dark-gray text-sm">
+                            
+                            <!-- Bloque 1: Ubicación y Publicaciones -->
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Ubicación en catálogo:</span>
+                                <span class="font-semibold">Franja inferior</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Publicaciones:</span>
+                                <span>Hasta 50</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Fotos por publicación:</span>
+                                <span>Hasta 4</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Optimización visual de ficha:</span>
+                                <span>Básica</span>
+                            </li>
+
+                            <!-- Bloque 2: Datos y Contacto -->
+                            <li class="pt-4 border-t border-dm-light-gray/80 flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Logo, dirección y horarios:</span>
+                                <span>Logo y dirección</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Redirección a Web propia:</span>
+                                <span class="font-bold text-dm-dark-gray">✓</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Líneas de contacto WhatsApp:</span>
+                                <span>1 línea</span>
+                            </li>
+
+                            <!-- Bloque 3: Redes Sociales -->
+                            <li class="pt-4 border-t border-dm-light-gray/80 font-bold text-dm-dark-gray">REDIRECCIÓN A TUS REDES SOCIALES</li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Instagram:</span>
+                                <span class="text-dm-light-gray">--</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Facebook:</span>
+                                <span class="text-dm-light-gray">--</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">TikTok:</span>
+                                <span class="text-dm-light-gray">--</span>
+                            </li>
+
+                            <!-- Bloque 4: Servicios Premium - CON TOOLTIP -->
+                            <!-- Título unificado: Showroom Virtual Mayorista -->
+                            <li class="pt-4 border-t border-dm-light-gray/80 font-bold text-dm-dark-gray">SHOWROOM VIRTUAL MAYORISTA</li>
+                            
+                            <!-- Presencia en Agenda de Vivos (AV. STREAMING FASHION) -->
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2 tooltip-container">
+                                <span class="font-medium relative">
+                                    Avellaneda en VIVO:
+                                    <span class="tooltip-text">
+                                        <span class="tooltip-system-name">Recorrido en Vivo:</span>
+                                        ¡Agendá tus vivos! Así todos los compradores ven tu horario y tu red. Es tu pasaporte para que te vean como si estuvieran en Avellaneda.
+                                    </span>
+                                </span>
+                                <span class="text-dm-light-gray">--</span>
+                            </li>
+                            
+                            <!-- Invitación de Hauls a clientes (Validación Haul) -->
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2 tooltip-container">
+                                <span class="font-medium relative">
+                                    Invitación de Hauls a clientes:
+                                    <span class="tooltip-text">
+                                        <span class="tooltip-system-name">Validación Haul:</span>
+                                        Pedile a tus clientes que suban fotos o videos de sus compras. Convertí las recepciones de mercadería en PRUEBA SOCIAL directa en tu catálogo.
+                                    </span>
+                                </span>
+                                <span class="text-dm-light-gray">--</span>
+                            </li>
+                            
+                            <!-- Diferenciación en el mapa de calor (Detector de Demanda) -->
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2 tooltip-container">
+                                <span class="font-medium relative">
+                                    Diferenciación en el mapa de calor:
+                                    <span class="tooltip-text">
+                                        <span class="tooltip-system-name">Detector de Demanda:</span>
+                                        Destacá tu local en el mapa que se ilumina con los clicks y visitas. Demostrá a los compradores que sos una "Zona Caliente" de demanda.
+                                    </span>
+                                </span>
+                                <span class="text-dm-light-gray">--</span>
+                            </li>
+                            
+                            <!-- Nueva línea de métricas -->
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Reportes / Métricas:</span>
+                                <span class="text-dm-light-gray">--</span>
+                            </li>
+                            <li class="flex justify-between pb-2">
+                                <span class="font-medium">Soporte:</span>
+                                <span>Mail + FAQ</span>
+                            </li>
+
+                        </ul>
+                    </div>
+                    
+                    <!-- Botón de Acción - Gris muy claro -->
+                    <div class="p-6 pt-0">
+                        <button onclick="selectPlan('Estándar')"
+                            class="w-full py-3 bg-dm-button-std text-dm-dark-gray font-bold text-lg rounded-lg shadow-sm hover:bg-dm-light-gray transition duration-150 transform hover:scale-[1.01] uppercase tracking-wider border border-dm-light-gray">
+                            Suscribirme a este plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Alta Visibilidad -->
+            <div class="flex flex-col">
+                <h3 class="text-xl font-bold uppercase text-dm-dark-gray text-center tracking-widest mb-4">Alta Visibilidad</h3>
+                
+                <div class="bg-white rounded-xl shadow-2xl ring-2 ring-dm-light-gray hover:shadow-xl transition duration-300 flex flex-col border border-dm-dark-gray flex-grow relative">
+                    <!-- Insignia de Más Popular -->
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 px-4 py-1 bg-dm-carmesi text-white text-xs font-bold rounded-full shadow-lg tracking-widest">
+                        RECOMENDADO
+                    </div>
+
+                    <div class="p-8 pt-6 flex-grow">
+                        <p class="text-sm text-dm-dark-gray text-center mb-6 font-light italic">El balance perfecto para crecer</p>
+                        <ul class="space-y-3 text-dm-dark-gray text-sm">
+                            
+                            <!-- Bloque 1: Ubicación y Publicaciones -->
+                            <li class="flex justify-between border-b border-dm-dark-gray/50 pb-2">
+                                <span class="font-medium">Ubicación en catálogo:</span>
+                                <span class="font-semibold">Franja intermedia</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Publicaciones:</span>
+                                <span>Hasta 250</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Fotos por publicación:</span>
+                                <span>Hasta 6</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Optimización visual de ficha:</span>
+                                <span>Optimizada</span>
+                            </li>
+
+                            <!-- Bloque 2: Datos y Contacto -->
+                            <li class="pt-4 border-t border-dm-light-gray/80 flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Logo, dirección y horarios:</span>
+                                <span>Logo y dirección</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-dark-gray/50 pb-2">
+                                <span class="font-medium">Redirección a Web propia:</span>
+                                <span class="font-bold text-dm-dark-gray">✓</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Líneas de contacto WhatsApp:</span>
+                                <span>2 líneas</span>
+                            </li>
+
+                            <!-- Bloque 3: Redes Sociales -->
+                            <li class="pt-4 border-t border-dm-light-gray/80 font-bold text-dm-dark-gray">REDIRECCIÓN A TUS REDES SOCIALES</li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Instagram:</span>
+                                <span class="font-bold text-dm-dark-gray">✓ Incluida</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Facebook:</span>
+                                <span class="font-bold text-dm-dark-gray">✓ Incluida</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">TikTok:</span>
+                                <span class="font-bold text-dm-dark-gray">✓ Incluida</span>
+                            </li>
+
+                            <!-- Bloque 4: Servicios Premium - CON TOOLTIP -->
+                            <!-- Título unificado: Showroom Virtual Mayorista -->
+                            <li class="pt-4 border-t border-dm-light-gray/80 font-bold text-dm-dark-gray">SHOWROOM VIRTUAL MAYORISTA</li>
+
+                            <!-- Presencia en Agenda de Vivos (AV. STREAMING FASHION) -->
+                            <li class="flex justify-between border-b border-dm-dark-gray/50 pb-2 tooltip-container">
+                                <span class="font-medium relative">
+                                    Avellaneda en VIVO:
+                                    <span class="tooltip-text">
+                                        <span class="tooltip-system-name">Recorrido en Vivo:</span>
+                                        ¡Agendá tus vivos! Así todos los compradores ven tu horario y tu red. Es tu pasaporte para que te vean como si estuvieran en Avellaneda.
+                                    </span>
+                                </span>
+                                <span class="font-bold text-dm-dark-gray">1 por semana</span>
+                            </li>
+                            
+                            <!-- Invitación de Hauls a clientes (Validación Haul) -->
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2 tooltip-container">
+                                <span class="font-medium relative">
+                                    Invitación de Hauls a clientes:
+                                    <span class="tooltip-text">
+                                        <span class="tooltip-system-name">Validación Haul:</span>
+                                        Pedile a tus clientes que suban fotos o videos de sus compras. Convertí las recepciones de mercadería en PRUEBA SOCIAL directa en tu catálogo.
+                                    </span>
+                                </span>
+                                <span class="text-dm-light-gray">--</span>
+                            </li>
+                            
+                            <!-- Diferenciación en el mapa de calor (Detector de Demanda) -->
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2 tooltip-container">
+                                <span class="font-medium relative">
+                                    Diferenciación en el mapa de calor:
+                                    <span class="tooltip-text">
+                                        <span class="tooltip-system-name">Detector de Demanda:</span>
+                                        Destacá tu local en el mapa que se ilumina con los clicks y visitas. Demostrá a los compradores que sos una "Zona Caliente" de demanda.
+                                    </span>
+                                </span>
+                                <span class="text-dm-light-gray">--</span>
+                            </li>
+                            
+                            <!-- Nueva línea de métricas -->
+                            <li class="flex justify-between border-b border-dm-dark-gray/50 pb-2">
+                                <span class="font-medium">Reportes / Métricas:</span>
+                                <span class="font-bold text-dm-dark-gray">Básicas</span>
+                            </li>
+                            <li class="flex justify-between pb-2">
+                                <span class="font-medium">Soporte:</span>
+                                <span>WhatsApp + Mail</span>
+                            </li>
+
+                        </ul>
+                    </div>
+                    
+                    <!-- Botón de Acción - Gris Oscuro DM -->
+                    <div class="p-6 pt-0">
+                        <button onclick="selectPlan('Alta Visibilidad')"
+                            class="w-full py-3 bg-dm-dark-gray text-white font-bold text-lg rounded-lg shadow-xl hover:bg-[#5a4f47] transition duration-150 transform hover:scale-[1.01] uppercase tracking-wider">
+                            Suscribirme a este plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Máxima Visibilidad -->
+            <div class="flex flex-col">
+                <h3 class="text-xl font-bold uppercase text-dm-carmesi text-center tracking-widest mb-4">Máxima Visibilidad</h3>
+                
+                <div class="bg-white rounded-xl shadow-2xl ring-2 ring-dm-carmesi flex flex-col flex-grow">
+                    <div class="p-8 flex-grow">
+                        <p class="text-sm text-dm-dark-gray text-center mb-6 font-light italic">Liderazgo y dominio total</p>
+                        <ul class="space-y-3 text-dm-dark-gray text-sm">
+                            
+                            <!-- Bloque 1: Ubicación y Publicaciones -->
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2">
+                                <span class="font-medium">Ubicación en catálogo:</span>
+                                <span class="font-semibold text-dm-carmesi">Franja superior</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2">
+                                <span class="font-medium">Publicaciones:</span>
+                                <span class="font-bold text-dm-carmesi">Ilimitadas</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-light-gray/40 pb-2">
+                                <span class="font-medium">Fotos por publicación:</span>
+                                <span>Hasta 8</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2">
+                                <span class="font-medium">Optimización visual de ficha:</span>
+                                <span class="font-bold text-dm-carmesi">Destacada</span>
+                            </li>
+
+                            <!-- Bloque 2: Datos y Contacto -->
+                            <li class="pt-4 border-t border-dm-light-gray/80 flex justify-between border-b border-dm-carmesi/50 pb-2">
+                                <span class="font-medium">Logo, dirección y horarios:</span>
+                                <span class="font-bold">Logo y dirección</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2">
+                                <span class="font-medium">Redirección a Web propia:</span>
+                                <span class="font-bold text-dm-carmesi">✓</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2">
+                                <span class="font-medium">Líneas de contacto WhatsApp:</span>
+                                <span class="font-bold text-dm-carmesi">3 líneas</span>
+                            </li>
+
+                            <!-- Bloque 3: Redes Sociales -->
+                            <li class="pt-4 border-t border-dm-light-gray/80 font-bold text-dm-dark-gray">REDIRECCIÓN A TUS REDES SOCIALES</li>
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2">
+                                <span class="font-medium">Instagram:</span>
+                                <span class="font-bold text-dm-carmesi">✓ Incluida</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2">
+                                <span class="font-medium">Facebook:</span>
+                                <span class="font-bold text-dm-carmesi">✓ Incluida</span>
+                            </li>
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2">
+                                <span class="font-medium">TikTok:</span>
+                                <span class="font-bold text-dm-carmesi">✓ Incluida</span>
+                            </li>
+
+                            <!-- Bloque 4: Servicios Premium - CON TOOLTIP -->
+                            <!-- Título unificado: Showroom Virtual Mayorista -->
+                            <li class="pt-4 border-t border-dm-light-gray/80 font-bold text-dm-dark-gray">SHOWROOM VIRTUAL MAYORISTA</li>
+
+                            <!-- Presencia en Agenda de Vivos (AV. STREAMING FASHION) -->
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2 tooltip-container">
+                                <span class="font-medium relative">
+                                    Avellaneda en VIVO:
+                                    <span class="tooltip-text">
+                                        <span class="tooltip-system-name">Recorrido en Vivo:</span>
+                                        ¡Agendá tus vivos! Así todos los compradores ven tu horario y tu red. Es tu pasaporte para que te vean como si estuvieran en Avellaneda.
+                                    </span>
+                                </span>
+                                <span class="font-bold text-dm-carmesi">3 por semana</span>
+                            </li>
+                            
+                            <!-- Invitación de Hauls a clientes (Validación Haul) -->
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2 tooltip-container">
+                                <span class="font-medium relative">
+                                    Invitación de Hauls a clientes:
+                                    <span class="tooltip-text">
+                                        <span class="tooltip-system-name">Validación Haul:</span>
+                                        Pedile a tus clientes que suban fotos o videos de sus compras. Convertí las recepciones de mercadería en PRUEBA SOCIAL directa en tu catálogo.
+                                    </span>
+                                </span>
+                                <span class="font-bold text-dm-carmesi">Incluida</span>
+                            </li>
+                            
+                            <!-- Diferenciación en el mapa de calor (Detector de Demanda) -->
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2 tooltip-container">
+                                <span class="font-medium relative">
+                                    Diferenciación en el mapa de calor:
+                                    <span class="tooltip-text">
+                                        <span class="tooltip-system-name">Detector de Demanda:</span>
+                                        Destacá tu local en el mapa que se ilumina con los clicks y visitas. Demostrá a los compradores que sos una "Zona Caliente" de demanda.
+                                    </span>
+                                </span>
+                                <span class="font-bold text-dm-carmesi">Incluida</span>
+                            </li>
+                            
+                            <!-- Nueva línea de métricas -->
+                            <li class="flex justify-between border-b border-dm-carmesi/50 pb-2">
+                                <span class="font-medium">Reportes / Métricas:</span>
+                                <span class="font-bold text-dm-carmesi">Avanzadas</span>
+                            </li>
+                            <li class="flex justify-between pb-2">
+                                <span class="font-medium">Soporte:</span>
+                                <span class="font-bold text-dm-carmesi">Prioritario + Ejecutivo</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Botón de Acción - Carmesí DM -->
+                    <div class="p-6 pt-0">
+                        <button onclick="selectPlan('Máxima Visibilidad')"
+                            class="w-full py-3 bg-dm-carmesi text-white font-bold text-lg rounded-lg shadow-xl hover:bg-[#c21140] transition duration-150 transform hover:scale-[1.01] uppercase tracking-wider">
+                            Suscribirme a este plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Nota sobre Campañas DM, usando color gris oscuro para el texto -->
+        <div class="mt-16 text-center text-sm text-dm-dark-gray/70">
+        
+
+    </div>
+
+</body>
+</html>
