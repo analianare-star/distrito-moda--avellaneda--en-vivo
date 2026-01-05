@@ -10,9 +10,10 @@ interface ShopDetailModalProps {
   user: UserContext;
   onClose: () => void;
   onToggleFavorite: (shopId: string) => void;
+  onRequireLogin: () => void;
 }
 
-export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStreams = [], user, onClose, onToggleFavorite }) => {
+export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStreams = [], user, onClose, onToggleFavorite, onRequireLogin }) => {
   const [activeTab, setActiveTab] = useState<'INFO' | 'CARD'>('INFO');
   
   const isFollowing = user.favorites.includes(shop.id);
@@ -85,7 +86,18 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
             {/* Tabs */}
             <div className="flex border-b border-gray-100 mb-6">
                 <button onClick={() => setActiveTab('INFO')} className={`flex-1 py-3 text-sm font-bold uppercase tracking-wide border-b-2 ${activeTab === 'INFO' ? 'border-dm-crimson text-dm-crimson' : 'border-transparent text-gray-400'}`}>Perfil</button>
-                <button onClick={() => setActiveTab('CARD')} className={`flex-1 py-3 text-sm font-bold uppercase tracking-wide border-b-2 ${activeTab === 'CARD' ? 'border-dm-crimson text-dm-crimson' : 'border-transparent text-gray-400'}`}>Tarjeta Digital</button>
+                <button
+                    onClick={() => {
+                        if (!user.isLoggedIn) {
+                            onRequireLogin();
+                            return;
+                        }
+                        setActiveTab('CARD');
+                    }}
+                    className={`flex-1 py-3 text-sm font-bold uppercase tracking-wide border-b-2 ${activeTab === 'CARD' ? 'border-dm-crimson text-dm-crimson' : 'border-transparent text-gray-400'}`}
+                >
+                    Tarjeta Digital
+                </button>
             </div>
 
             {activeTab === 'INFO' ? (
@@ -133,7 +145,7 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                             <Button
                                 variant="outline"
                                 className="w-full justify-start text-xs border-gray-200 text-gray-400 h-10"
-                                onClick={() => alert('Inicia sesion para ver WhatsApp')}
+                                onClick={onRequireLogin}
                             >
                                 <Phone size={14} className="mr-2" /> Inicia sesion para ver WhatsApp
                             </Button>
@@ -169,7 +181,13 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                 </div>
             ) : (
                 <div className="flex flex-col items-center pt-2">
-                    {canDownloadCard ? (
+                    {!user.isLoggedIn ? (
+                        <div className="text-center p-8 bg-gray-50 rounded-lg">
+                            <AlertOctagon size={32} className="mx-auto text-orange-400 mb-2" />
+                            <p className="text-sm text-dm-dark font-bold">Inicia sesion para ver la tarjeta</p>
+                            <p className="text-xs text-gray-500 mt-1">La tarjeta digital requiere acceso.</p>
+                        </div>
+                    ) : canDownloadCard ? (
                         <>
                             <div className="scale-75 origin-top -mb-28 shadow-xl">
                                 <ShareableCard 

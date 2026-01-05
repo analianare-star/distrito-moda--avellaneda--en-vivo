@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-// Asegúrate de que la ruta a 'types' sea correcta (a veces es './types' o '../types')
+﻿import React, { useState, useEffect } from 'react';
+// AsegÃºrate de que la ruta a 'types' sea correcta (a veces es './types' o '../types')
 import { ViewMode, Shop, Stream, StreamStatus, UserContext, Reel } from './types';
 import { HeroSection } from './components/HeroSection';
 import { StreamCard } from './components/StreamCard';
@@ -8,9 +8,17 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { ShopDetailModal } from './components/ShopDetailModal';
 import { StoryModal } from './components/StoryModal';
 import { api } from './services/api';
-import { X, ChevronDown, User, UserCheck, AlertTriangle } from 'lucide-react';
+import { X, User, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown } from 'lucide-react';
+import { auth, googleProvider } from './firebase';
+import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 
-// --- TIENDA DE SEGURIDAD (Para evitar crasheos cuando la DB está vacía) ---
+type AuthProfile = {
+  userType: 'ADMIN' | 'SHOP' | 'CLIENT';
+  shopId?: string;
+  adminRole?: string;
+};
+
+// --- TIENDA DE SEGURIDAD (Para evitar crasheos cuando la DB estÃ¡ vacÃ­a) ---
 const EMPTY_SHOP: Shop = {
   id: 'empty',
   name: 'Sin Tienda Seleccionada',
@@ -35,6 +43,10 @@ const EMPTY_SHOP: Shop = {
 const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('CLIENT');
   const [isLoading, setIsLoading] = useState(true);
+  const [activeBottomNav, setActiveBottomNav] = useState('home');
+  const [adminTab, setAdminTab] = useState<'DASHBOARD' | 'AGENDA' | 'STREAMS' | 'SHOPS' | 'REELS' | 'ADMIN'>('DASHBOARD');
+  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
+  const [authProfile, setAuthProfile] = useState<AuthProfile | null>(null);
 
   // --- CENTRALIZED STATE ---
   const [allShops, setAllShops] = useState<Shop[]>([]);
@@ -53,15 +65,20 @@ const App: React.FC = () => {
       reports: [],
       preferences: { theme: 'light', notifications: false }
   });
+  const [loginPromptDismissed, setLoginPromptDismissed] = useState(false);
 
   // UI States
-  const [isShopSelectorOpen, setIsShopSelectorOpen] = useState(false);
   const [selectedShopForModal, setSelectedShopForModal] = useState<Shop | null>(null);
   const [selectedReel, setSelectedReel] = useState<Reel | null>(null);
   const [activeFilter, setActiveFilter] = useState('Todos');
+  const requireLogin = () => {
+      setViewMode('CLIENT');
+      setActiveBottomNav('account');
+      setLoginPromptDismissed(false);
+  };
 
-  // --- Derived States (CON PROTECCIÓN ANTI-CRASH) ---
-  // Si no encuentra la tienda o la lista está vacía, usa la EMPTY_SHOP para no romper la pantalla.
+  // --- Derived States (CON PROTECCIÃ“N ANTI-CRASH) ---
+  // Si no encuentra la tienda o la lista estÃ¡ vacÃ­a, usa la EMPTY_SHOP para no romper la pantalla.
   const currentShop = allShops.find(s => s.id === currentShopId) || allShops[0] || EMPTY_SHOP;
 
   // --- DATA LOADING & AUTO-UPDATE ---
@@ -90,6 +107,57 @@ const App: React.FC = () => {
 
   useEffect(() => {
     refreshData();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      if (fbUser) {
+        setUser(prev => ({
+          ...prev,
+          id: fbUser.uid,
+          isLoggedIn: true,
+          name: fbUser.displayName || prev.name || 'Cliente',
+          email: fbUser.email || prev.email
+        }));
+        void (async () => {
+          const profile = await api.fetchAuthMe();
+          if (profile?.userType) {
+            setAuthProfile(profile);
+            if (profile.userType === 'ADMIN') {
+              setViewMode('ADMIN');
+              setActiveBottomNav('panel');
+              setAdminTab('DASHBOARD');
+            } else if (profile.userType === 'SHOP') {
+              setViewMode('MERCHANT');
+              setActiveBottomNav('home');
+              if (profile.shopId) {
+                setCurrentShopId(profile.shopId);
+              }
+            } else {
+              setViewMode('CLIENT');
+              setActiveBottomNav('home');
+            }
+          } else {
+            setAuthProfile(null);
+            setViewMode('CLIENT');
+            setActiveBottomNav('home');
+          }
+        })();
+        setLoginPromptDismissed(true);
+      } else {
+        setUser(prev => ({
+          ...prev,
+          id: prev.isLoggedIn ? `anon-${Date.now()}` : prev.id,
+          isLoggedIn: false
+        }));
+        setAuthProfile(null);
+        setViewMode('CLIENT');
+        setActiveBottomNav('home');
+        setLoginPromptDismissed(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // --- AUTOMATIC TIME MANAGEMENT ---
@@ -186,7 +254,7 @@ const App: React.FC = () => {
               extensionCount: stream.extensionCount + 1 
           });
           refreshData();
-          alert("¡Vivo extendido! Tienes 30 minutos adicionales.");
+          alert("Â¡Vivo extendido! Tienes 30 minutos adicionales.");
       }
   };
 
@@ -203,7 +271,7 @@ const App: React.FC = () => {
 
   const handleReportStream = async (streamId: string) => {
       if (!user.isLoggedIn) {
-          alert("Debes iniciar sesión para reportar un vivo.");
+          requireLogin();
           return;
       }
       const stream = allStreams.find(s => s.id === streamId);
@@ -214,7 +282,7 @@ const App: React.FC = () => {
       const diffMinutes = (now.getTime() - h0.getTime()) / 60000;
 
       if (diffMinutes < 5) {
-          alert("El vivo aún está en tiempo de tolerancia (5 min). Espera un momento.");
+          alert("El vivo aÃºn estÃ¡ en tiempo de tolerancia (5 min). Espera un momento.");
           return;
       }
       if (diffMinutes > 30) {
@@ -222,11 +290,11 @@ const App: React.FC = () => {
           return;
       }
 
-      if (!window.confirm("IMPORTANTE: Por favor verifica en la App de la tienda si realmente NO están transmitiendo. ¿Confirmas que el vivo no se está realizando?")) {
+      if (!window.confirm("IMPORTANTE: Por favor verifica en la App de la tienda si realmente NO estÃ¡n transmitiendo. Â¿Confirmas que el vivo no se estÃ¡ realizando?")) {
           return;
       }
 
-      const result = await api.reportStream(streamId, user.id);
+      const result = await api.reportStream(streamId);
       if (result.success) {
           setUser(prev => ({
               ...prev,
@@ -240,17 +308,23 @@ const App: React.FC = () => {
   };
 
   const handleToggleFavorite = (shopId: string) => {
+      if (!user.isLoggedIn) {
+          requireLogin();
+          return;
+      }
       if (user.favorites.includes(shopId)) {
           setUser(prev => ({ ...prev, favorites: prev.favorites.filter(id => id !== shopId) }));
-          if (!user.isLoggedIn) alert("Tienda eliminada de favoritos locales.");
       } else {
           setUser(prev => ({ ...prev, favorites: [...prev.favorites, shopId] }));
-          if (!user.isLoggedIn) alert("Tienda guardada en favoritos locales (Modo Anónimo). Inicia sesión para guardarlo en la nube.");
-          else alert("¡Siguiendo tienda!");
+          alert("Â¡Siguiendo tienda!");
       }
   };
 
   const handleToggleReminder = (streamId: string) => {
+      if (!user.isLoggedIn) {
+          requireLogin();
+          return;
+      }
       if (user.reminders.includes(streamId)) {
           setUser(prev => ({ ...prev, reminders: prev.reminders.filter(id => id !== streamId) }));
       } else {
@@ -258,7 +332,39 @@ const App: React.FC = () => {
       }
   };
 
+  const handleLoginRequest = async () => {
+      try {
+          await signInWithPopup(auth, googleProvider);
+      } catch (error) {
+          console.error('Error iniciando sesion:', error);
+          alert('No se pudo iniciar sesion con Google.');
+      }
+  };
+
+  const handleContinueAsGuest = () => {
+      setLoginPromptDismissed(true);
+  };
+
+  const handleToggleClientLogin = async () => {
+      if (user.isLoggedIn) {
+          try {
+              await signOut(auth);
+              setLoginPromptDismissed(false);
+          } catch (error) {
+              console.error('Error cerrando sesion:', error);
+              alert('No se pudo cerrar sesion.');
+          }
+          return;
+      }
+
+      await handleLoginRequest();
+  };
+
   const handleLikeStream = (streamId: string) => {
+      if (!user.isLoggedIn) {
+          requireLogin();
+          return;
+      }
       const s = allStreams.find(s => s.id === streamId);
       if(s) {
           // Ideally call API
@@ -268,11 +374,27 @@ const App: React.FC = () => {
   };
 
   const handleRateStream = (streamId: string, rating: number) => {
-      alert(`¡Gracias por calificar con ${rating} estrellas!`);
+      if (!user.isLoggedIn) {
+          requireLogin();
+          return;
+      }
+      alert(`Â¡Gracias por calificar con ${rating} estrellas!`);
   };
 
   const handleDownloadCard = (stream: Stream) => {
+      if (!user.isLoggedIn) {
+          requireLogin();
+          return;
+      }
       setSelectedShopForModal(stream.shop);
+  };
+
+  const handleOpenShop = (shop: Shop) => {
+      if (!user.isLoggedIn) {
+          requireLogin();
+          return;
+      }
+      setSelectedShopForModal(shop);
   };
 
   const handleViewReel = (reel: Reel) => {
@@ -287,7 +409,7 @@ const App: React.FC = () => {
       filtered = filtered.filter(s => s.shop?.status === 'ACTIVE');
       filtered = filtered.filter(s => s.status !== StreamStatus.CANCELLED && s.status !== StreamStatus.BANNED);
       if (activeFilter === 'En Vivo') filtered = filtered.filter(s => s.status === StreamStatus.LIVE);
-      if (activeFilter === 'Próximos') filtered = filtered.filter(s => s.status === StreamStatus.UPCOMING);
+      if (activeFilter === 'PrÃ³ximos') filtered = filtered.filter(s => s.status === StreamStatus.UPCOMING);
       if (activeFilter === 'Finalizados') filtered = filtered.filter(s => s.status === StreamStatus.FINISHED || s.status === StreamStatus.MISSED);
       
       filtered.sort((a, b) => {
@@ -325,78 +447,167 @@ const App: React.FC = () => {
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center font-bold text-dm-dark">Cargando Sistema Avellaneda...</div>;
 
+  const isAdminUser = authProfile?.userType === 'ADMIN';
+
+  const handleClientNav = (id: string) => {
+      setViewMode('CLIENT');
+      setActiveBottomNav(id);
+      if (id === 'home') setActiveFilter('Todos');
+      if (id === 'live') setActiveFilter('En Vivo');
+      if (id === 'account') {
+          if (user.isLoggedIn) {
+              void handleToggleClientLogin();
+          } else {
+              setLoginPromptDismissed(false);
+          }
+      }
+  };
+
+  const handleAdminNav = (id: string) => {
+      setViewMode('ADMIN');
+      setActiveBottomNav(id);
+      const nextTab =
+        id === 'shops' ? 'SHOPS' :
+        id === 'streams' ? 'STREAMS' :
+        id === 'purchases' ? 'ADMIN' :
+        id === 'reports' ? 'STREAMS' :
+        'DASHBOARD';
+      setAdminTab(nextTab);
+  };
+
+  const bottomNavItems = isAdminUser
+      ? [
+          { id: 'shops', label: 'Tiendas', icon: Store, isCenter: false, onSelect: () => handleAdminNav('shops') },
+          { id: 'streams', label: 'Vivos', icon: Radio, isCenter: false, onSelect: () => handleAdminNav('streams') },
+          { id: 'panel', label: 'Panel', icon: Shield, isCenter: true, onSelect: () => handleAdminNav('panel') },
+          { id: 'purchases', label: 'Compras', icon: Receipt, isCenter: false, onSelect: () => handleAdminNav('purchases') },
+          { id: 'reports', label: 'Reportes', icon: AlertTriangle, isCenter: false, onSelect: () => handleAdminNav('reports') }
+        ]
+      : [
+          { id: 'home', label: 'Inicio', icon: Home, isCenter: false, onSelect: () => handleClientNav('home') },
+          { id: 'shops', label: 'Tiendas', icon: Store, isCenter: false, onSelect: () => handleClientNav('shops') },
+          { id: 'live', label: 'En vivo', icon: Radio, isCenter: true, onSelect: () => handleClientNav('live') },
+          { id: 'favorites', label: 'Favoritos', icon: Heart, isCenter: false, onSelect: () => handleClientNav('favorites') },
+          { id: 'account', label: user.isLoggedIn ? 'Cuenta' : 'Ingresar', icon: User, isCenter: false, onSelect: () => handleClientNav('account') }
+        ];
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-3 flex justify-between items-center shadow-sm">
-        <div className="flex items-center gap-2">
+            {/* Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-3 shadow-sm">
+        <div className="grid grid-cols-3 items-center">
+          <div className="relative hidden md:flex items-center">
+            <button
+              onClick={() => setIsDesktopMenuOpen((prev) => !prev)}
+              className="flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-[11px] font-bold text-gray-500 hover:text-dm-dark"
+            >
+              Menu
+              <ChevronDown size={14} className={`transition-transform ${isDesktopMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isDesktopMenuOpen && (
+              <div className="absolute left-0 top-11 z-50 w-48 rounded-xl border border-gray-100 bg-white shadow-xl">
+                <div className="py-2">
+                  {bottomNavItems.map((item) => {
+                    const isActive = activeBottomNav === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          item.onSelect();
+                          setIsDesktopMenuOpen(false);
+                        }}
+                        className={`flex w-full items-center justify-between px-4 py-2 text-xs font-bold ${isActive ? 'text-dm-crimson' : 'text-gray-500'} hover:bg-gray-50`}
+                      >
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-center">
             <img 
               src="https://www.distritomoda.com.ar/sites/all/themes/omega_btob/images/logo.svg" 
               alt="Distrito Moda" 
               className="h-8 w-auto object-contain" 
             />
-        </div>
-        
-        <div className="flex items-center gap-4">
-            {viewMode === 'MERCHANT' && (
-                <div className="relative">
-                   <button 
-                        onClick={() => setIsShopSelectorOpen(!isShopSelectorOpen)}
-                        className={`flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-md text-sm font-bold text-dm-dark hover:bg-gray-200 transition-colors ${isShopSelectorOpen ? 'bg-gray-200 ring-2 ring-gray-200' : ''}`}
-                    >
-                       Simulando: {currentShop.name} ({currentShop.plan}) <ChevronDown size={14} className={`transition-transform duration-200 ${isShopSelectorOpen ? 'rotate-180' : ''}`}/>
-                    </button>
-                    
-                    {isShopSelectorOpen && (
-                        <>
-                            <div className="fixed inset-0 z-10 cursor-default" onClick={() => setIsShopSelectorOpen(false)} />
-                            <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-100 shadow-xl rounded-lg overflow-hidden animate-in fade-in slide-in-from-top-2 z-20">
-                                <div className="max-h-[300px] overflow-y-auto">
-                                    {allShops.length === 0 && <div className="p-4 text-xs text-center text-gray-500">No hay tiendas creadas. Ve al Panel Admin.</div>}
-                                    {allShops.map(shop => (
-                                        <button 
-                                            key={shop.id}
-                                            onClick={() => {
-                                                setCurrentShopId(shop.id);
-                                                setIsShopSelectorOpen(false);
-                                            }}
-                                            className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex justify-between items-center border-b border-gray-50 last:border-0 transition-colors ${currentShopId === shop.id ? 'bg-gray-50 text-dm-crimson font-bold' : 'text-dm-dark'}`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-6 h-6 rounded-full bg-gray-100 overflow-hidden border border-gray-200 shrink-0">
-                                                    {shop.logoUrl ? <img src={shop.logoUrl} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full bg-gray-200"></div>}
-                                                </div>
-                                                <span>{shop.name}</span>
-                                            </div>
-                                            <span className={`text-[10px] uppercase px-1.5 py-0.5 rounded ${shop.plan === 'Estandar' ? 'bg-gray-100 text-gray-500' : 'bg-dm-crimson/10 text-dm-crimson font-bold'}`}>{shop.plan}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </div>
+          </div>
+          <div className="flex flex-col items-end text-xs font-sans text-gray-500">
+            <span>
+              Hola: <span className="ml-1 font-semibold text-dm-dark">{user.isLoggedIn ? (user.name || 'Cliente') : 'Invitado'}</span>
+            </span>
+            {user.isLoggedIn && (
+              <button
+                onClick={handleToggleClientLogin}
+                className="mt-0.5 text-[10px] font-semibold text-gray-400 underline underline-offset-2 hover:text-dm-crimson"
+              >
+                Salir
+              </button>
             )}
-
-            {viewMode === 'CLIENT' && (
-                 <button 
-                    onClick={() => setUser(prev => ({...prev, isLoggedIn: !prev.isLoggedIn}))}
-                    className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold transition-colors ${user.isLoggedIn ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}
-                 >
-                    {user.isLoggedIn ? <UserCheck size={14} /> : <User size={14} />}
-                    {user.isLoggedIn ? `Cliente: ${user.name || 'Logueado'}` : 'Cliente Anónimo'}
-                 </button>
-            )}
-
-            <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
-            <button onClick={() => setViewMode('CLIENT')} className={`px-4 py-1 rounded-full text-xs font-bold font-sans transition-all ${viewMode === 'CLIENT' ? 'bg-dm-dark text-white shadow' : 'text-gray-500 hover:text-dm-dark'}`}>CLIENTE</button>
-            <button onClick={() => setViewMode('MERCHANT')} className={`px-4 py-1 rounded-full text-xs font-bold font-sans transition-all ${viewMode === 'MERCHANT' ? 'bg-dm-dark text-white shadow' : 'text-gray-500 hover:text-dm-dark'}`}>TIENDA</button>
-            <button onClick={() => setViewMode('ADMIN')} className={`px-4 py-1 rounded-full text-xs font-bold font-sans transition-all ${viewMode === 'ADMIN' ? 'bg-dm-dark text-white shadow' : 'text-gray-500 hover:text-dm-dark'}`}>ADMIN</button>
-            </div>
+          </div>
         </div>
       </nav>
 
-      <div className="pt-16">
+      {viewMode === 'CLIENT' && !user.isLoggedIn && !loginPromptDismissed && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="w-[92%] max-w-sm rounded-2xl border border-gray-100 bg-white p-6 shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-serif text-2xl text-dm-dark">Ingreso</p>
+                <p className="mt-1 text-xs font-sans text-gray-500">
+                  Accede a recordatorios, favoritos y reportes.
+                </p>
+              </div>
+              <button
+                onClick={handleContinueAsGuest}
+                className="rounded-full border border-gray-200 p-1 text-gray-400 hover:text-gray-600"
+                aria-label="Cerrar"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <button
+              onClick={handleLoginRequest}
+              className="mt-5 w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90"
+            >
+              Continuar con Google
+            </button>
+            <button
+              onClick={handleContinueAsGuest}
+              className="mt-2 w-full rounded-full border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50"
+            >
+              Continuar como visitante
+            </button>
+            <p className="mt-3 text-[11px] font-sans text-gray-400">
+              Autenticacion con Google via Firebase.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white/95 backdrop-blur-sm md:hidden">
+        <div className="mx-auto flex max-w-md items-end justify-between px-6 pb-3 pt-2">
+          {bottomNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeBottomNav === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={item.onSelect}
+                className={`flex flex-col items-center gap-1 text-[10px] font-semibold ${item.isCenter ? '-translate-y-3' : ''} ${isActive ? 'text-dm-crimson' : 'text-gray-400'}`}
+              >
+                <span className={`flex h-11 w-11 items-center justify-center rounded-full ${item.isCenter ? 'bg-dm-crimson text-white shadow-lg shadow-dm-crimson/30' : 'bg-white'}`}>
+                  <Icon size={20} className={item.isCenter ? 'text-white' : (isActive ? 'text-dm-crimson' : 'text-gray-400')} />
+                </span>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      <div className="pt-16 pb-24 md:pb-12">
         {viewMode === 'CLIENT' ? (
           <>
             <HeroSection 
@@ -404,8 +615,9 @@ const App: React.FC = () => {
                 onFilterChange={setActiveFilter} 
                 liveStreams={sortedLiveStreams}
                 activeReels={activeReels}
-                onViewReel={handleViewReel}
-                viewedReels={user.viewedReels}
+                  onViewReel={handleViewReel}
+                  viewedReels={user.viewedReels}
+                  onOpenShop={handleOpenShop}
             />
             
             <main className="max-w-7xl mx-auto px-4 py-12">
@@ -422,7 +634,7 @@ const App: React.FC = () => {
                         key={stream.id} 
                         stream={stream} 
                         user={user}
-                        onOpenShop={() => setSelectedShopForModal(stream.shop)}
+                        onOpenShop={() => handleOpenShop(stream.shop)}
                         onReport={handleReportStream}
                         onToggleReminder={handleToggleReminder}
                         onLike={handleLikeStream}
@@ -445,6 +657,7 @@ const App: React.FC = () => {
                     user={user}
                     onClose={() => setSelectedShopForModal(null)} 
                     onToggleFavorite={handleToggleFavorite}
+                    onRequireLogin={requireLogin}
                  />
             )}
 
@@ -471,6 +684,8 @@ const App: React.FC = () => {
             shops={allShops}
             setShops={setAllShops}
             onRefreshData={refreshData}
+            activeTab={adminTab}
+            onTabChange={setAdminTab}
           />
         )}
       </div>
@@ -479,4 +694,12 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+
+
+
+
+
+
+
 

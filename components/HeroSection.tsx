@@ -11,6 +11,7 @@ interface HeroSectionProps {
     activeReels: Reel[]; 
     onViewReel: (reel: Reel) => void; 
     viewedReels: string[];
+    onOpenShop: (shop: Stream['shop']) => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ 
@@ -19,7 +20,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     liveStreams,
     activeReels,
     onViewReel,
-    viewedReels
+    viewedReels,
+    onOpenShop
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -164,7 +166,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                               >
                                   Entrar al Vivo
                               </Button>
-                              <Button variant="outline" className="border-white text-white hover:bg-white/10">
+                              <Button
+                                variant="outline"
+                                className="border-white text-white hover:bg-white/10"
+                                onClick={() => onOpenShop(activeStream.shop)}
+                              >
                                   Ver Perfil
                               </Button>
                           </div>
