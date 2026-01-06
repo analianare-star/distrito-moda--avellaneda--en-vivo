@@ -86,6 +86,21 @@ const mapWhatsappLines = (lines: any[]): WhatsappLine[] => {
 const mapShop = (shop: any): Shop => {
   const penalties = Array.isArray(shop?.penalties) ? shop.penalties : [];
   const status = normalizeShopStatus(shop?.status);
+  const quotaWallet = shop?.quotaWallet
+    ? {
+        weeklyLiveBaseLimit: Number(shop.quotaWallet.weeklyLiveBaseLimit ?? 0),
+        weeklyLiveUsed: Number(shop.quotaWallet.weeklyLiveUsed ?? 0),
+        liveExtraBalance: Number(shop.quotaWallet.liveExtraBalance ?? 0),
+        reelDailyLimit: Number(shop.quotaWallet.reelDailyLimit ?? 0),
+        reelDailyUsed: Number(shop.quotaWallet.reelDailyUsed ?? 0),
+        reelExtraBalance: Number(shop.quotaWallet.reelExtraBalance ?? 0),
+      }
+    : undefined;
+  const liveBaseLimit = quotaWallet?.weeklyLiveBaseLimit ?? 0;
+  const liveBaseUsed = quotaWallet?.weeklyLiveUsed ?? 0;
+  const liveBaseRemaining = Math.max(0, liveBaseLimit - liveBaseUsed);
+  const liveExtraBalance = quotaWallet?.liveExtraBalance ?? 0;
+  const reelExtraBalance = quotaWallet?.reelExtraBalance ?? 0;
   return {
     ...shop,
     plan: normalizePlan(shop?.plan),
@@ -94,9 +109,9 @@ const mapShop = (shop: any): Shop => {
     statusChangedAt: shop?.statusChangedAt ? new Date(shop.statusChangedAt).toISOString() : undefined,
     agendaSuspendedUntil: shop?.agendaSuspendedUntil ? new Date(shop.agendaSuspendedUntil).toISOString() : undefined,
     agendaSuspendedReason: shop?.agendaSuspendedReason || undefined,
-    baseQuota: Number(shop?.streamQuota ?? shop?.baseQuota ?? 0),
-    extraQuota: Number(shop?.extraQuota ?? 0),
-    reelsExtraQuota: Number(shop?.reelQuota ?? shop?.reelsExtraQuota ?? 0),
+    baseQuota: quotaWallet ? liveBaseRemaining : Number(shop?.streamQuota ?? shop?.baseQuota ?? 0),
+    extraQuota: quotaWallet ? liveExtraBalance : Number(shop?.extraQuota ?? 0),
+    reelsExtraQuota: quotaWallet ? reelExtraBalance : Number(shop?.reelQuota ?? shop?.reelsExtraQuota ?? 0),
     paymentMethods: shop?.paymentMethods || [],
     whatsappLines: mapWhatsappLines(shop?.whatsappLines || []),
     socialHandles: mapSocialHandles(shop?.socialHandles || []),
@@ -111,6 +126,7 @@ const mapShop = (shop: any): Shop => {
     reviews: shop?.reviews || [],
     ratingAverage: Number(shop?.ratingAverage ?? 0),
     logoUrl: shop?.logoUrl || '',
+    quotaWallet,
   };
 };
 
@@ -188,6 +204,60 @@ export const api = {
     });
     if (!res.ok) return null;
     return res.json();
+  },
+  fetchClientState: async (): Promise<{ favorites: string[]; reminders: string[] } | null> => {
+    try {
+      const res = await fetchWithAuth('/clients/me');
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (error) {
+      console.error('Error fetching client state:', error);
+      return null;
+    }
+  },
+  addFavorite: async (shopId: string): Promise<string[] | null> => {
+    try {
+      const res = await fetchWithAuth(`/clients/me/favorites/${shopId}`, { method: 'POST' });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.favorites || [];
+    } catch (error) {
+      console.error('Error adding favorite:', error);
+      return null;
+    }
+  },
+  removeFavorite: async (shopId: string): Promise<string[] | null> => {
+    try {
+      const res = await fetchWithAuth(`/clients/me/favorites/${shopId}`, { method: 'DELETE' });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.favorites || [];
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+      return null;
+    }
+  },
+  addReminder: async (streamId: string): Promise<string[] | null> => {
+    try {
+      const res = await fetchWithAuth(`/clients/me/reminders/${streamId}`, { method: 'POST' });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.reminders || [];
+    } catch (error) {
+      console.error('Error adding reminder:', error);
+      return null;
+    }
+  },
+  removeReminder: async (streamId: string): Promise<string[] | null> => {
+    try {
+      const res = await fetchWithAuth(`/clients/me/reminders/${streamId}`, { method: 'DELETE' });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.reminders || [];
+    } catch (error) {
+      console.error('Error removing reminder:', error);
+      return null;
+    }
   },
   fetchShops: async (): Promise<Shop[]> => {
     try {
@@ -431,6 +501,17 @@ export const api = {
       return [];
     }
   },
+  fetchReelsByShop: async (shopId: string): Promise<Reel[]> => {
+    try {
+      const res = await fetchWithAuth(`/reels/shop/${shopId}`);
+      if (!res.ok) throw new Error('Error al obtener reels');
+      const data = await res.json();
+      return data.map(mapReel);
+    } catch (error) {
+      console.error('Error fetching reels:', error);
+      return [];
+    }
+  },
 
   fetchReportsAdmin: async (): Promise<any[]> => {
     try {
@@ -450,6 +531,16 @@ export const api = {
       throw new Error(data?.message || 'Error al resolver reporte');
     }
     return data;
+  },
+  registerReelView: async (reelId: string) => {
+    try {
+      const res = await fetchWithAuth(`/reels/${reelId}/view`, { method: 'POST' });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (error) {
+      console.error('Error registering reel view:', error);
+      return null;
+    }
   },
 
   createReel: async (shopId: string, url: string, platform: SocialPlatform) => {

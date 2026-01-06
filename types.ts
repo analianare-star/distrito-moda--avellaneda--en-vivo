@@ -32,6 +32,15 @@ export interface SocialHandles {
   youtube?: string;
 }
 
+export interface QuotaWalletSnapshot {
+  weeklyLiveBaseLimit: number;
+  weeklyLiveUsed: number;
+  liveExtraBalance: number;
+  reelDailyLimit: number;
+  reelDailyUsed: number;
+  reelExtraBalance: number;
+}
+
 export interface Review {
   id: string;
   author: string;
@@ -87,6 +96,7 @@ export interface Shop {
   
   // Modelo de Cupos (Reels) - NEW
   reelsExtraQuota: number; 
+  quotaWallet?: QuotaWalletSnapshot;
 
   whatsappLines: WhatsappLine[]; 
   website?: string; 

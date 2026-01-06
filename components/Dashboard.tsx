@@ -96,9 +96,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
       }));
 
       const loadReels = async () => {
+          if (!currentShop.id) return;
           try {
-            const allReels = await api.fetchAllReelsAdmin();
-            const myReels = allReels.filter(r => r.shopId === currentShop.id);
+            const myReels = await api.fetchReelsByShop(currentShop.id);
             setShopReels(myReels);
           } catch (error) {
             console.error("Error cargando reels", error);
@@ -117,21 +117,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
   );
   
   // CORRECCIÓN: Usamos Number() y || 0 para evitar errores si el backend manda null
-  const baseQuota = Number(currentShop.baseQuota) || 0;
-  const extraQuota = Number(currentShop.extraQuota) || 0;
+  const wallet = currentShop.quotaWallet;
+  const baseQuota = wallet
+      ? Math.max(0, Number(wallet.weeklyLiveBaseLimit) - Number(wallet.weeklyLiveUsed))
+      : Number(currentShop.baseQuota) || 0;
+  const extraQuota = wallet ? Number(wallet.liveExtraBalance) : Number(currentShop.extraQuota) || 0;
   
-  const totalQuota = baseQuota + extraQuota;
   const usedQuota = activeStreams.length;
-  const availableQuota = totalQuota - usedQuota;
+  const availableQuota = wallet ? baseQuota + extraQuota : (baseQuota + extraQuota) - usedQuota;
   
   // Reels Quota
   const todayStr = new Date().toISOString().split('T')[0];
   const reelsToday = shopReels.filter(r => r.createdAtISO.startsWith(todayStr) && r.origin === 'PLAN' && r.status !== 'HIDDEN').length;
-  const reelPlanLimit = REEL_LIMITS[currentShop.plan] || 1; // Default a 1 si el plan no coincide
-  const availableReelPlan = Math.max(0, reelPlanLimit - reelsToday);
+  const reelPlanLimit = wallet ? Number(wallet.reelDailyLimit) : (REEL_LIMITS[currentShop.plan] || 1);
+  const reelDailyUsed = wallet ? Number(wallet.reelDailyUsed) : reelsToday;
+  const availableReelPlan = Math.max(0, reelPlanLimit - reelDailyUsed);
   
-  // CORRECCIÓN: Convertir a número
-  const reelsExtra = Number(currentShop.reelsExtraQuota) || 0;
+  const reelsExtra = wallet ? Number(wallet.reelExtraBalance) : (Number(currentShop.reelsExtraQuota) || 0);
   
   // Validation Flags
   const shopStatus = currentShop.status || 'ACTIVE';

@@ -168,6 +168,14 @@ const App: React.FC = () => {
                 displayName: fbUser.displayName || undefined,
                 avatarUrl: fbUser.photoURL || undefined,
               });
+              const clientState = await api.fetchClientState();
+              if (clientState) {
+                setUser((prev) => ({
+                  ...prev,
+                  favorites: clientState.favorites || [],
+                  reminders: clientState.reminders || [],
+                }));
+              }
             }
           } else {
             setAuthProfile(null);
@@ -180,7 +188,11 @@ const App: React.FC = () => {
         setUser(prev => ({
           ...prev,
           id: prev.isLoggedIn ? `anon-${Date.now()}` : prev.id,
-          isLoggedIn: false
+          isLoggedIn: false,
+          favorites: [],
+          reminders: [],
+          viewedReels: [],
+          reports: []
         }));
         setAuthProfile(null);
         setViewMode('CLIENT');
@@ -409,25 +421,51 @@ const App: React.FC = () => {
 
   const handleToggleFavorite = (shopId: string) => {
       if (!requireClient()) return;
-      if (user.favorites.includes(shopId)) {
-          setUser(prev => ({ ...prev, favorites: prev.favorites.filter(id => id !== shopId) }));
-      } else {
-          setUser(prev => ({ ...prev, favorites: [...prev.favorites, shopId] }));
-          setNotice({
-              title: 'Favorito guardado',
-              message: '¡Siguiendo tienda!',
-              tone: 'success',
-          });
-      }
+      if (!user.isLoggedIn) return;
+      void (async () => {
+          try {
+              const updated = user.favorites.includes(shopId)
+                  ? await api.removeFavorite(shopId)
+                  : await api.addFavorite(shopId);
+              if (updated) {
+                  setUser(prev => ({ ...prev, favorites: updated }));
+              }
+              if (!user.favorites.includes(shopId)) {
+                  setNotice({
+                      title: 'Favorito guardado',
+                      message: '¡Siguiendo tienda!',
+                      tone: 'success',
+                  });
+              }
+          } catch (error) {
+              setNotice({
+                  title: 'No se pudo actualizar',
+                  message: 'Intenta nuevamente.',
+                  tone: 'error',
+              });
+          }
+      })();
   };
 
   const handleToggleReminder = (streamId: string) => {
       if (!requireClient()) return;
-      if (user.reminders.includes(streamId)) {
-          setUser(prev => ({ ...prev, reminders: prev.reminders.filter(id => id !== streamId) }));
-      } else {
-          setUser(prev => ({ ...prev, reminders: [...prev.reminders, streamId] }));
-      }
+      if (!user.isLoggedIn) return;
+      void (async () => {
+          try {
+              const updated = user.reminders.includes(streamId)
+                  ? await api.removeReminder(streamId)
+                  : await api.addReminder(streamId);
+              if (updated) {
+                  setUser(prev => ({ ...prev, reminders: updated }));
+              }
+          } catch (error) {
+              setNotice({
+                  title: 'No se pudo actualizar',
+                  message: 'Intenta nuevamente.',
+                  tone: 'error',
+              });
+          }
+      })();
   };
 
   const handleLoginRequest = async () => {
@@ -508,8 +546,11 @@ const App: React.FC = () => {
 
   const handleViewReel = (reel: Reel) => {
       setSelectedReel(reel);
-      if (!user.viewedReels.includes(reel.id)) {
-          setUser(prev => ({ ...prev, viewedReels: [...prev.viewedReels, reel.id] }));
+      if (user.isLoggedIn && authProfile?.userType === 'CLIENT') {
+          if (!user.viewedReels.includes(reel.id)) {
+              setUser(prev => ({ ...prev, viewedReels: [...prev.viewedReels, reel.id] }));
+          }
+          void api.registerReelView(reel.id);
       }
   };
 
