@@ -9,8 +9,29 @@ import {
   SocialPlatform,
   StreamStatus,
 } from '../types';
+import { auth } from '../firebase';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+const buildHeaders = async (options: { json?: boolean; headers?: Record<string, string> } = {}) => {
+  const baseHeaders: Record<string, string> = {};
+  if (options.json) {
+    baseHeaders['Content-Type'] = 'application/json';
+  }
+  const token = await auth.currentUser?.getIdToken();
+  if (token) {
+    baseHeaders.Authorization = `Bearer ${token}`;
+  }
+  return options.headers ? { ...baseHeaders, ...options.headers } : baseHeaders;
+};
+
+const fetchWithAuth = async (path: string, options: RequestInit = {}) => {
+  const headers = await buildHeaders({
+    json: Boolean(options.body),
+    headers: options.headers as Record<string, string> | undefined,
+  });
+  return fetch(`${API_URL}${path}`, { ...options, headers });
+};
 
 const PLAN_BY_BACKEND: Record<string, ShopPlan> = {
   basic: 'Estandar',
@@ -149,9 +170,28 @@ const mapReel = (reel: any): Reel => {
 };
 
 export const api = {
+  fetchAuthMe: async (): Promise<{ userType?: string; shopId?: string; adminRole?: string } | null> => {
+    try {
+      const res = await fetchWithAuth('/auth/me');
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (error) {
+      console.error('Error fetching auth profile:', error);
+      return null;
+    }
+  },
+  createClientMe: async (payload: { displayName?: string; avatarUrl?: string }) => {
+    const res = await fetchWithAuth('/clients/me', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  },
   fetchShops: async (): Promise<Shop[]> => {
     try {
-      const res = await fetch(`${API_URL}/shops`);
+      const res = await fetchWithAuth('/shops');
       if (!res.ok) throw new Error('Error al conectar con el servidor');
       const data = await res.json();
       return data.map(mapShop);
@@ -163,7 +203,7 @@ export const api = {
 
   createShop: async (payload: any): Promise<{ success: boolean; message: string; shop?: Shop }> => {
     try {
-      const res = await fetch(`${API_URL}/shops`, {
+      const res = await fetchWithAuth('/shops', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -193,7 +233,7 @@ export const api = {
       whatsappLines: data.whatsappLines || [],
     };
 
-    const res = await fetch(`${API_URL}/shops/${id}`, {
+    const res = await fetchWithAuth(`/shops/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dbPayload),
@@ -209,7 +249,7 @@ export const api = {
 
   fetchStreams: async (): Promise<Stream[]> => {
     try {
-      const res = await fetch(`${API_URL}/streams`);
+      const res = await fetchWithAuth('/streams');
       if (!res.ok) throw new Error('Error al obtener vivos');
       const data = await res.json();
       return data.map(mapStream);
@@ -234,7 +274,7 @@ export const api = {
         extensionCount: payload.extensionCount ?? 0,
       };
 
-      const res = await fetch(`${API_URL}/streams`, {
+      const res = await fetchWithAuth('/streams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(streamPayload),
@@ -275,7 +315,7 @@ export const api = {
       forceScheduleUpdate: data.forceScheduleUpdate,
     };
 
-    const res = await fetch(`${API_URL}/streams/${data.id}`, {
+    const res = await fetchWithAuth(`/streams/${data.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dbPayload),
@@ -289,11 +329,11 @@ export const api = {
   },
 
   deleteStream: async (id: string) => {
-    await fetch(`${API_URL}/streams/${id}`, { method: 'DELETE' });
+    await fetchWithAuth(`/streams/${id}`, { method: 'DELETE' });
   },
 
   cancelStream: async (id: string, reason?: string) => {
-    const res = await fetch(`${API_URL}/streams/${id}/cancel`, {
+    const res = await fetchWithAuth(`/streams/${id}/cancel`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason }),
@@ -305,7 +345,7 @@ export const api = {
   },
 
   banStream: async (id: string, reason?: string) => {
-    const res = await fetch(`${API_URL}/streams/${id}/ban`, {
+    const res = await fetchWithAuth(`/streams/${id}/ban`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason }),
@@ -317,7 +357,7 @@ export const api = {
   },
 
   buyReelQuota: async (shopId: string, amount: number, _payment?: any) => {
-    const res = await fetch(`${API_URL}/shops/${shopId}/buy-reel-quota`, {
+    const res = await fetchWithAuth(`/shops/${shopId}/buy-reel-quota`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount }),
@@ -327,7 +367,7 @@ export const api = {
   },
 
   buyStreamQuota: async (shopId: string, amount: number, _payment?: any) => {
-    const res = await fetch(`${API_URL}/shops/${shopId}/buy-stream-quota`, {
+    const res = await fetchWithAuth(`/shops/${shopId}/buy-stream-quota`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount }),
@@ -340,12 +380,12 @@ export const api = {
     return api.buyStreamQuota(shopId, amount);
   },
 
-  reportStream: async (streamId: string, _userId?: string) => {
+  reportStream: async (streamId: string, reason: string) => {
     try {
-      const res = await fetch(`${API_URL}/streams/${streamId}/report`, {
+      const res = await fetchWithAuth(`/streams/${streamId}/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(_userId ? { userId: _userId } : {}),
+        body: JSON.stringify({ reason }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Error al reportar');
@@ -355,9 +395,22 @@ export const api = {
     }
   },
 
+  rateStream: async (streamId: string, rating: number, comment?: string) => {
+    const res = await fetchWithAuth(`/streams/${streamId}/rate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rating, comment }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.message || 'Error al calificar vivo');
+    }
+    return data;
+  },
+
   fetchReels: async (): Promise<Reel[]> => {
     try {
-      const res = await fetch(`${API_URL}/reels`);
+      const res = await fetchWithAuth('/reels');
       if (!res.ok) throw new Error('Error al obtener reels');
       const data = await res.json();
       return data.map(mapReel);
@@ -369,7 +422,7 @@ export const api = {
 
   fetchAllReelsAdmin: async (): Promise<Reel[]> => {
     try {
-      const res = await fetch(`${API_URL}/reels/admin`);
+      const res = await fetchWithAuth('/reels/admin');
       if (!res.ok) throw new Error('Error al obtener reels');
       const data = await res.json();
       return data.map(mapReel);
@@ -379,9 +432,29 @@ export const api = {
     }
   },
 
+  fetchReportsAdmin: async (): Promise<any[]> => {
+    try {
+      const res = await fetchWithAuth('/reports');
+      if (!res.ok) throw new Error('Error al obtener reportes');
+      return await res.json();
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      return [];
+    }
+  },
+
+  resolveReportAdmin: async (id: string) => {
+    const res = await fetchWithAuth(`/reports/${id}/resolve`, { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || 'Error al resolver reporte');
+    }
+    return data;
+  },
+
   createReel: async (shopId: string, url: string, platform: SocialPlatform) => {
     try {
-      const res = await fetch(`${API_URL}/reels`, {
+      const res = await fetchWithAuth('/reels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ shopId, url, platform }),
@@ -395,22 +468,22 @@ export const api = {
   },
 
   hideReel: async (id: string) => {
-    await fetch(`${API_URL}/reels/${id}/hide`, { method: 'POST' });
+    await fetchWithAuth(`/reels/${id}/hide`, { method: 'POST' });
   },
 
   reactivateReel: async (id: string) => {
-    await fetch(`${API_URL}/reels/${id}/reactivate`, { method: 'POST' });
+    await fetchWithAuth(`/reels/${id}/reactivate`, { method: 'POST' });
   },
 
   togglePenalty: async (id: string) => {
     try {
-      await fetch(`${API_URL}/shops/${id}/toggle-penalty`, { method: 'POST' });
+      await fetchWithAuth(`/shops/${id}/toggle-penalty`, { method: 'POST' });
     } catch (e) {}
     return null;
   },
 
   activateShop: async (id: string, reason?: string) => {
-    await fetch(`${API_URL}/shops/${id}/activate`, {
+    await fetchWithAuth(`/shops/${id}/activate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason }),
@@ -418,7 +491,7 @@ export const api = {
   },
 
   rejectShop: async (id: string, reason?: string) => {
-    await fetch(`${API_URL}/shops/${id}/reject`, {
+    await fetchWithAuth(`/shops/${id}/reject`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason }),
@@ -426,7 +499,7 @@ export const api = {
   },
 
   suspendAgenda: async (id: string, reason?: string, days?: number) => {
-    await fetch(`${API_URL}/shops/${id}/suspend-agenda`, {
+    await fetchWithAuth(`/shops/${id}/suspend-agenda`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason, days }),
@@ -434,14 +507,14 @@ export const api = {
   },
 
   liftAgendaSuspension: async (id: string) => {
-    await fetch(`${API_URL}/shops/${id}/lift-suspension`, {
+    await fetchWithAuth(`/shops/${id}/lift-suspension`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
   },
 
   resetShopPassword: async (id: string) => {
-    const res = await fetch(`${API_URL}/shops/${id}/reset-password`, {
+    const res = await fetchWithAuth(`/shops/${id}/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -451,6 +524,18 @@ export const api = {
     }
     return data;
   },
+  assignShopOwner: async (id: string, payload: { authUserId?: string; email?: string }) => {
+    const res = await fetchWithAuth(`/shops/${id}/assign-owner`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.message || 'Error al asignar dueño');
+    }
+    return mapShop(data);
+  },
 
   updateStreamTime: async (streamId: string, minutes: number) => {
     const scheduledAt = new Date(Date.now() + minutes * 60 * 1000).toISOString();
@@ -458,7 +543,7 @@ export const api = {
   },
 
   resetSystem: async () => {
-    await fetch(`${API_URL}/testpanel/reset`, { method: 'POST' });
+    await fetchWithAuth('/testpanel/reset', { method: 'POST' });
   },
 
   loginUser: async (email: string, _userId?: string) => ({

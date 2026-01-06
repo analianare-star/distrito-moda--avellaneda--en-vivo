@@ -8,12 +8,14 @@ interface ShopDetailModalProps {
   shop: Shop;
   shopStreams?: Stream[]; 
   user: UserContext;
+  canClientInteract: boolean;
   onClose: () => void;
   onToggleFavorite: (shopId: string) => void;
   onRequireLogin: () => void;
+  onNotify?: (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => void;
 }
 
-export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStreams = [], user, onClose, onToggleFavorite, onRequireLogin }) => {
+export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStreams = [], user, canClientInteract, onClose, onToggleFavorite, onRequireLogin, onNotify }) => {
   const [activeTab, setActiveTab] = useState<'INFO' | 'CARD'>('INFO');
   
   const isFollowing = user.favorites.includes(shop.id);
@@ -45,7 +47,7 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
   };
 
   const whatsappLimit = shop.plan === 'Maxima Visibilidad' ? 3 : shop.plan === 'Alta Visibilidad' ? 2 : 1;
-  const canSeeWhatsapp = user.isLoggedIn;
+  const canSeeWhatsapp = canClientInteract;
   // Filter valid lines
   const waLines = shop.whatsappLines ? shop.whatsappLines.filter(l => l.number && l.number.trim() !== '').slice(0, whatsappLimit) : [];
 
@@ -67,13 +69,24 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                 </div>
                 
                 <button 
-                    onClick={() => onToggleFavorite(shop.id)}
-                    className={`mb-2 px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-sm transition-all ${isFollowing ? 'bg-gray-100 text-dm-dark border border-gray-300' : 'bg-dm-crimson text-white hover:bg-red-700'}`}
+                    onClick={() => canClientInteract && onToggleFavorite(shop.id)}
+                    className={`mb-2 px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-sm transition-all ${
+                        canClientInteract
+                          ? isFollowing
+                            ? 'bg-gray-100 text-dm-dark border border-gray-300'
+                            : 'bg-dm-crimson text-white hover:bg-red-700'
+                          : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                    }`}
+                    disabled={!canClientInteract}
                 >
-                    {isFollowing ? (
-                        <>Siguiendo <Check size={14}/></>
+                    {canClientInteract ? (
+                        isFollowing ? (
+                            <>Siguiendo <Check size={14}/></>
+                        ) : (
+                            <>Seguir Tienda <UserPlus size={14}/></>
+                        )
                     ) : (
-                        <>Seguir Tienda <UserPlus size={14}/></>
+                        <>Solo clientes</>
                     )}
                 </button>
             </div>
@@ -88,7 +101,7 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                 <button onClick={() => setActiveTab('INFO')} className={`flex-1 py-3 text-sm font-bold uppercase tracking-wide border-b-2 ${activeTab === 'INFO' ? 'border-dm-crimson text-dm-crimson' : 'border-transparent text-gray-400'}`}>Perfil</button>
                 <button
                     onClick={() => {
-                        if (!user.isLoggedIn) {
+                        if (!canClientInteract) {
                             onRequireLogin();
                             return;
                         }
@@ -147,7 +160,7 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                                 className="w-full justify-start text-xs border-gray-200 text-gray-400 h-10"
                                 onClick={onRequireLogin}
                             >
-                                <Phone size={14} className="mr-2" /> Inicia sesion para ver WhatsApp
+                                <Phone size={14} className="mr-2" /> Solo clientes
                             </Button>
                         )}
 
@@ -181,11 +194,11 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                 </div>
             ) : (
                 <div className="flex flex-col items-center pt-2">
-                    {!user.isLoggedIn ? (
+                    {!canClientInteract ? (
                         <div className="text-center p-8 bg-gray-50 rounded-lg">
                             <AlertOctagon size={32} className="mx-auto text-orange-400 mb-2" />
-                            <p className="text-sm text-dm-dark font-bold">Inicia sesion para ver la tarjeta</p>
-                            <p className="text-xs text-gray-500 mt-1">La tarjeta digital requiere acceso.</p>
+                            <p className="text-sm text-dm-dark font-bold">Solo clientes pueden ver la tarjeta</p>
+                            <p className="text-xs text-gray-500 mt-1">Inicia sesion con un perfil cliente.</p>
                         </div>
                     ) : canDownloadCard ? (
                         <>
@@ -194,6 +207,7 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                                     shop={shop} 
                                     stream={priorityStream} 
                                     mode="CLIENT" // Client mode = Contact Info & Real Links
+                                    onNotify={onNotify}
                                 />
                             </div>
                         </>

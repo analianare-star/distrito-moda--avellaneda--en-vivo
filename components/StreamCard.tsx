@@ -6,6 +6,8 @@ import { Instagram, Video, Flag, Clock, Heart, Share2, Check, Download, Star, Mo
 interface StreamCardProps {
   stream: Stream;
   user: UserContext;
+  canClientInteract: boolean;
+  onNotify?: (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => void;
   onOpenShop: () => void;
   onReport: (streamId: string) => void;
   onToggleReminder: (streamId: string) => void;
@@ -17,6 +19,8 @@ interface StreamCardProps {
 export const StreamCard: React.FC<StreamCardProps> = ({ 
     stream, 
     user, 
+    canClientInteract,
+    onNotify,
     onOpenShop, 
     onReport, 
     onToggleReminder,
@@ -29,14 +33,15 @@ export const StreamCard: React.FC<StreamCardProps> = ({
   
   // Status Helpers
   const isLive = stream.status === StreamStatus.LIVE;
-  const isFinished = stream.status === StreamStatus.FINISHED || stream.status === StreamStatus.MISSED;
+  const isFinished = stream.status === StreamStatus.FINISHED;
   const isMissed = stream.status === StreamStatus.MISSED;
   const isCancelled = stream.status === StreamStatus.CANCELLED || stream.status === StreamStatus.BANNED;
   const isUpcoming = stream.status === StreamStatus.UPCOMING;
-  const canReport = stream.status === StreamStatus.LIVE || stream.status === StreamStatus.UPCOMING;
+  const canReport = stream.status === StreamStatus.FINISHED;
   
   const reminderSet = user.reminders.includes(stream.id);
   const isLiked = false; // Implement Logic in App level or passed prop if persistent
+  const reminderBlockedLabel = user.isLoggedIn ? 'Solo clientes' : 'Inicia sesion';
   
   // Shop Rating Display
   const shopRating = stream.shop.ratingAverage || 5.0;
@@ -74,7 +79,10 @@ export const StreamCard: React.FC<StreamCardProps> = ({
             });
         } catch(e) {}
     } else {
-        alert("Link copiado al portapapeles");
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+        } catch (e) {}
+        onNotify?.('Link copiado', 'Se copió el enlace al portapapeles.', 'success');
     }
   };
 
@@ -175,13 +183,19 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                     Finalizado
                  </Button>
             ) : isUpcoming ? (
-                 <Button 
-                    variant={reminderSet ? 'secondary' : 'outline'} 
-                    className={`w-full ${reminderSet ? 'bg-dm-dark text-white' : 'border-dm-dark text-dm-dark hover:bg-dm-dark hover:text-white'}`}
-                    onClick={() => onToggleReminder(stream.id)}
-                 >
-                    {reminderSet ? <><Check size={14} className="mr-2"/> Agendado</> : <><Clock size={14} className="mr-2"/> Recordarme</>}
-                 </Button>
+                canClientInteract ? (
+                  <Button 
+                      variant={reminderSet ? 'secondary' : 'outline'} 
+                      className={`w-full ${reminderSet ? 'bg-dm-dark text-white' : 'border-dm-dark text-dm-dark hover:bg-dm-dark hover:text-white'}`}
+                      onClick={() => onToggleReminder(stream.id)}
+                  >
+                      {reminderSet ? <><Check size={14} className="mr-2"/> Agendado</> : <><Clock size={14} className="mr-2"/> Recordarme</>}
+                  </Button>
+                ) : (
+                  <Button variant="outline" className="w-full border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed" disabled>
+                      {reminderBlockedLabel}
+                  </Button>
+                )
             ) : (
                  <Button variant="outline" className="w-full border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed">
                     No Disponible
@@ -192,9 +206,10 @@ export const StreamCard: React.FC<StreamCardProps> = ({
             <div className="flex justify-between items-center border-t border-gray-100 pt-3">
                  <div className="flex gap-1">
                     <button 
-                        onClick={() => onLike && onLike(stream.id)} 
-                        className="p-2 text-gray-400 hover:text-dm-crimson hover:bg-red-50 rounded-full transition-colors"
+                        onClick={() => canClientInteract && onLike && onLike(stream.id)} 
+                        className={`p-2 rounded-full transition-colors ${canClientInteract ? 'text-gray-400 hover:text-dm-crimson hover:bg-red-50' : 'text-gray-300 cursor-not-allowed'}`}
                         title="Me gusta"
+                        disabled={!canClientInteract}
                     >
                         <Heart size={18} />
                     </button>
@@ -206,23 +221,24 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                         <Share2 size={18} />
                     </button>
                     <button 
-                        onClick={() => onDownloadCard && onDownloadCard(stream)}
-                        className="p-2 text-gray-400 hover:text-dm-dark hover:bg-gray-100 rounded-full transition-colors"
+                        onClick={() => canClientInteract && onDownloadCard && onDownloadCard(stream)}
+                        className={`p-2 rounded-full transition-colors ${canClientInteract ? 'text-gray-400 hover:text-dm-dark hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                         title="Descargar Tarjeta"
+                        disabled={!canClientInteract}
                     >
                         <Download size={18} />
                     </button>
                  </div>
 
                  {/* Rate or Report */}
-                 {isFinished ? (
+                 {canClientInteract && isFinished ? (
                      <button 
                         onClick={() => onRate && onRate(stream.id, 5)} 
                         className="text-xs font-bold text-yellow-500 hover:text-yellow-600 flex items-center gap-1"
                      >
                          <Star size={14} className="fill-current"/> Calificar
                      </button>
-                 ) : canReport ? (
+                 ) : canClientInteract && canReport ? (
                      <button 
                         onClick={() => onReport(stream.id)}
                         className="text-[10px] text-gray-300 hover:text-red-400 flex items-center gap-1"

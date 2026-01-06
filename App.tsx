@@ -5,10 +5,13 @@ import { HeroSection } from './components/HeroSection';
 import { StreamCard } from './components/StreamCard';
 import { Dashboard } from './components/Dashboard';
 import { AdminDashboard } from './components/AdminDashboard';
+import { Button } from './components/Button';
 import { ShopDetailModal } from './components/ShopDetailModal';
 import { StoryModal } from './components/StoryModal';
+import { NoticeModal } from './components/NoticeModal';
+import { ReportModal } from './components/ReportModal';
 import { api } from './services/api';
-import { X, User, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown } from 'lucide-react';
+import { X, User, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown, Globe, Film } from 'lucide-react';
 import { auth, googleProvider } from './firebase';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 
@@ -17,6 +20,8 @@ type AuthProfile = {
   shopId?: string;
   adminRole?: string;
 };
+
+type MerchantTab = 'RESUMEN' | 'VIVOS' | 'REELS' | 'REDES' | 'PERFIL';
 
 // --- TIENDA DE SEGURIDAD (Para evitar crasheos cuando la DB estÃ¡ vacÃ­a) ---
 const EMPTY_SHOP: Shop = {
@@ -45,6 +50,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeBottomNav, setActiveBottomNav] = useState('home');
   const [adminTab, setAdminTab] = useState<'DASHBOARD' | 'AGENDA' | 'STREAMS' | 'SHOPS' | 'REELS' | 'ADMIN'>('DASHBOARD');
+  const [merchantTab, setMerchantTab] = useState<MerchantTab>('RESUMEN');
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
   const [authProfile, setAuthProfile] = useState<AuthProfile | null>(null);
 
@@ -70,11 +76,32 @@ const App: React.FC = () => {
   // UI States
   const [selectedShopForModal, setSelectedShopForModal] = useState<Shop | null>(null);
   const [selectedReel, setSelectedReel] = useState<Reel | null>(null);
+  const [reportTarget, setReportTarget] = useState<Stream | null>(null);
   const [activeFilter, setActiveFilter] = useState('Todos');
+  const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
+  const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
+  const notify = (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => {
+      setNotice({ title, message, tone });
+  };
   const requireLogin = () => {
       setViewMode('CLIENT');
       setActiveBottomNav('account');
       setLoginPromptDismissed(false);
+  };
+  const requireClient = () => {
+      if (!user.isLoggedIn) {
+          requireLogin();
+          return false;
+      }
+      if (authProfile?.userType && authProfile.userType !== 'CLIENT') {
+          setNotice({
+              title: 'Solo clientes',
+              message: 'Esta acción está disponible solo para cuentas cliente.',
+              tone: 'warning',
+          });
+          return false;
+      }
+      return true;
   };
 
   // --- Derived States (CON PROTECCIÃ“N ANTI-CRASH) ---
@@ -129,13 +156,18 @@ const App: React.FC = () => {
               setAdminTab('DASHBOARD');
             } else if (profile.userType === 'SHOP') {
               setViewMode('MERCHANT');
-              setActiveBottomNav('home');
+              setActiveBottomNav('resumen');
+              setMerchantTab('RESUMEN');
               if (profile.shopId) {
                 setCurrentShopId(profile.shopId);
               }
             } else {
               setViewMode('CLIENT');
               setActiveBottomNav('home');
+              await api.createClientMe({
+                displayName: fbUser.displayName || undefined,
+                avatarUrl: fbUser.photoURL || undefined,
+              });
             }
           } else {
             setAuthProfile(null);
@@ -159,6 +191,28 @@ const App: React.FC = () => {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!authProfile) {
+      if (viewMode !== 'CLIENT') setViewMode('CLIENT');
+      return;
+    }
+    if (authProfile.userType === 'ADMIN' && viewMode !== 'ADMIN') {
+      setViewMode('ADMIN');
+      setActiveBottomNav('panel');
+      setAdminTab('DASHBOARD');
+      return;
+    }
+    if (authProfile.userType === 'SHOP' && viewMode !== 'MERCHANT') {
+      setViewMode('MERCHANT');
+      setActiveBottomNav('resumen');
+      return;
+    }
+    if (authProfile.userType === 'CLIENT' && viewMode !== 'CLIENT') {
+      setViewMode('CLIENT');
+      setActiveBottomNav('home');
+    }
+  }, [authProfile, viewMode]);
 
   // --- AUTOMATIC TIME MANAGEMENT ---
   useEffect(() => {
@@ -200,14 +254,22 @@ const App: React.FC = () => {
     try {
       const result = await api.createStream(newStream);
       if (!result.success) {
-        alert(result.message);
+        setNotice({
+            title: 'No se pudo agendar',
+            message: result.message,
+            tone: 'error',
+        });
         return false;
       }
       await refreshData();
       return true;
     } catch (error) {
       console.error('Error creando vivo:', error);
-      alert('No se pudo agendar el vivo. Intenta de nuevo.');
+      setNotice({
+          title: 'Error al agendar',
+          message: 'No se pudo agendar el vivo. Intenta de nuevo.',
+          tone: 'error',
+      });
       return false;
     }
   };
@@ -219,7 +281,11 @@ const App: React.FC = () => {
       return true;
     } catch (error) {
       console.error('Error actualizando vivo:', error);
-      alert('No se pudo actualizar el vivo. Intenta de nuevo.');
+      setNotice({
+          title: 'Error al actualizar',
+          message: 'No se pudo actualizar el vivo. Intenta de nuevo.',
+          tone: 'error',
+      });
       return false;
     }
   };
@@ -230,7 +296,11 @@ const App: React.FC = () => {
       await refreshData();
     } catch (error) {
       console.error('Error cancelando vivo:', error);
-      alert('No se pudo cancelar el vivo.');
+      setNotice({
+          title: 'No se pudo cancelar',
+          message: 'No se pudo cancelar el vivo.',
+          tone: 'error',
+      });
     }
   };
 
@@ -241,7 +311,11 @@ const App: React.FC = () => {
         return true;
       } catch (error) {
         console.error('Error actualizando tienda:', error);
-        alert('No se pudo guardar la tienda. Intenta de nuevo.');
+        setNotice({
+            title: 'No se pudo guardar',
+            message: 'No se pudo guardar la tienda. Intenta de nuevo.',
+            tone: 'error',
+        });
         return false;
       }
   };
@@ -254,77 +328,101 @@ const App: React.FC = () => {
               extensionCount: stream.extensionCount + 1 
           });
           refreshData();
-          alert("Â¡Vivo extendido! Tienes 30 minutos adicionales.");
+          setNotice({
+              title: 'Vivo extendido',
+              message: 'Tienes 30 minutos adicionales.',
+              tone: 'success',
+          });
       }
   };
 
   const handleBuyQuota = async (amount: number) => {
-      if (!currentShopId) return alert("No hay tienda seleccionada");
+      if (!currentShopId) {
+          setNotice({
+              title: 'Sin tienda',
+              message: 'No hay tienda seleccionada.',
+              tone: 'warning',
+          });
+          return;
+      }
       try {
           await api.buyQuota(currentShopId, amount);
           refreshData();
       } catch (error) {
           console.error('Error comprando cupo:', error);
-          alert('No se pudo comprar el cupo.');
+          setNotice({
+              title: 'Error de compra',
+              message: 'No se pudo comprar el cupo.',
+              tone: 'error',
+          });
       }
   };
 
   const handleReportStream = async (streamId: string) => {
-      if (!user.isLoggedIn) {
-          requireLogin();
-          return;
-      }
+      if (!requireClient()) return;
       const stream = allStreams.find(s => s.id === streamId);
       if (!stream) return;
 
-      const now = new Date();
-      const h0 = new Date(stream.fullDateISO);
-      const diffMinutes = (now.getTime() - h0.getTime()) / 60000;
-
-      if (diffMinutes < 5) {
-          alert("El vivo aÃºn estÃ¡ en tiempo de tolerancia (5 min). Espera un momento.");
+      if (stream.status !== StreamStatus.FINISHED) {
+          setNotice({
+              title: 'Reporte no disponible',
+              message: 'Solo se pueden reportar vivos finalizados.',
+              tone: 'warning',
+          });
           return;
       }
-      if (diffMinutes > 30) {
-          alert("La ventana de reporte para este vivo ha finalizado.");
+      if (user.reports.some((r) => r.streamId === streamId)) {
+          setNotice({
+              title: 'Reporte ya enviado',
+              message: 'Ya reportaste este vivo.',
+              tone: 'info',
+          });
           return;
       }
 
-      if (!window.confirm("IMPORTANTE: Por favor verifica en la App de la tienda si realmente NO estÃ¡n transmitiendo. Â¿Confirmas que el vivo no se estÃ¡ realizando?")) {
-          return;
-      }
+      setReportTarget(stream);
+  };
 
-      const result = await api.reportStream(streamId);
+  const handleSubmitReport = async (reason: string) => {
+      if (!reportTarget) return;
+      const result = await api.reportStream(reportTarget.id, reason);
       if (result.success) {
           setUser(prev => ({
               ...prev,
-              reports: [...prev.reports, { streamId, timestamp: Date.now() }]
+              reports: [...prev.reports, { streamId: reportTarget.id, timestamp: Date.now() }]
           }));
-          alert(result.message);
+          setNotice({
+              title: 'Reporte enviado',
+              message: result.message,
+              tone: 'success',
+          });
           refreshData();
       } else {
-          alert(result.message);
+          setNotice({
+              title: 'No se pudo reportar',
+              message: result.message,
+              tone: 'error',
+          });
       }
+      setReportTarget(null);
   };
 
   const handleToggleFavorite = (shopId: string) => {
-      if (!user.isLoggedIn) {
-          requireLogin();
-          return;
-      }
+      if (!requireClient()) return;
       if (user.favorites.includes(shopId)) {
           setUser(prev => ({ ...prev, favorites: prev.favorites.filter(id => id !== shopId) }));
       } else {
           setUser(prev => ({ ...prev, favorites: [...prev.favorites, shopId] }));
-          alert("Â¡Siguiendo tienda!");
+          setNotice({
+              title: 'Favorito guardado',
+              message: '¡Siguiendo tienda!',
+              tone: 'success',
+          });
       }
   };
 
   const handleToggleReminder = (streamId: string) => {
-      if (!user.isLoggedIn) {
-          requireLogin();
-          return;
-      }
+      if (!requireClient()) return;
       if (user.reminders.includes(streamId)) {
           setUser(prev => ({ ...prev, reminders: prev.reminders.filter(id => id !== streamId) }));
       } else {
@@ -337,7 +435,11 @@ const App: React.FC = () => {
           await signInWithPopup(auth, googleProvider);
       } catch (error) {
           console.error('Error iniciando sesion:', error);
-          alert('No se pudo iniciar sesion con Google.');
+          setNotice({
+              title: 'No se pudo iniciar sesión',
+              message: 'Reintentá con tu cuenta de Google.',
+              tone: 'error',
+          });
       }
   };
 
@@ -352,7 +454,11 @@ const App: React.FC = () => {
               setLoginPromptDismissed(false);
           } catch (error) {
               console.error('Error cerrando sesion:', error);
-              alert('No se pudo cerrar sesion.');
+              setNotice({
+                  title: 'Error de sesión',
+                  message: 'No se pudo cerrar la sesión.',
+                  tone: 'error',
+              });
           }
           return;
       }
@@ -361,10 +467,7 @@ const App: React.FC = () => {
   };
 
   const handleLikeStream = (streamId: string) => {
-      if (!user.isLoggedIn) {
-          requireLogin();
-          return;
-      }
+      if (!requireClient()) return;
       const s = allStreams.find(s => s.id === streamId);
       if(s) {
           // Ideally call API
@@ -374,26 +477,32 @@ const App: React.FC = () => {
   };
 
   const handleRateStream = (streamId: string, rating: number) => {
-      if (!user.isLoggedIn) {
-          requireLogin();
-          return;
-      }
-      alert(`Â¡Gracias por calificar con ${rating} estrellas!`);
+      if (!requireClient()) return;
+      void (async () => {
+          try {
+              await api.rateStream(streamId, rating);
+              setNotice({
+                  title: 'Gracias por calificar',
+                  message: `Calificaste con ${rating} estrellas.`,
+                  tone: 'success',
+              });
+              refreshData();
+          } catch (error: any) {
+              setNotice({
+                  title: 'No se pudo calificar',
+                  message: error?.message || 'No se pudo calificar el vivo.',
+                  tone: 'error',
+              });
+          }
+      })();
   };
 
   const handleDownloadCard = (stream: Stream) => {
-      if (!user.isLoggedIn) {
-          requireLogin();
-          return;
-      }
+      if (!requireClient()) return;
       setSelectedShopForModal(stream.shop);
   };
 
   const handleOpenShop = (shop: Shop) => {
-      if (!user.isLoggedIn) {
-          requireLogin();
-          return;
-      }
       setSelectedShopForModal(shop);
   };
 
@@ -448,6 +557,29 @@ const App: React.FC = () => {
   if (isLoading) return <div className="min-h-screen flex items-center justify-center font-bold text-dm-dark">Cargando Sistema Avellaneda...</div>;
 
   const isAdminUser = authProfile?.userType === 'ADMIN';
+  const isShopUser = authProfile?.userType === 'SHOP';
+  const isAdminViewBlocked = viewMode === 'ADMIN' && !isAdminUser;
+  const isMerchantViewBlocked = viewMode === 'MERCHANT' && !isShopUser;
+
+  if (isAdminViewBlocked || isMerchantViewBlocked) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white px-6 text-center">
+        <h2 className="font-serif text-3xl text-dm-dark">Acceso restringido</h2>
+        <p className="mt-2 text-sm text-gray-500">
+          Tu cuenta no tiene permisos para ver este panel.
+        </p>
+        <button
+          onClick={() => {
+            setViewMode('CLIENT');
+            setActiveBottomNav('home');
+          }}
+          className="mt-5 rounded-full bg-dm-crimson px-5 py-2 text-xs font-bold text-white shadow-sm"
+        >
+          Volver a inicio
+        </button>
+      </div>
+    );
+  }
 
   const handleClientNav = (id: string) => {
       setViewMode('CLIENT');
@@ -455,11 +587,7 @@ const App: React.FC = () => {
       if (id === 'home') setActiveFilter('Todos');
       if (id === 'live') setActiveFilter('En Vivo');
       if (id === 'account') {
-          if (user.isLoggedIn) {
-              void handleToggleClientLogin();
-          } else {
-              setLoginPromptDismissed(false);
-          }
+          setIsAccountDrawerOpen(true);
       }
   };
 
@@ -470,11 +598,35 @@ const App: React.FC = () => {
         id === 'shops' ? 'SHOPS' :
         id === 'streams' ? 'STREAMS' :
         id === 'purchases' ? 'ADMIN' :
-        id === 'reports' ? 'STREAMS' :
+        id === 'reports' ? 'REPORTS' :
         'DASHBOARD';
       setAdminTab(nextTab);
   };
 
+  const handleMerchantNav = (id: string) => {
+      setViewMode('MERCHANT');
+      setActiveBottomNav(id);
+      const nextTab =
+        id === 'vivos' ? 'VIVOS' :
+        id === 'reels' ? 'REELS' :
+        id === 'redes' ? 'REDES' :
+        id === 'perfil' ? 'PERFIL' :
+        'RESUMEN';
+      setMerchantTab(nextTab);
+  };
+
+  const syncMerchantTab = (tab: MerchantTab) => {
+      setMerchantTab(tab);
+      const navId =
+        tab === 'VIVOS' ? 'vivos' :
+        tab === 'REELS' ? 'reels' :
+        tab === 'REDES' ? 'redes' :
+        tab === 'PERFIL' ? 'perfil' :
+        'resumen';
+      setActiveBottomNav(navId);
+  };
+
+  const isMerchantUser = authProfile?.userType === 'SHOP';
   const bottomNavItems = isAdminUser
       ? [
           { id: 'shops', label: 'Tiendas', icon: Store, isCenter: false, onSelect: () => handleAdminNav('shops') },
@@ -483,6 +635,14 @@ const App: React.FC = () => {
           { id: 'purchases', label: 'Compras', icon: Receipt, isCenter: false, onSelect: () => handleAdminNav('purchases') },
           { id: 'reports', label: 'Reportes', icon: AlertTriangle, isCenter: false, onSelect: () => handleAdminNav('reports') }
         ]
+      : isMerchantUser
+      ? [
+          { id: 'resumen', label: 'Resumen', icon: Home, isCenter: false, onSelect: () => handleMerchantNav('resumen') },
+          { id: 'redes', label: 'Redes', icon: Globe, isCenter: false, onSelect: () => handleMerchantNav('redes') },
+          { id: 'vivos', label: 'Vivos', icon: Radio, isCenter: true, onSelect: () => handleMerchantNav('vivos') },
+          { id: 'reels', label: 'Reels', icon: Film, isCenter: false, onSelect: () => handleMerchantNav('reels') },
+          { id: 'perfil', label: 'Perfil', icon: Store, isCenter: false, onSelect: () => handleMerchantNav('perfil') }
+        ]
       : [
           { id: 'home', label: 'Inicio', icon: Home, isCenter: false, onSelect: () => handleClientNav('home') },
           { id: 'shops', label: 'Tiendas', icon: Store, isCenter: false, onSelect: () => handleClientNav('shops') },
@@ -490,6 +650,9 @@ const App: React.FC = () => {
           { id: 'favorites', label: 'Favoritos', icon: Heart, isCenter: false, onSelect: () => handleClientNav('favorites') },
           { id: 'account', label: user.isLoggedIn ? 'Cuenta' : 'Ingresar', icon: User, isCenter: false, onSelect: () => handleClientNav('account') }
         ];
+
+  const canClientInteract = user.isLoggedIn && authProfile?.userType === 'CLIENT';
+  const favoriteShops = allShops.filter((shop) => user.favorites.includes(shop.id));
 
   return (
     <div className="min-h-screen bg-white">
@@ -621,33 +784,128 @@ const App: React.FC = () => {
             />
             
             <main className="max-w-7xl mx-auto px-4 py-12">
-               <div className="flex items-center justify-between mb-8">
-                  <h2 className="font-serif text-3xl text-dm-dark">Agenda de Vivos</h2>
-                  <div className="text-sm font-sans text-gray-500">
-                      Mostrando: <span className="font-bold text-dm-crimson">{activeFilter}</span>
-                  </div>
-               </div>
-               
-               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                 {getFilteredStreams().map(stream => (
-                   <StreamCard 
-                        key={stream.id} 
-                        stream={stream} 
-                        user={user}
-                        onOpenShop={() => handleOpenShop(stream.shop)}
-                        onReport={handleReportStream}
-                        onToggleReminder={handleToggleReminder}
-                        onLike={handleLikeStream}
-                        onRate={handleRateStream}
-                        onDownloadCard={handleDownloadCard}
-                    />
-                 ))}
-                 {getFilteredStreams().length === 0 && (
-                     <div className="col-span-full text-center py-12 text-gray-400 font-sans">
-                         No hay vivos que coincidan con este filtro.
-                     </div>
-                 )}
-               </div>
+               {(activeBottomNav === 'home' || activeBottomNav === 'live') && (
+                 <>
+                   <div className="flex items-center justify-between mb-8">
+                      <h2 className="font-serif text-3xl text-dm-dark">Agenda de Vivos</h2>
+                      <div className="text-sm font-sans text-gray-500">
+                          Mostrando: <span className="font-bold text-dm-crimson">{activeFilter}</span>
+                      </div>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                     {getFilteredStreams().map(stream => (
+                       <StreamCard 
+                            key={stream.id} 
+                            stream={stream} 
+                            user={user}
+                            canClientInteract={canClientInteract}
+                            onNotify={notify}
+                            onOpenShop={() => handleOpenShop(stream.shop)}
+                            onReport={handleReportStream}
+                            onToggleReminder={handleToggleReminder}
+                            onLike={handleLikeStream}
+                            onRate={handleRateStream}
+                            onDownloadCard={handleDownloadCard}
+                        />
+                     ))}
+                     {getFilteredStreams().length === 0 && (
+                         <div className="col-span-full text-center py-12 text-gray-400 font-sans">
+                             No hay vivos que coincidan con este filtro.
+                         </div>
+                     )}
+                   </div>
+                 </>
+               )}
+
+               {activeBottomNav === 'shops' && (
+                 <>
+                   <div className="flex items-center justify-between mb-8">
+                      <h2 className="font-serif text-3xl text-dm-dark">Tiendas</h2>
+                      <div className="text-sm font-sans text-gray-500">
+                          {allShops.length} registradas
+                      </div>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                     {allShops.map((shop) => (
+                       <button
+                         key={shop.id}
+                         onClick={() => handleOpenShop(shop)}
+                         className="rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
+                       >
+                         <div className="flex items-center gap-3">
+                           <img src={shop.logoUrl} alt={shop.name} className="h-12 w-12 rounded-full object-cover border border-gray-200" />
+                           <div>
+                             <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
+                             <p className="text-[10px] text-gray-400 uppercase">{shop.plan}</p>
+                           </div>
+                         </div>
+                         <p className="mt-3 text-xs text-gray-500 line-clamp-2">{shop.address || 'Sin dirección cargada'}</p>
+                       </button>
+                     ))}
+                     {allShops.length === 0 && (
+                       <div className="col-span-full text-center py-12 text-gray-400 font-sans">
+                         No hay tiendas disponibles.
+                       </div>
+                     )}
+                   </div>
+                 </>
+               )}
+
+               {activeBottomNav === 'favorites' && (
+                 <>
+                   <div className="flex items-center justify-between mb-8">
+                      <h2 className="font-serif text-3xl text-dm-dark">Favoritos</h2>
+                      <div className="text-sm font-sans text-gray-500">
+                          {favoriteShops.length} tiendas guardadas
+                      </div>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                     {favoriteShops.map((shop) => (
+                       <button
+                         key={shop.id}
+                         onClick={() => handleOpenShop(shop)}
+                         className="rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
+                       >
+                         <div className="flex items-center gap-3">
+                           <img src={shop.logoUrl} alt={shop.name} className="h-12 w-12 rounded-full object-cover border border-gray-200" />
+                           <div>
+                             <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
+                             <p className="text-[10px] text-gray-400 uppercase">{shop.plan}</p>
+                           </div>
+                         </div>
+                         <p className="mt-3 text-xs text-gray-500 line-clamp-2">{shop.address || 'Sin dirección cargada'}</p>
+                       </button>
+                     ))}
+                     {favoriteShops.length === 0 && (
+                       <div className="col-span-full text-center py-12 text-gray-400 font-sans">
+                         {canClientInteract ? 'Todavía no seguiste ninguna tienda.' : 'Inicia sesión para guardar favoritos.'}
+                       </div>
+                     )}
+                   </div>
+                 </>
+               )}
+
+              {activeBottomNav === 'account' && (
+                 <div className="max-w-xl mx-auto rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-sm hidden md:block">
+                   <h2 className="font-serif text-2xl text-dm-dark">Tu cuenta</h2>
+                   {user.isLoggedIn ? (
+                     <>
+                       <p className="mt-2 text-sm text-gray-500">Sesión activa como</p>
+                       <p className="mt-1 text-sm font-bold text-dm-dark">{user.name || user.email}</p>
+                       <Button className="mt-5" onClick={handleToggleClientLogin}>
+                         Cerrar sesión
+                       </Button>
+                     </>
+                   ) : (
+                     <>
+                       <p className="mt-2 text-sm text-gray-500">Inicia sesión para interactuar con tiendas.</p>
+                       <Button className="mt-5" onClick={handleLoginRequest}>
+                         Ingresar con Google
+                       </Button>
+                     </>
+                   )}
+                 </div>
+              )}
             </main>
 
             {selectedShopForModal && (
@@ -655,14 +913,16 @@ const App: React.FC = () => {
                     shop={selectedShopForModal} 
                     shopStreams={allStreams.filter(s => s.shop.id === selectedShopForModal.id)}
                     user={user}
+                    canClientInteract={canClientInteract}
                     onClose={() => setSelectedShopForModal(null)} 
                     onToggleFavorite={handleToggleFavorite}
                     onRequireLogin={requireLogin}
+                    onNotify={notify}
                  />
             )}
 
             {selectedReel && (
-                <StoryModal reel={selectedReel} onClose={() => setSelectedReel(null)} />
+                <StoryModal reel={selectedReel} onClose={() => setSelectedReel(null)} onNotify={notify} />
             )}
           </>
         ) : viewMode === 'MERCHANT' ? (
@@ -676,6 +936,8 @@ const App: React.FC = () => {
             onExtendStream={handleExtendStream}
             onBuyQuota={handleBuyQuota}
             onReelChange={refreshData}
+            activeTab={merchantTab}
+            onTabChange={syncMerchantTab}
           />
         ) : (
           <AdminDashboard 
@@ -689,17 +951,92 @@ const App: React.FC = () => {
           />
         )}
       </div>
+
+      <NoticeModal
+        isOpen={Boolean(notice)}
+        title={notice?.title || ''}
+        message={notice?.message || ''}
+        tone={notice?.tone || 'info'}
+        onClose={() => setNotice(null)}
+      />
+
+      {reportTarget && (
+        <ReportModal
+          isOpen={Boolean(reportTarget)}
+          streamTitle={reportTarget.title}
+          onClose={() => setReportTarget(null)}
+          onSubmit={handleSubmitReport}
+        />
+      )}
+
+      {viewMode === 'CLIENT' && (
+        <div className={`fixed inset-0 z-[130] ${isAccountDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+          <div
+            className={`absolute inset-0 bg-black/40 transition-opacity ${isAccountDrawerOpen ? 'opacity-100' : 'opacity-0'}`}
+            onClick={() => setIsAccountDrawerOpen(false)}
+          />
+          <aside
+            className={`absolute right-0 top-0 h-full w-[85vw] max-w-sm bg-white shadow-2xl border-l border-gray-100 transition-transform duration-300 md:w-[30vw] ${
+              isAccountDrawerOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}
+          >
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-gray-400">Cuenta</p>
+                <h3 className="font-serif text-xl text-dm-dark">Perfil y estado</h3>
+              </div>
+              <button
+                className="text-gray-400 hover:text-dm-dark"
+                onClick={() => setIsAccountDrawerOpen(false)}
+                aria-label="Cerrar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 space-y-5">
+              {user.isLoggedIn ? (
+                <>
+                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                    <p className="text-xs text-gray-400 uppercase tracking-widest">Identidad</p>
+                    <p className="mt-1 text-sm font-bold text-dm-dark">{user.name || user.email}</p>
+                    <p className="text-[11px] text-gray-500">{user.email || 'Correo no disponible'}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="rounded-lg border border-gray-100 p-3 text-center">
+                      <p className="text-gray-400 uppercase tracking-widest">Favoritos</p>
+                      <p className="mt-1 text-lg font-bold text-dm-dark">{user.favorites.length}</p>
+                    </div>
+                    <div className="rounded-lg border border-gray-100 p-3 text-center">
+                      <p className="text-gray-400 uppercase tracking-widest">Recordatorios</p>
+                      <p className="mt-1 text-lg font-bold text-dm-dark">{user.reminders.length}</p>
+                    </div>
+                    <div className="rounded-lg border border-gray-100 p-3 text-center">
+                      <p className="text-gray-400 uppercase tracking-widest">Reportes</p>
+                      <p className="mt-1 text-lg font-bold text-dm-dark">{user.reports.length}</p>
+                    </div>
+                    <div className="rounded-lg border border-gray-100 p-3 text-center">
+                      <p className="text-gray-400 uppercase tracking-widest">Rol</p>
+                      <p className="mt-1 text-sm font-bold text-dm-dark">{authProfile?.userType || 'CLIENT'}</p>
+                    </div>
+                  </div>
+                  <Button className="w-full" onClick={handleToggleClientLogin}>
+                    Cerrar sesión
+                  </Button>
+                </>
+              ) : (
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center">
+                  <p className="text-sm text-gray-500">Inicia sesión para interactuar con tiendas.</p>
+                  <Button className="mt-4 w-full" onClick={handleLoginRequest}>
+                    Ingresar con Google
+                  </Button>
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 };
 
 export default App;
-
-
-
-
-
-
-
-
-

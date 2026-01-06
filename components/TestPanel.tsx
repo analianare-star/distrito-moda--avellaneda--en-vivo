@@ -3,6 +3,7 @@ import { Button } from './Button';
 import { api } from '../services/api';
 import { Shop, Stream, UserContext } from '../types';
 import { User, Clock, AlertTriangle, RefreshCw, ShoppingCart, Lock } from 'lucide-react';
+import { NoticeModal } from './NoticeModal';
 
 interface TestPanelProps {
     streams: Stream[];
@@ -16,6 +17,12 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
     const [selectedStreamId, setSelectedStreamId] = useState<string>('');
     const [timeOffset, setTimeOffset] = useState<string>('5'); // Default 5 mins (start of report window)
     const [selectedShopId, setSelectedShopId] = useState<string>('');
+    const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
+    const [confirmReset, setConfirmReset] = useState(false);
+
+    const notify = (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => {
+        setNotice({ title, message, tone });
+    };
 
     const handleLogin = async () => {
         if (!selectedUserId) {
@@ -26,35 +33,37 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
                 reminders: [],
                 reports: []
             });
-            alert('Modo: Cliente Anónimo');
+            notify('Identidad aplicada', 'Modo: Cliente anónimo', 'info');
             return;
         }
 
         const user = await api.loginUser(`usuario_${selectedUserId}@test.com`, selectedUserId);
         onUserLogin(user);
-        alert(`Logueado como: ${user.name} (ID: ${user.id})`);
+        notify('Identidad aplicada', `Logueado como: ${user.name} (ID: ${user.id})`, 'success');
     };
 
     const handleTimeTravel = async () => {
-        if (!selectedStreamId) return alert('Selecciona un vivo');
+        if (!selectedStreamId) {
+            notify('Falta seleccionar', 'Selecciona un vivo para aplicar la simulación.', 'warning');
+            return;
+        }
         await api.updateStreamTime(selectedStreamId, parseInt(timeOffset));
         onRefreshData();
-        alert(`Vivo actualizado a H0 + ${timeOffset} minutos (Relativo a AHORA).`);
+        notify('Tiempo actualizado', `Vivo actualizado a H0 + ${timeOffset} minutos.`, 'success');
     };
 
     const handleReset = async () => {
-        if (confirm('¿Resetear toda la base de datos de prueba? Se perderán reportes y penalizaciones.')) {
-            await api.resetSystem();
-            onRefreshData();
-            alert('Sistema reseteado.');
-        }
+        setConfirmReset(true);
     };
 
     const handleBuyQuota = async () => {
-        if (!selectedShopId) return alert('Selecciona una tienda');
+        if (!selectedShopId) {
+            notify('Falta seleccionar', 'Selecciona una tienda para simular la compra.', 'warning');
+            return;
+        }
         await api.buyQuota(selectedShopId, 1);
         onRefreshData();
-        alert('Cupo comprado simulado.');
+        notify('Compra simulada', 'Cupo comprado simulado.', 'success');
     };
 
     return (
@@ -170,6 +179,41 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
                 </div>
 
             </div>
+
+            {confirmReset && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                        <h3 className="font-serif text-xl text-dm-dark">Resetear sistema</h3>
+                        <p className="mt-2 text-xs text-gray-500">
+                            Se perderán reportes, penalizaciones y compras simuladas. ¿Continuar?
+                        </p>
+                        <div className="mt-6 flex gap-3">
+                            <Button variant="outline" className="flex-1" onClick={() => setConfirmReset(false)}>
+                                Cancelar
+                            </Button>
+                            <Button
+                                className="flex-1 bg-red-600 hover:bg-red-700 border-none"
+                                onClick={async () => {
+                                    setConfirmReset(false);
+                                    await api.resetSystem();
+                                    onRefreshData();
+                                    notify('Sistema reseteado', 'La base de prueba volvió a su estado inicial.', 'success');
+                                }}
+                            >
+                                Resetear
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <NoticeModal
+                isOpen={Boolean(notice)}
+                title={notice?.title || ''}
+                message={notice?.message || ''}
+                tone={notice?.tone || 'info'}
+                onClose={() => setNotice(null)}
+            />
         </div>
     );
 };

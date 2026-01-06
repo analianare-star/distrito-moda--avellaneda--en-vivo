@@ -7,9 +7,10 @@ import { Button } from './Button';
 interface StoryModalProps {
     reel: Reel;
     onClose: () => void;
+    onNotify?: (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => void;
 }
 
-export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose }) => {
+export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify }) => {
     
     // Calculate time left
     const now = new Date();
@@ -29,10 +30,25 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose }) => {
                     title: `Historia de ${reel.shopName}`,
                     url: reel.url
                 });
-            } catch(e) {}
-        } else {
-            alert('Link copiado al portapapeles');
+                onNotify?.('Compartido', 'El link se compartió correctamente.', 'success');
+                return;
+            } catch (e) {
+                onNotify?.('Compartir cancelado', 'No se completó el envío.', 'warning');
+                return;
+            }
         }
+
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(reel.url);
+                onNotify?.('Link copiado', 'Pegalo donde quieras compartirlo.', 'success');
+                return;
+            }
+        } catch (e) {
+            // Fallback below
+        }
+
+        onNotify?.('No se pudo copiar', 'Tu navegador no permite copiar automáticamente.', 'error');
     };
 
     return (

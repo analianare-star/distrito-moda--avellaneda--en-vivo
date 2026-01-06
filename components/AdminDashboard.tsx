@@ -5,6 +5,9 @@ import { LayoutDashboard, Radio, Store, AlertTriangle, CheckCircle, XCircle, Edi
 import { StreamStatus, DataIntegrityStatus, Stream, Shop, Reel } from '../types';
 import { api } from '../services/api';
 import { AddressAutocomplete } from './AddressAutocomplete';
+import { NoticeModal } from './NoticeModal';
+
+type AdminTab = 'DASHBOARD' | 'AGENDA' | 'STREAMS' | 'SHOPS' | 'REELS' | 'REPORTS' | 'ADMIN';
 
 interface AdminDashboardProps {
     streams: Stream[];
@@ -12,13 +15,15 @@ interface AdminDashboardProps {
     shops: Shop[];
     setShops: React.Dispatch<React.SetStateAction<Shop[]>>;
     onRefreshData: () => void;
+    activeTab: AdminTab;
+    onTabChange: (tab: AdminTab) => void;
 }
 
 const PAYMENT_OPTIONS = ['Efectivo', 'Transferencia', 'Depósito', 'USDT', 'Cheque', 'Mercado Pago'];
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStreams, shops, setShops, onRefreshData }) => {
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'AGENDA' | 'STREAMS' | 'SHOPS' | 'REELS' | 'ADMIN'>('DASHBOARD');
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStreams, shops, setShops, onRefreshData, activeTab, onTabChange }) => {
   const [reels, setReels] = useState<Reel[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [agendaQuery, setAgendaQuery] = useState('');
   const [agendaStatus, setAgendaStatus] = useState<'ALL' | StreamStatus>('ALL');
@@ -27,6 +32,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   const [quotaType, setQuotaType] = useState<'STREAM' | 'REEL'>('STREAM');
   const [quotaAmount, setQuotaAmount] = useState(1);
   const [officialMode, setOfficialMode] = useState(false);
+  const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    onConfirm: () => void;
+  } | null>(null);
+  const [inputDialog, setInputDialog] = useState<{
+    title: string;
+    message: string;
+    placeholders: string[];
+    defaults?: string[];
+    confirmLabel?: string;
+    cancelLabel?: string;
+    onConfirm: (values: string[]) => void;
+  } | null>(null);
+  const [inputValues, setInputValues] = useState<string[]>([]);
 
   // Expanded Form State for Create Shop
   const [formData, setFormData] = useState({
@@ -51,6 +74,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   useEffect(() => {
       if (activeTab === 'REELS') {
           api.fetchAllReelsAdmin().then(setReels);
+      }
+      if (activeTab === 'REPORTS') {
+          api.fetchReportsAdmin().then(setReports);
       }
   }, [activeTab]);
   
@@ -81,20 +107,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   const editStreamUrl = async (streamId: string) => {
       const stream = streams.find(s => s.id === streamId);
       if (!stream) return;
-      const url = window.prompt('Nueva URL del vivo:', stream.url || '');
-      if (!url) return;
-      await api.updateStream({ ...stream, url, isAdminOverride: true });
-      onRefreshData();
+      setInputDialog({
+          title: 'Editar URL del vivo',
+          message: 'Ingresa la nueva URL para este vivo.',
+          placeholders: ['https://...'],
+          defaults: [stream.url || ''],
+          confirmLabel: 'Guardar',
+          onConfirm: async ([url]) => {
+              if (!url) return;
+              await api.updateStream({ ...stream, url, isAdminOverride: true });
+              onRefreshData();
+          },
+      });
+      setInputValues([stream.url || '']);
   };
 
   const adjustStreamTime = async (streamId: string) => {
       const stream = streams.find(s => s.id === streamId);
       if (!stream) return;
-      const value = window.prompt('Nueva fecha y hora (YYYY-MM-DDTHH:mm):', stream.fullDateISO.slice(0, 16));
-      if (!value) return;
-      const iso = new Date(value).toISOString();
-      await api.updateStream({ ...stream, fullDateISO: iso, forceScheduleUpdate: true, isAdminOverride: true });
-      onRefreshData();
+      setInputDialog({
+          title: 'Ajustar horario del vivo',
+          message: 'Formato: YYYY-MM-DDTHH:mm',
+          placeholders: ['2026-01-05T15:30'],
+          defaults: [stream.fullDateISO.slice(0, 16)],
+          confirmLabel: 'Actualizar',
+          onConfirm: async ([value]) => {
+              if (!value) return;
+              const iso = new Date(value).toISOString();
+              await api.updateStream({ ...stream, fullDateISO: iso, forceScheduleUpdate: true, isAdminOverride: true });
+              onRefreshData();
+          },
+      });
+      setInputValues([stream.fullDateISO.slice(0, 16)]);
   };
 
   const toggleVisibility = async (streamId: string) => {
@@ -106,15 +150,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   };
 
   const cancelStream = async (streamId: string) => {
-      const reason = window.prompt('Motivo de cancelacion?');
-      await api.cancelStream(streamId, reason || undefined);
-      onRefreshData();
+      setInputDialog({
+          title: 'Cancelar vivo',
+          message: 'Ingresa el motivo de cancelación.',
+          placeholders: ['Motivo...'],
+          confirmLabel: 'Cancelar vivo',
+          onConfirm: async ([reason]) => {
+              await api.cancelStream(streamId, reason || undefined);
+              onRefreshData();
+          },
+      });
+      setInputValues(['']);
   };
 
   const banStream = async (streamId: string) => {
-      const reason = window.prompt('Motivo de bloqueo?');
-      await api.banStream(streamId, reason || undefined);
-      onRefreshData();
+      setInputDialog({
+          title: 'Bloquear vivo',
+          message: 'Ingresa el motivo del bloqueo.',
+          placeholders: ['Motivo...'],
+          confirmLabel: 'Bloquear vivo',
+          onConfirm: async ([reason]) => {
+              await api.banStream(streamId, reason || undefined);
+              onRefreshData();
+          },
+      });
+      setInputValues(['']);
   };
 
   const togglePenalty = async (shopId: string) => {
@@ -128,17 +188,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   };
 
   const rejectShop = async (shopId: string) => {
-      const reason = window.prompt('Motivo de rechazo?');
-      await api.rejectShop(shopId, reason || undefined);
-      onRefreshData();
+      setInputDialog({
+          title: 'Rechazar tienda',
+          message: 'Ingresa el motivo del rechazo.',
+          placeholders: ['Motivo...'],
+          confirmLabel: 'Rechazar',
+          onConfirm: async ([reason]) => {
+              await api.rejectShop(shopId, reason || undefined);
+              onRefreshData();
+          },
+      });
+      setInputValues(['']);
   };
 
   const suspendAgenda = async (shopId: string) => {
-      const reason = window.prompt('Motivo de suspension de agenda?');
-      const daysRaw = window.prompt('Dias de suspension (default 7):', '7');
-      const days = Number(daysRaw || 7);
-      await api.suspendAgenda(shopId, reason || undefined, isNaN(days) ? 7 : days);
-      onRefreshData();
+      setInputDialog({
+          title: 'Suspender agenda',
+          message: 'Motivo y días de suspensión.',
+          placeholders: ['Motivo...', '7'],
+          defaults: ['', '7'],
+          confirmLabel: 'Suspender',
+          onConfirm: async ([reason, daysRaw]) => {
+              const days = Number(daysRaw || 7);
+              await api.suspendAgenda(shopId, reason || undefined, isNaN(days) ? 7 : days);
+              onRefreshData();
+          },
+      });
+      setInputValues(['', '7']);
   };
 
   const liftSuspension = async (shopId: string) => {
@@ -147,9 +223,48 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   };
 
   const resetPassword = async (shopId: string) => {
-      if (!window.confirm('¿Resetear clave de la tienda?')) return;
-      const result = await api.resetShopPassword(shopId);
-      alert(`Nueva clave: ${result.password}`);
+      setConfirmDialog({
+          title: 'Resetear clave',
+          message: '¿Confirmas el reseteo de clave de la tienda?',
+          confirmLabel: 'Resetear',
+          onConfirm: async () => {
+              const result = await api.resetShopPassword(shopId);
+              setNotice({
+                  title: 'Clave reseteada',
+                  message: `Nueva clave: ${result.password}`,
+                  tone: 'success',
+              });
+          },
+      });
+  };
+
+  const assignOwner = async (shopId: string) => {
+      setInputDialog({
+          title: 'Asignar dueño',
+          message: 'Ingresa el email del dueño (debe haber iniciado sesión).',
+          placeholders: ['email@dominio.com'],
+          defaults: [''],
+          confirmLabel: 'Asignar',
+          onConfirm: async ([email]) => {
+              const trimmedEmail = (email || '').trim();
+              if (!trimmedEmail) {
+                  setNotice({
+                      title: 'Email requerido',
+                      message: 'Debes indicar un email válido.',
+                      tone: 'warning',
+                  });
+                  return;
+              }
+              await api.assignShopOwner(shopId, { email: trimmedEmail });
+              setNotice({
+                  title: 'Dueño asignado',
+                  message: 'La tienda quedó vinculada al nuevo dueño.',
+                  tone: 'success',
+              });
+              onRefreshData();
+          },
+      });
+      setInputValues(['']);
   };
 
   const toggleReelHide = async (reel: Reel) => {
@@ -184,7 +299,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   const handleCreateShop = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!formData.name || !formData.razonSocial || !formData.email || !formData.password) {
-          alert("Por favor completa los campos obligatorios: Nombre, Razón Social, Email y Contraseña.");
+          setNotice({
+              title: 'Campos obligatorios',
+              message: 'Completa Nombre, Razón Social, Email y Contraseña.',
+              tone: 'warning',
+          });
           return;
       }
 
@@ -213,7 +332,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
 
       const result = await api.createShop(payload);
       if (result.success) {
-          alert(result.message);
+          setNotice({
+              title: 'Tienda creada',
+              message: result.message,
+              tone: 'success',
+          });
           setIsCreateModalOpen(false);
           // Reset
           setFormData({
@@ -228,11 +351,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   const handleAssignQuota = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!quotaShopId) {
-          alert('Selecciona una tienda.');
+          setNotice({
+              title: 'Selecciona una tienda',
+              message: 'Debes elegir una tienda antes de asignar cupos.',
+              tone: 'warning',
+          });
           return;
       }
       if (quotaAmount <= 0) {
-          alert('La cantidad debe ser mayor a 0.');
+          setNotice({
+              title: 'Cantidad inválida',
+              message: 'La cantidad debe ser mayor a 0.',
+              tone: 'warning',
+          });
           return;
       }
       if (quotaType === 'STREAM') {
@@ -240,7 +371,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
       } else {
           await api.buyReelQuota(quotaShopId, quotaAmount);
       }
-      alert('Cupos asignados.');
+      setNotice({
+          title: 'Cupos asignados',
+          message: 'La asignación se completó correctamente.',
+          tone: 'success',
+      });
       onRefreshData();
   };
 
@@ -262,14 +397,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
       <div className="flex flex-1 max-w-7xl mx-auto w-full overflow-hidden">
         <aside className="w-64 bg-white border-r border-gray-200 hidden md:block shrink-0 h-full">
             <nav className="p-4 space-y-1">
-                {['DASHBOARD', 'AGENDA', 'STREAMS', 'SHOPS', 'REELS', 'ADMIN'].map(tab => (
+                {['DASHBOARD', 'AGENDA', 'STREAMS', 'SHOPS', 'REELS', 'REPORTS', 'ADMIN'].map(tab => (
                     <button 
                         key={tab}
-                        onClick={() => setActiveTab(tab as any)}
+                        onClick={() => onTabChange(tab as AdminTab)}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === tab ? 'bg-gray-100 text-dm-crimson' : 'text-dm-dark hover:bg-gray-50'}`}
                     >
-                        {tab === 'DASHBOARD' ? <LayoutDashboard size={18} /> : tab === 'AGENDA' ? <Calendar size={18} /> : tab === 'STREAMS' ? <Radio size={18}/> : tab === 'SHOPS' ? <Store size={18}/> : tab === 'REELS' ? <Film size={18}/> : <ShoppingBag size={18}/>}
-                        {tab === 'DASHBOARD' ? 'Resumen' : tab === 'AGENDA' ? 'Agenda' : tab === 'STREAMS' ? 'Vivos' : tab === 'SHOPS' ? 'Tiendas' : tab === 'REELS' ? 'Reels' : 'Administrativo'}
+                        {tab === 'DASHBOARD' ? <LayoutDashboard size={18} /> : tab === 'AGENDA' ? <Calendar size={18} /> : tab === 'STREAMS' ? <Radio size={18}/> : tab === 'SHOPS' ? <Store size={18}/> : tab === 'REELS' ? <Film size={18}/> : tab === 'REPORTS' ? <AlertTriangle size={18} /> : <ShoppingBag size={18}/>}
+                        {tab === 'DASHBOARD' ? 'Resumen' : tab === 'AGENDA' ? 'Agenda' : tab === 'STREAMS' ? 'Vivos' : tab === 'SHOPS' ? 'Tiendas' : tab === 'REELS' ? 'Reels' : tab === 'REPORTS' ? 'Reportes' : 'Administrativo'}
                     </button>
                 ))}
             </nav>
@@ -278,13 +413,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
         <main className="flex-1 p-8 overflow-y-auto">
             <div className="md:hidden mb-4">
                 <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                    {['DASHBOARD', 'AGENDA', 'STREAMS', 'SHOPS', 'REELS', 'ADMIN'].map(tab => (
+                    {['DASHBOARD', 'AGENDA', 'STREAMS', 'SHOPS', 'REELS', 'REPORTS', 'ADMIN'].map(tab => (
                         <button 
                             key={tab}
-                            onClick={() => setActiveTab(tab as any)}
+                            onClick={() => onTabChange(tab as AdminTab)}
                             className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === tab ? 'bg-dm-crimson text-white' : 'bg-gray-100 text-gray-500'}`}
                         >
-                            {tab === 'DASHBOARD' ? 'Resumen' : tab === 'AGENDA' ? 'Agenda' : tab === 'STREAMS' ? 'Vivos' : tab === 'SHOPS' ? 'Tiendas' : tab === 'REELS' ? 'Reels' : 'Administrativo'}
+                            {tab === 'DASHBOARD' ? 'Resumen' : tab === 'AGENDA' ? 'Agenda' : tab === 'STREAMS' ? 'Vivos' : tab === 'SHOPS' ? 'Tiendas' : tab === 'REELS' ? 'Reels' : tab === 'REPORTS' ? 'Reportes' : 'Administrativo'}
                         </button>
                     ))}
                 </div>
@@ -486,6 +621,61 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                  </div>
             )}
 
+            {activeTab === 'REPORTS' && (
+                <div className="space-y-6 animate-in fade-in">
+                    <h2 className="font-serif text-2xl text-dm-dark">Reportes</h2>
+                    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 border-b">
+                                <tr>
+                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Vivo</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                                {reports.length > 0 ? (
+                                    reports.map((report) => (
+                                        <tr key={report.id}>
+                                            <td className="px-6 py-4">
+                                                <p className="text-xs font-bold">{report?.stream?.title || report.streamId}</p>
+                                                <p className="text-[10px] text-gray-400">{report?.stream?.shop?.name || 'Sin tienda'}</p>
+                                            </td>
+                                            <td className="px-6 py-4 text-xs font-bold">{report.status || 'OPEN'}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={async () => {
+                                                        try {
+                                                            await api.resolveReportAdmin(report.id);
+                                                            const next = reports.filter((item) => item.id !== report.id);
+                                                            setReports(next);
+                                                        } catch (error: any) {
+                                                            setNotice({
+                                                                title: 'Error al resolver',
+                                                                message: error?.message || 'No se pudo resolver el reporte.',
+                                                                tone: 'error',
+                                                            });
+                                                        }
+                                                    }}
+                                                >
+                                                    Resolver
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={3} className="px-6 py-6 text-center text-xs text-gray-400">Sin reportes abiertos.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
             {activeTab === 'SHOPS' && (
                  <div className="space-y-6 animate-in fade-in">
                     <div className="flex justify-between items-center">
@@ -568,6 +758,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                       <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
                                                     </>
                                                 )}
+                                                <button onClick={() => assignOwner(shop.id)} className="text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200">
+                                                    Asignar dueño
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -635,7 +828,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                     <h2 className="font-serif text-2xl text-dm-dark">Administrativo</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-white rounded-xl shadow-sm border p-6 space-y-4">
-                            <h3 className="font-bold text-dm-dark">Solicitudes de Compra</h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-bold text-dm-dark">Solicitudes de Compra</h3>
+                                <span className="text-[10px] font-bold uppercase bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full px-2 py-0.5">
+                                    Pendiente API
+                                </span>
+                            </div>
                             <p className="text-xs text-gray-500">Bandeja de solicitudes pendientes (PENDING).</p>
                             <div className="text-xs text-gray-400 border border-dashed border-gray-200 rounded-lg p-4">
                                 Sin solicitudes registradas.
@@ -689,6 +887,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                             Modo Oficial
                         </label>
                     </div>
+                    <div className="bg-white rounded-xl shadow-sm border p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="font-bold text-dm-dark">Motor de sanciones</h3>
+                                <p className="text-xs text-gray-500">Ejecuta la corrida del motor (Paso 7).</p>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full px-2 py-0.5">
+                                Pendiente API
+                            </span>
+                        </div>
+                        <Button className="mt-4 w-full" disabled>
+                            Ejecutar motor
+                        </Button>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm border p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="font-bold text-dm-dark">Notificaciones</h3>
+                                <p className="text-xs text-gray-500">Cola y estados del sistema.</p>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full px-2 py-0.5">
+                                Pendiente API
+                            </span>
+                        </div>
+                        <div className="mt-4 text-xs text-gray-400 border border-dashed border-gray-200 rounded-lg p-4">
+                            Sin endpoints activos para listar o enviar notificaciones.
+                        </div>
+                    </div>
                 </div>
             )}
         </main>
@@ -708,6 +934,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                         <div>
                             <h2 className="font-serif text-2xl text-dm-dark font-bold leading-tight">Alta de Nueva Tienda</h2>
                             <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Registro Administrativo</p>
+                            <p className="text-[10px] text-gray-400 mt-1">Estado inicial: PENDING_VERIFICATION</p>
                         </div>
                       </div>
                       <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:text-dm-dark p-2 rounded-full hover:bg-white shadow-sm transition-all">
@@ -928,6 +1155,98 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
               </div>
           </div>
       )}
+
+      {confirmDialog && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative">
+                  <button
+                      onClick={() => setConfirmDialog(null)}
+                      className="absolute top-3 right-3 text-gray-400 hover:text-dm-dark"
+                  >
+                      <X size={18} />
+                  </button>
+                  <h3 className="font-serif text-xl text-dm-dark">{confirmDialog.title}</h3>
+                  <p className="mt-2 text-xs text-gray-500">{confirmDialog.message}</p>
+                  <div className="mt-6 flex gap-3">
+                      <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => setConfirmDialog(null)}
+                      >
+                          {confirmDialog.cancelLabel || 'Cancelar'}
+                      </Button>
+                      <Button
+                          className="flex-1 bg-dm-crimson hover:bg-red-700 text-white border-none"
+                          onClick={async () => {
+                              const action = confirmDialog.onConfirm;
+                              setConfirmDialog(null);
+                              await action();
+                          }}
+                      >
+                          {confirmDialog.confirmLabel || 'Confirmar'}
+                      </Button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {inputDialog && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative">
+                  <button
+                      onClick={() => setInputDialog(null)}
+                      className="absolute top-3 right-3 text-gray-400 hover:text-dm-dark"
+                  >
+                      <X size={18} />
+                  </button>
+                  <h3 className="font-serif text-xl text-dm-dark">{inputDialog.title}</h3>
+                  <p className="mt-2 text-xs text-gray-500">{inputDialog.message}</p>
+                  <div className="mt-4 space-y-3">
+                      {inputDialog.placeholders.map((placeholder, idx) => (
+                          <input
+                              key={placeholder + idx}
+                              value={inputValues[idx] || ''}
+                              onChange={(e) => {
+                                  const next = [...inputValues];
+                                  next[idx] = e.target.value;
+                                  setInputValues(next);
+                              }}
+                              placeholder={placeholder}
+                              className="w-full rounded-lg border border-gray-200 p-2 text-sm"
+                          />
+                      ))}
+                  </div>
+                  <div className="mt-6 flex gap-3">
+                      <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => setInputDialog(null)}
+                      >
+                          {inputDialog.cancelLabel || 'Cancelar'}
+                      </Button>
+                      <Button
+                          className="flex-1 bg-dm-crimson hover:bg-red-700 text-white border-none"
+                          onClick={async () => {
+                              const action = inputDialog.onConfirm;
+                              const values = inputValues;
+                              setInputDialog(null);
+                              await action(values);
+                          }}
+                      >
+                          {inputDialog.confirmLabel || 'Confirmar'}
+                      </Button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      <NoticeModal
+        isOpen={Boolean(notice)}
+        title={notice?.title || ''}
+        message={notice?.message || ''}
+        tone={notice?.tone || 'info'}
+        onClose={() => setNotice(null)}
+      />
     </div>
   );
 };

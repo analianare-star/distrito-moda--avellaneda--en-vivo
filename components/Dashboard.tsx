@@ -5,6 +5,7 @@ import { StreamStatus, Shop, SocialHandles, Stream, SocialPlatform, WhatsappLine
 import { PLANES_URL } from '../constants';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { api } from '../services/api';
+import { NoticeModal } from './NoticeModal';
 
 interface DashboardProps {
     currentShop: Shop;
@@ -15,7 +16,9 @@ interface DashboardProps {
     onShopUpdate: (shop: Shop) => Promise<boolean>;
     onExtendStream?: (streamId: string) => void;
     onBuyQuota: (amount: number) => void;
-    onReelChange: () => void; 
+    onReelChange: () => void;
+    activeTab?: Tab;
+    onTabChange?: (tab: Tab) => void;
 }
 
 type Tab = 'RESUMEN' | 'REDES' | 'VIVOS' | 'REELS' | 'PERFIL';
@@ -33,11 +36,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
     onShopUpdate, 
     onExtendStream,
     onBuyQuota,
-    onReelChange
+    onReelChange,
+    activeTab: activeTabProp,
+    onTabChange
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('RESUMEN');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showBuyModal, setShowBuyModal] = useState(false);
+  const [showBuyReelModal, setShowBuyReelModal] = useState(false);
+  const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
+  const [showPendingNotice, setShowPendingNotice] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+      title: string;
+      message: string;
+      confirmLabel?: string;
+      cancelLabel?: string;
+      onConfirm: () => void;
+  } | null>(null);
   const [editingStream, setEditingStream] = useState<Stream | null>(null);
   const [shopReels, setShopReels] = useState<Reel[]>([]); 
   
@@ -162,6 +177,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const statusLabel = statusLabels[shopStatus] || 'Activa';
   const statusTone = statusTones[shopStatus] || statusTones.ACTIVE;
 
+  useEffect(() => {
+      if (shopStatus === 'PENDING_VERIFICATION') {
+          setShowPendingNotice(true);
+      }
+  }, [shopStatus]);
+
+  useEffect(() => {
+      if (activeTabProp && activeTabProp !== activeTab) {
+          setActiveTab(activeTabProp);
+      }
+  }, [activeTabProp, activeTab]);
+
+  const setTab = (tab: Tab) => {
+      setActiveTab(tab);
+      onTabChange?.(tab);
+  };
+
   // --- HELPERS ---
   const handleInputChange = (field: keyof Shop, value: any) => {
       setShopForm(prev => ({ ...prev, [field]: value }));
@@ -195,51 +227,82 @@ export const Dashboard: React.FC<DashboardProps> = ({
         : currentShop.address;
       const ok = await onShopUpdate({ ...currentShop, ...shopForm, address: newAddress });
       if (!ok) return;
-      alert("Datos de tienda actualizados correctamente.");
+      setNotice({
+          title: 'Datos actualizados',
+          message: 'La información de la tienda se guardó correctamente.',
+          tone: 'success',
+      });
   };
 
   // --- REELS HANDLERS ---
   const handleUploadReel = async () => {
       if (!reelUrl || !reelPlatform) {
-          alert("Debes ingresar la URL y la plataforma.");
+          setNotice({
+              title: 'Datos incompletos',
+              message: 'Debes ingresar la URL y la plataforma.',
+              tone: 'warning',
+          });
           return;
       }
       const result = await api.createReel(currentShop.id, reelUrl, reelPlatform as SocialPlatform);
       if (result.success) {
-          alert(result.message);
+          setNotice({
+              title: 'Historia publicada',
+              message: result.message,
+              tone: 'success',
+          });
           setReelUrl('');
           setReelPlatform('');
           if (onReelChange) onReelChange();
           const allReels = await api.fetchAllReelsAdmin();
           setShopReels(allReels.filter(r => r.shopId === currentShop.id));
       } else {
-          alert(result.message);
+          setNotice({
+              title: 'No se pudo publicar',
+              message: result.message,
+              tone: 'error',
+          });
       }
   };
 
   const handleBuyReelConfirm = async () => {
-      if (window.confirm("¿Comprar paquete de 5 Historias extra por $2.500?")) {
-           // CORRECCIÓN AQUÍ: Agregamos el tercer argumento (payment simulado)
-           const updated = await api.buyReelQuota(currentShop.id, 5, { method: 'SIMULATED' });
-           if(updated) {
-               await onShopUpdate(updated);
-               if (onReelChange) onReelChange();
-           }
-           alert("¡Paquete de historias comprado!");
+      // CORRECCIÓN AQUÍ: Agregamos el tercer argumento (payment simulado)
+      const updated = await api.buyReelQuota(currentShop.id, 5, { method: 'SIMULATED' });
+      if(updated) {
+          await onShopUpdate(updated);
+          if (onReelChange) onReelChange();
       }
+      setNotice({
+          title: 'Compra realizada',
+          message: '¡Paquete de historias comprado!',
+          tone: 'success',
+      });
   };
 
   // --- STREAM FORM HANDLERS ---
   const handleBuyConfirm = () => {
       if (isAgendaSuspended) {
-          alert("Agenda suspendida: no puedes comprar cupos de vivos.");
+          setNotice({
+              title: 'Agenda suspendida',
+              message: 'No puedes comprar cupos de vivos mientras dure la suspensión.',
+              tone: 'warning',
+          });
           return;
       }
-      if (window.confirm("Confirmar compra de 1 cupo adicional por $5.000?")) {
-          onBuyQuota(1);
-          setShowBuyModal(false);
-          alert("¡Cupo comprado exitosamente! Ya puedes agendar tu vivo.");
-      }
+      setConfirmDialog({
+          title: 'Comprar cupo extra',
+          message: 'Confirmar compra de 1 cupo adicional por $5.000?',
+          confirmLabel: 'Confirmar compra',
+              onConfirm: () => {
+                  onBuyQuota(1);
+                  setShowBuyModal(false);
+                  setNotice({
+                      title: 'Compra exitosa',
+                      message: '¡Cupo comprado exitosamente! Ya puedes agendar tu vivo.',
+                      tone: 'success',
+                  });
+              },
+      });
   };
   const handleCreateClick = () => {
       if (!canSchedule) return;
@@ -247,7 +310,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
       setShowCreateModal(true);
   };
   const handleConfirmStream = async () => { 
-      if(!formTitle || !formTime || !formPlatform || !formDate) { alert("Todos los campos son obligatorios."); return; }
+      if(!formTitle || !formTime || !formPlatform || !formDate) {
+          setNotice({
+              title: 'Campos obligatorios',
+              message: 'Completa título, fecha, hora y plataforma.',
+              tone: 'warning',
+          });
+          return;
+      }
       const fullDateISO = new Date(`${formDate}T${formTime}`).toISOString();
       const selectedDateStr = fullDateISO.split('T')[0];
       const hasStreamOnDate = myStreams.some(s => {
@@ -255,9 +325,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
           if (![StreamStatus.UPCOMING, StreamStatus.LIVE, StreamStatus.PENDING_REPROGRAMMATION].includes(s.status)) return false;
           return s.fullDateISO.split('T')[0] === selectedDateStr;
       });
-      if (hasStreamOnDate) { alert(`Límite diario: Ya tienes un vivo programado para el ${selectedDateStr}.`); return; }
+      if (hasStreamOnDate) {
+          setNotice({
+              title: 'Límite diario',
+              message: `Ya tienes un vivo programado para el ${selectedDateStr}.`,
+              tone: 'warning',
+          });
+          return;
+      }
       const handle = currentShop.socialHandles ? currentShop.socialHandles[formPlatform.toLowerCase() as keyof SocialHandles] : '';
-      if (!handle) { alert(`Configura tu usuario de ${formPlatform} en la pestaña 'Mis Redes' antes de agendar.`); return; }
+      if (!handle) {
+          setNotice({
+              title: 'Red social requerida',
+              message: `Configura tu usuario de ${formPlatform} en la pestaña 'Mis Redes' antes de agendar.`,
+              tone: 'warning',
+          });
+          return;
+      }
       let url = '';
       if (formPlatform === 'Instagram') url = `https://instagram.com/${handle}/live`;
       else if (formPlatform === 'TikTok') url = `https://tiktok.com/@${handle}/live`;
@@ -281,17 +365,32 @@ export const Dashboard: React.FC<DashboardProps> = ({
       const validWaLines: WhatsappLine[] = [];
       for (const line of waLines.slice(0, whatsappLimit)) {
           if (line.number.trim()) {
-              if (!line.label) { alert("Selecciona etiqueta para el WhatsApp: " + line.number); return; }
+              if (!line.label) {
+                  setNotice({
+                      title: 'Etiqueta requerida',
+                      message: `Selecciona etiqueta para el WhatsApp: ${line.number}`,
+                      tone: 'warning',
+                  });
+                  return;
+              }
               validWaLines.push({ label: line.label as WhatsappLabel, number: line.number });
           }
       }
       const ok = await onShopUpdate({ ...currentShop, socialHandles: socials, whatsappLines: validWaLines, website: shopForm.website });
       if (!ok) return;
-      alert("Redes y contactos actualizados.");
+      setNotice({
+          title: 'Cambios guardados',
+          message: 'Redes y contactos actualizados.',
+          tone: 'success',
+      });
   };
   const openEditModal = (stream: Stream) => {
       if (!canManageAgenda) {
-          alert(getRestrictionMessage() || "Agenda no disponible.");
+          setNotice({
+              title: 'Agenda no disponible',
+              message: getRestrictionMessage() || 'Agenda no disponible.',
+              tone: 'warning',
+          });
           return;
       }
       setFormTitle(stream.title);
@@ -317,7 +416,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       
       {/* SIDEBAR */}
-      <aside className="w-full md:w-64 bg-white border-r border-gray-200 flex-shrink-0 z-10 flex flex-col">
+      <aside className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-shrink-0 z-10 flex-col">
           <div className="p-6 border-b border-gray-100 text-center">
               <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full mb-3 overflow-hidden border-4 border-white shadow-sm">
                   <img src={currentShop.logoUrl} alt={currentShop.name} className="w-full h-full object-cover" />
@@ -329,26 +428,55 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
           </div>
           <nav className="p-4 space-y-1 flex-1">
-               <button onClick={() => setActiveTab('RESUMEN')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'RESUMEN' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
+               <button onClick={() => setTab('RESUMEN')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'RESUMEN' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
                    <LayoutDashboard size={18}/> Inicio / Resumen
                </button>
-               <button onClick={() => setActiveTab('REDES')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'REDES' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
+               <button onClick={() => setTab('REDES')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'REDES' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
                    <Globe size={18}/> Mis Redes
                </button>
-               <button onClick={() => setActiveTab('VIVOS')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'VIVOS' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
+               <button onClick={() => setTab('VIVOS')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'VIVOS' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
                    <Radio size={18}/> Mis Vivos
                </button>
-               <button onClick={() => setActiveTab('REELS')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'REELS' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
+               <button onClick={() => setTab('REELS')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'REELS' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
                    <Film size={18}/> Mis Historias
                </button>
-               <button onClick={() => setActiveTab('PERFIL')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'PERFIL' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
+               <button onClick={() => setTab('PERFIL')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'PERFIL' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
                    <Store size={18}/> Datos Tienda
                </button>
           </nav>
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-5 md:p-8 overflow-y-auto">
+          <div className="md:hidden mb-6">
+              <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-4 shadow-sm">
+                  <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden border border-white shadow-sm">
+                      <img src={currentShop.logoUrl} alt={currentShop.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1">
+                      <p className="text-xs text-gray-400 uppercase tracking-widest">Tienda</p>
+                      <h2 className="font-serif text-xl text-dm-dark">{currentShop.name}</h2>
+                      <p className="text-[11px] text-gray-500 uppercase tracking-wider">{currentShop.plan}</p>
+                  </div>
+                  <div className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full border ${statusTone}`}>
+                      {statusLabel}
+                  </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                  <button
+                      onClick={() => setTab('VIVOS')}
+                      className="rounded-full border border-gray-200 bg-white py-2 text-xs font-bold text-gray-600"
+                  >
+                      Gestionar vivos
+                  </button>
+                  <button
+                      onClick={() => setTab('PERFIL')}
+                      className="rounded-full border border-gray-200 bg-white py-2 text-xs font-bold text-gray-600"
+                  >
+                      Editar perfil
+                  </button>
+              </div>
+          </div>
           
           {/* TAB 1: RESUMEN (HOME) */}
           {activeTab === 'RESUMEN' && (
@@ -410,6 +538,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                       <span className="text-gray-500">Usados (En curso/Prog.)</span>
                                       <span className="font-bold text-dm-crimson">-{usedQuota}</span>
                                   </div>
+                                  {availableQuota <= 0 && (
+                                      <div className="mt-3 rounded-lg border border-red-100 bg-red-50 p-3 text-xs text-red-700">
+                                          <p className="font-bold">Sin cupos disponibles</p>
+                                          <p className="mt-1">
+                                              {isAgendaSuspended
+                                                  ? 'Agenda suspendida: no podés comprar cupos de vivos.'
+                                                  : 'Comprá cupos extras o mejorá tu plan para agendar.'}
+                                          </p>
+                                      </div>
+                                  )}
                               </div>
                           </div>
                       </div>
@@ -477,7 +615,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <div className="text-right">
                           <p className="text-xs text-gray-500">Disponibles hoy (Plan): <span className="font-bold">{availableReelPlan}</span></p>
                           <p className="text-xs text-gray-500">Extras comprados: <span className="font-bold text-green-600">{reelsExtra}</span></p>
-                          <button onClick={handleBuyReelConfirm} className="text-[10px] text-dm-crimson underline font-bold mt-1">Comprar Extras</button>
+                          <button onClick={() => setShowBuyReelModal(true)} className="text-[10px] text-dm-crimson underline font-bold mt-1">Comprar Extras</button>
+                          {(availableReelPlan === 0 && reelsExtra === 0) && (
+                              <p className="text-[10px] text-red-500 mt-2">Sin cupos disponibles hoy.</p>
+                          )}
                       </div>
                   </header>
 
@@ -755,7 +896,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                     <button
                                                         onClick={() => {
                                                             if (!canManageAgenda) return;
-                                                            if (window.confirm('Cancelar este vivo?')) onStreamDelete(stream.id);
+                                                            setConfirmDialog({
+                                                                title: 'Cancelar vivo',
+                                                                message: '¿Confirmas la cancelación de este vivo?',
+                                                                confirmLabel: 'Cancelar vivo',
+                                                                onConfirm: () => onStreamDelete(stream.id),
+                                                            });
                                                         }}
                                                         disabled={!canManageAgenda}
                                                         title={!canManageAgenda ? getRestrictionMessage() : 'Cancelar vivo'}
@@ -911,6 +1057,36 @@ export const Dashboard: React.FC<DashboardProps> = ({
            </div>
       )}
 
+      {/* MODAL: BUY REEL QUOTA */}
+      {showBuyReelModal && (
+           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 relative animate-in zoom-in-95">
+                  <button onClick={() => setShowBuyReelModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-dm-dark"><X size={20}/></button>
+                  <div className="text-center mb-6">
+                      <div className="w-16 h-16 bg-pink-100 text-dm-crimson rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Film size={32} />
+                      </div>
+                      <h2 className="font-serif text-2xl text-dm-dark">Comprar Historias Extra</h2>
+                      <p className="text-sm text-gray-500 mt-2">Agrega 5 historias adicionales para hoy.</p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 flex justify-between items-center">
+                          <span className="font-bold text-dm-dark">Pack 5 Historias</span>
+                          <span className="font-bold text-green-600">$2.500</span>
+                      </div>
+                      <Button className="w-full bg-dm-crimson hover:bg-red-700 border-none text-white" onClick={async () => {
+                          await handleBuyReelConfirm();
+                          setShowBuyReelModal(false);
+                      }}>
+                          Confirmar Compra
+                      </Button>
+                      <p className="text-[10px] text-center text-gray-400">Compra simulada para entorno demo.</p>
+                  </div>
+              </div>
+           </div>
+      )}
+
       {/* MODAL: CREATE STREAM */}
       {showCreateModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -972,6 +1148,48 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
           </div>
       )}
+
+      {confirmDialog && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 relative animate-in zoom-in-95">
+                  <button onClick={() => setConfirmDialog(null)} className="absolute top-4 right-4 text-gray-400 hover:text-dm-dark"><X size={20}/></button>
+                  <h3 className="font-serif text-xl text-dm-dark">{confirmDialog.title}</h3>
+                  <p className="text-xs text-gray-500 mt-2">{confirmDialog.message}</p>
+                  <div className="mt-6 flex gap-3">
+                      <Button variant="outline" className="flex-1" onClick={() => setConfirmDialog(null)}>
+                          {confirmDialog.cancelLabel || 'Cancelar'}
+                      </Button>
+                      <Button
+                          className="flex-1 bg-dm-crimson hover:bg-red-700 border-none text-white"
+                          onClick={() => {
+                              const action = confirmDialog.onConfirm;
+                              setConfirmDialog(null);
+                              action();
+                          }}
+                      >
+                          {confirmDialog.confirmLabel || 'Confirmar'}
+                      </Button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      <NoticeModal
+        isOpen={Boolean(notice)}
+        title={notice?.title || ''}
+        message={notice?.message || ''}
+        tone={notice?.tone || 'info'}
+        onClose={() => setNotice(null)}
+      />
+
+      <NoticeModal
+        isOpen={showPendingNotice}
+        title="Cuenta pendiente"
+        message="Tu tienda está en verificación. Podrás agendar y operar cuando sea aprobada."
+        tone="warning"
+        onClose={() => setShowPendingNotice(false)}
+        confirmLabel="Entendido"
+      />
 
     </div>
   );

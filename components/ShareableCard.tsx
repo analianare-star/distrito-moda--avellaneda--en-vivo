@@ -7,9 +7,10 @@ interface ShareableCardProps {
   shop: Shop;
   stream?: Stream; 
   mode: 'CLIENT' | 'MERCHANT'; 
+  onNotify?: (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => void;
 }
 
-export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode }) => {
+export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode, onNotify }) => {
   
   // LOGIC: Formating Date
   const dateObj = stream ? new Date(stream.fullDateISO) : new Date();
@@ -141,7 +142,19 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
         </div>
       </div>
 
-      <Button variant="secondary" size="sm" onClick={() => alert(`Descargando tarjeta (${mode})...`)}>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() =>
+          onNotify?.(
+            'Descarga pendiente',
+            mode === 'CLIENT'
+              ? 'Estamos preparando la tarjeta para descargar.'
+              : 'Generamos una versión lista para promo.',
+            'info'
+          )
+        }
+      >
         <Download size={16} className="mr-2" />
         {mode === 'CLIENT' ? 'Guardar Tarjeta' : 'Descargar para Promo'}
       </Button>
