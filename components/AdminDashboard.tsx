@@ -560,7 +560,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
             {activeTab === 'DASHBOARD' && (
                 <div className="space-y-8 animate-in fade-in">
                     <h2 className="font-serif text-2xl text-dm-dark">Estado del Sistema</h2>
-                    <div className="grid grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-white p-6 rounded-xl border flex justify-between">
                             <div><p className="text-xs font-bold text-gray-400">EN VIVO</p><p className="text-3xl font-serif">{liveCount}</p></div>
                             <Radio className="text-red-500" />
@@ -609,34 +609,54 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 border-b">
-                                <tr>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Tienda</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Fecha</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Plataforma</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {filteredAgendaStreams.length > 0 ? (
-                                    filteredAgendaStreams.map(stream => (
-                                        <tr key={stream.id}>
-                                            <td className="px-6 py-4 text-sm font-bold">{stream.shop?.name || 'Sin tienda'}</td>
-                                            <td className="px-6 py-4 text-xs text-gray-500">
-                                                {new Date(stream.fullDateISO).toLocaleDateString()} {stream.scheduledTime} hs
-                                            </td>
-                                            <td className="px-6 py-4 text-xs font-bold">{stream.status}</td>
-                                            <td className="px-6 py-4 text-xs">{stream.platform}</td>
-                                        </tr>
-                                    ))
-                                ) : (
+                        <div className="md:hidden divide-y">
+                            {filteredAgendaStreams.length > 0 ? (
+                                filteredAgendaStreams.map((stream) => (
+                                    <div key={stream.id} className="p-4 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-sm font-bold text-dm-dark">{stream.shop?.name || 'Sin tienda'}</p>
+                                            <span className="text-[11px] font-bold text-gray-600">{stream.status}</span>
+                                        </div>
+                                        <p className="text-xs text-gray-500">
+                                            {new Date(stream.fullDateISO).toLocaleDateString()} {stream.scheduledTime} hs
+                                        </p>
+                                        <p className="text-[11px] text-gray-500 uppercase">{stream.platform}</p>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados</div>
+                            )}
+                        </div>
+                        <div className="hidden md:block">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 border-b">
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados</td>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Tienda</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Fecha</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Plataforma</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {filteredAgendaStreams.length > 0 ? (
+                                        filteredAgendaStreams.map(stream => (
+                                            <tr key={stream.id}>
+                                                <td className="px-6 py-4 text-sm font-bold">{stream.shop?.name || 'Sin tienda'}</td>
+                                                <td className="px-6 py-4 text-xs text-gray-500">
+                                                    {new Date(stream.fullDateISO).toLocaleDateString()} {stream.scheduledTime} hs
+                                                </td>
+                                                <td className="px-6 py-4 text-xs font-bold">{stream.status}</td>
+                                                <td className="px-6 py-4 text-xs">{stream.platform}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={4} className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             )}
@@ -645,111 +665,208 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                  <div className="space-y-6 animate-in fade-in">
                     <h2 className="font-serif text-2xl text-dm-dark">Gestión de Vivos</h2>
                     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 border-b">
-                                <tr>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Info</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Reportes</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {streams.map(stream => (
-                                    <tr key={stream.id}>
-                                        <td className="px-6 py-4">
-                                            <p className="font-bold text-sm">{stream.title}</p>
-                                            <p className="text-xs text-gray-500">{stream.shop.name}</p>
-                                            <span className={`text-[10px] px-1 rounded ${stream.status === 'LIVE' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}>{stream.status}</span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {stream.reportCount > 0 ? <span className="text-red-600 font-bold flex items-center gap-1"><AlertTriangle size={12}/> {stream.reportCount}</span> : '-'}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-end gap-2">
-                                                <button 
-                                                    onClick={() => toggleVisibility(stream.id)} 
-                                                    title={stream.isVisible ? "Ocultar vivo de la app" : "Hacer visible en la app"}
-                                                    className={`px-3 py-1.5 border rounded text-xs font-bold flex items-center gap-2 transition-colors ${stream.isVisible ? 'text-gray-600 hover:bg-gray-100' : 'bg-gray-100 text-gray-400'}`}
-                                                >
-                                                    {stream.isVisible ? <Eye size={14}/> : <EyeOff size={14}/>}
-                                                    {stream.isVisible ? 'Visible' : 'Oculto'}
-                                                </button>
+                        <div className="md:hidden divide-y">
+                            {streams.map((stream) => (
+                                <div key={stream.id} className="p-4 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-bold text-dm-dark">{stream.title}</p>
+                                            <p className="text-[11px] text-gray-500">{stream.shop.name}</p>
+                                        </div>
+                                        <span className={`text-[11px] px-2 py-1 rounded ${stream.status === 'LIVE' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                                            {stream.status}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs text-gray-500">
+                                        <span>Reportes</span>
+                                        {stream.reportCount > 0 ? (
+                                            <span className="text-red-600 font-bold flex items-center gap-1"><AlertTriangle size={12}/> {stream.reportCount}</span>
+                                        ) : (
+                                            <span>-</span>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 pt-2">
+                                        <button 
+                                            onClick={() => toggleVisibility(stream.id)} 
+                                            className={`px-3 py-1.5 border rounded text-xs font-bold flex items-center gap-2 transition-colors ${stream.isVisible ? 'text-gray-600 hover:bg-gray-100' : 'bg-gray-100 text-gray-400'}`}
+                                        >
+                                            {stream.isVisible ? <Eye size={14}/> : <EyeOff size={14}/>}
+                                            {stream.isVisible ? 'Visible' : 'Oculto'}
+                                        </button>
 
-                                                {stream.status === 'UPCOMING' && (
-                                                    <button 
-                                                        onClick={() => handleStatusChange(stream.id, StreamStatus.LIVE)} 
-                                                        title="INICIAR VIVO: Comienza el contador de 30 minutos."
-                                                        className="px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold flex items-center gap-2 hover:bg-green-100 transition-colors shadow-sm"
-                                                    >
-                                                        <PlayCircle size={14}/> Iniciar
-                                                    </button>
-                                                )}
-                                                
-                                                {stream.status === 'LIVE' && (
-                                                    <button 
-                                                        onClick={() => handleStatusChange(stream.id, StreamStatus.FINISHED)} 
-                                                        title="FINALIZAR VIVO: Cortar transmisión inmediatamente."
-                                                        className="px-3 py-1.5 border border-red-200 bg-white text-red-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-red-50 transition-colors shadow-sm"
-                                                    >
-                                                        <StopCircle size={14}/> Finalizar
-                                                    </button>
-                                                )}
+                                        {stream.status === 'UPCOMING' && (
+                                            <button 
+                                                onClick={() => handleStatusChange(stream.id, StreamStatus.LIVE)} 
+                                                className="px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold flex items-center gap-2"
+                                            >
+                                                <PlayCircle size={14}/> Iniciar
+                                            </button>
+                                        )}
+                                        
+                                        {stream.status === 'LIVE' && (
+                                            <button 
+                                                onClick={() => handleStatusChange(stream.id, StreamStatus.FINISHED)} 
+                                                className="px-3 py-1.5 border border-red-200 bg-white text-red-600 rounded text-xs font-bold flex items-center gap-2"
+                                            >
+                                                <StopCircle size={14}/> Finalizar
+                                            </button>
+                                        )}
 
-                                                {stream.status === 'LIVE' && (
-                                                    <button 
-                                                        onClick={() => forceExtend(stream.id)} 
-                                                        title="FORZAR EXTENSION +30"
-                                                        className="px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold flex items-center gap-2 hover:bg-green-100 transition-colors shadow-sm"
-                                                    >
-                                                        +30 min
-                                                    </button>
-                                                )}
+                                        {stream.status === 'LIVE' && (
+                                            <button 
+                                                onClick={() => forceExtend(stream.id)} 
+                                                className="px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold"
+                                            >
+                                                +30 min
+                                            </button>
+                                        )}
 
-                                                {(stream.status === 'UPCOMING' || stream.status === 'LIVE') && (
-                                                    <button 
-                                                        onClick={() => editStreamUrl(stream.id)} 
-                                                        title="EDITAR URL"
-                                                        className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm"
-                                                    >
-                                                        URL
-                                                    </button>
-                                                )}
+                                        {(stream.status === 'UPCOMING' || stream.status === 'LIVE') && (
+                                            <button 
+                                                onClick={() => editStreamUrl(stream.id)} 
+                                                className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold"
+                                            >
+                                                URL
+                                            </button>
+                                        )}
 
-                                                {(stream.status === 'UPCOMING' || stream.status === 'LIVE') && (
-                                                    <button 
-                                                        onClick={() => adjustStreamTime(stream.id)} 
-                                                        title="AJUSTAR HORA"
-                                                        className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm"
-                                                    >
-                                                        Hora
-                                                    </button>
-                                                )}
+                                        {(stream.status === 'UPCOMING' || stream.status === 'LIVE') && (
+                                            <button 
+                                                onClick={() => adjustStreamTime(stream.id)} 
+                                                className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold"
+                                            >
+                                                Hora
+                                            </button>
+                                        )}
 
-                                                {stream.status === 'UPCOMING' && (
-                                                    <button 
-                                                        onClick={() => cancelStream(stream.id)} 
-                                                        title="CANCELAR VIVO"
-                                                        className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm"
-                                                    >
-                                                        Cancelar
-                                                    </button>
-                                                )}
+                                        {stream.status === 'UPCOMING' && (
+                                            <button 
+                                                onClick={() => cancelStream(stream.id)} 
+                                                className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold"
+                                            >
+                                                Cancelar
+                                            </button>
+                                        )}
 
-                                                {stream.status !== 'BANNED' && (
-                                                    <button 
-                                                        onClick={() => banStream(stream.id)} 
-                                                        title="BLOQUEAR VIVO"
-                                                        className="px-3 py-1.5 border border-red-200 bg-red-50 text-red-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-red-100 transition-colors shadow-sm"
-                                                    >
-                                                        Bloquear
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
+                                        {stream.status !== 'BANNED' && (
+                                            <button 
+                                                onClick={() => banStream(stream.id)} 
+                                                className="px-3 py-1.5 border border-red-200 bg-red-50 text-red-600 rounded text-xs font-bold"
+                                            >
+                                                Bloquear
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="hidden md:block">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 border-b">
+                                    <tr>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Info</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Reportes</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {streams.map(stream => (
+                                        <tr key={stream.id}>
+                                            <td className="px-6 py-4">
+                                                <p className="font-bold text-sm">{stream.title}</p>
+                                                <p className="text-xs text-gray-500">{stream.shop.name}</p>
+                                                <span className={`text-[10px] px-1 rounded ${stream.status === 'LIVE' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}>{stream.status}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {stream.reportCount > 0 ? <span className="text-red-600 font-bold flex items-center gap-1"><AlertTriangle size={12}/> {stream.reportCount}</span> : '-'}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex justify-end gap-2">
+                                                    <button 
+                                                        onClick={() => toggleVisibility(stream.id)} 
+                                                        title={stream.isVisible ? "Ocultar vivo de la app" : "Hacer visible en la app"}
+                                                        className={`px-3 py-1.5 border rounded text-xs font-bold flex items-center gap-2 transition-colors ${stream.isVisible ? 'text-gray-600 hover:bg-gray-100' : 'bg-gray-100 text-gray-400'}`}
+                                                    >
+                                                        {stream.isVisible ? <Eye size={14}/> : <EyeOff size={14}/>}
+                                                        {stream.isVisible ? 'Visible' : 'Oculto'}
+                                                    </button>
+
+                                                    {stream.status === 'UPCOMING' && (
+                                                        <button 
+                                                            onClick={() => handleStatusChange(stream.id, StreamStatus.LIVE)} 
+                                                            title="INICIAR VIVO: Comienza el contador de 30 minutos."
+                                                            className="px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold flex items-center gap-2 hover:bg-green-100 transition-colors shadow-sm"
+                                                        >
+                                                            <PlayCircle size={14}/> Iniciar
+                                                        </button>
+                                                    )}
+                                                    
+                                                    {stream.status === 'LIVE' && (
+                                                        <button 
+                                                            onClick={() => handleStatusChange(stream.id, StreamStatus.FINISHED)} 
+                                                            title="FINALIZAR VIVO: Cortar transmisión inmediatamente."
+                                                            className="px-3 py-1.5 border border-red-200 bg-white text-red-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-red-50 transition-colors shadow-sm"
+                                                        >
+                                                            <StopCircle size={14}/> Finalizar
+                                                        </button>
+                                                    )}
+
+                                                    {stream.status === 'LIVE' && (
+                                                        <button 
+                                                            onClick={() => forceExtend(stream.id)} 
+                                                            title="FORZAR EXTENSION +30"
+                                                            className="px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold flex items-center gap-2 hover:bg-green-100 transition-colors shadow-sm"
+                                                        >
+                                                            +30 min
+                                                        </button>
+                                                    )}
+
+                                                    {(stream.status === 'UPCOMING' || stream.status === 'LIVE') && (
+                                                        <button 
+                                                            onClick={() => editStreamUrl(stream.id)} 
+                                                            title="EDITAR URL"
+                                                            className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm"
+                                                        >
+                                                            URL
+                                                        </button>
+                                                    )}
+
+                                                    {(stream.status === 'UPCOMING' || stream.status === 'LIVE') && (
+                                                        <button 
+                                                            onClick={() => adjustStreamTime(stream.id)} 
+                                                            title="AJUSTAR HORA"
+                                                            className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm"
+                                                        >
+                                                            Hora
+                                                        </button>
+                                                    )}
+
+                                                    {stream.status === 'UPCOMING' && (
+                                                        <button 
+                                                            onClick={() => cancelStream(stream.id)} 
+                                                            title="CANCELAR VIVO"
+                                                            className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm"
+                                                        >
+                                                            Cancelar
+                                                        </button>
+                                                    )}
+
+                                                    {stream.status !== 'BANNED' && (
+                                                        <button 
+                                                            onClick={() => banStream(stream.id)} 
+                                                            title="BLOQUEAR VIVO"
+                                                            className="px-3 py-1.5 border border-red-200 bg-red-50 text-red-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-red-100 transition-colors shadow-sm"
+                                                        >
+                                                            Bloquear
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                  </div>
             )}
@@ -758,85 +875,152 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                 <div className="space-y-6 animate-in fade-in">
                     <h2 className="font-serif text-2xl text-dm-dark">Reportes</h2>
                     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 border-b">
-                                <tr>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Vivo</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Motivo</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {reports.length > 0 ? (
-                                    reports.map((report) => (
-                                        <tr key={report.id}>
-                                            <td className="px-6 py-4">
-                                                <p className="text-xs font-bold">{report?.stream?.title || report.streamId}</p>
-                                                <p className="text-[10px] text-gray-400">{report?.stream?.shop?.name || 'Sin tienda'}</p>
-                                            </td>
-                                            <td className="px-6 py-4 text-xs font-bold">{report.status || 'OPEN'}</td>
-                                            <td className="px-6 py-4">
-                                                <p className="text-[10px] text-gray-500">{report.reason || 'Sin motivo'}</p>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={async () => {
+                        <div className="md:hidden divide-y">
+                            {reports.length > 0 ? (
+                                reports.map((report) => (
+                                    <div key={report.id} className="p-4 space-y-3">
+                                        <div>
+                                            <p className="text-sm font-bold text-dm-dark">{report?.stream?.title || report.streamId}</p>
+                                            <p className="text-[11px] text-gray-500">{report?.stream?.shop?.name || 'Sin tienda'}</p>
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="font-bold text-gray-600">{report.status || 'OPEN'}</span>
+                                            <span className="text-[11px] text-gray-600">{report.reason || 'Sin motivo'}</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={async () => {
+                                                    try {
+                                                        await api.resolveReportAdmin(report.id);
+                                                        const next = reports.filter((item) => item.id !== report.id);
+                                                        setReports(next);
+                                                    } catch (error: any) {
+                                                        setNotice({
+                                                            title: 'Error al resolver',
+                                                            message: error?.message || 'No se pudo resolver el reporte.',
+                                                            tone: 'error',
+                                                        });
+                                                    }
+                                                }}
+                                            >
+                                                Resolver
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                onClick={() => {
+                                                    setConfirmDialog({
+                                                        title: 'Rechazar reporte',
+                                                        message: 'El reporte quedara marcado como rechazado. Esta accion no se puede deshacer.',
+                                                        confirmLabel: 'Rechazar',
+                                                        onConfirm: async () => {
                                                             try {
-                                                                await api.resolveReportAdmin(report.id);
+                                                                await api.rejectReportAdmin(report.id);
                                                                 const next = reports.filter((item) => item.id !== report.id);
                                                                 setReports(next);
                                                             } catch (error: any) {
                                                                 setNotice({
-                                                                    title: 'Error al resolver',
-                                                                    message: error?.message || 'No se pudo resolver el reporte.',
+                                                                    title: 'Error al rechazar',
+                                                                    message: error?.message || 'No se pudo rechazar el reporte.',
                                                                     tone: 'error',
                                                                 });
                                                             }
-                                                        }}
-                                                    >
-                                                        Resolver
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="secondary"
-                                                        onClick={() => {
-                                                            setConfirmDialog({
-                                                                title: 'Rechazar reporte',
-                                                                message: 'El reporte quedara marcado como rechazado. Esta accion no se puede deshacer.',
-                                                                confirmLabel: 'Rechazar',
-                                                                onConfirm: async () => {
-                                                                    try {
-                                                                        await api.rejectReportAdmin(report.id);
-                                                                        const next = reports.filter((item) => item.id !== report.id);
-                                                                        setReports(next);
-                                                                    } catch (error: any) {
-                                                                        setNotice({
-                                                                            title: 'Error al rechazar',
-                                                                            message: error?.message || 'No se pudo rechazar el reporte.',
-                                                                            tone: 'error',
-                                                                        });
-                                                                    }
-                                                                },
-                                                            });
-                                                        }}
-                                                    >
-                                                        Rechazar
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
+                                                        },
+                                                    });
+                                                }}
+                                            >
+                                                Rechazar
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="px-6 py-6 text-center text-xs text-gray-400">Sin reportes abiertos.</div>
+                            )}
+                        </div>
+                        <div className="hidden md:block">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 border-b">
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-6 text-center text-xs text-gray-400">Sin reportes abiertos.</td>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Vivo</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Motivo</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {reports.length > 0 ? (
+                                        reports.map((report) => (
+                                            <tr key={report.id}>
+                                                <td className="px-6 py-4">
+                                                    <p className="text-xs font-bold">{report?.stream?.title || report.streamId}</p>
+                                                    <p className="text-[10px] text-gray-400">{report?.stream?.shop?.name || 'Sin tienda'}</p>
+                                                </td>
+                                                <td className="px-6 py-4 text-xs font-bold">{report.status || 'OPEN'}</td>
+                                                <td className="px-6 py-4">
+                                                    <p className="text-[10px] text-gray-500">{report.reason || 'Sin motivo'}</p>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await api.resolveReportAdmin(report.id);
+                                                                    const next = reports.filter((item) => item.id !== report.id);
+                                                                    setReports(next);
+                                                                } catch (error: any) {
+                                                                    setNotice({
+                                                                        title: 'Error al resolver',
+                                                                        message: error?.message || 'No se pudo resolver el reporte.',
+                                                                        tone: 'error',
+                                                                    });
+                                                                }
+                                                            }}
+                                                        >
+                                                            Resolver
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            onClick={() => {
+                                                                setConfirmDialog({
+                                                                    title: 'Rechazar reporte',
+                                                                    message: 'El reporte quedara marcado como rechazado. Esta accion no se puede deshacer.',
+                                                                    confirmLabel: 'Rechazar',
+                                                                    onConfirm: async () => {
+                                                                        try {
+                                                                            await api.rejectReportAdmin(report.id);
+                                                                            const next = reports.filter((item) => item.id !== report.id);
+                                                                            setReports(next);
+                                                                        } catch (error: any) {
+                                                                            setNotice({
+                                                                                title: 'Error al rechazar',
+                                                                                message: error?.message || 'No se pudo rechazar el reporte.',
+                                                                                tone: 'error',
+                                                                            });
+                                                                        }
+                                                                    },
+                                                                });
+                                                            }}
+                                                        >
+                                                            Rechazar
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={4} className="px-6 py-6 text-center text-xs text-gray-400">Sin reportes abiertos.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             )}
@@ -858,80 +1042,147 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                         </div>
                     </div>
                     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 border-b">
-                                <tr>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Tienda</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Plan</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Integridad</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Penalización</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {filteredShops.map(shop => {
-                                    const status = shop.status || 'ACTIVE';
-                                    return (
-                                    <tr key={shop.id}>
-                                        <td className="px-6 py-4 font-bold text-sm">{shop.name}</td>
-                                        <td className="px-6 py-4 text-xs">{shop.plan}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
+                        <div className="md:hidden divide-y">
+                            {filteredShops.map((shop) => {
+                                const status = shop.status || 'ACTIVE';
+                                return (
+                                    <div key={shop.id} className="p-4 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
+                                                <p className="text-[11px] text-gray-500">{shop.plan}</p>
+                                            </div>
+                                            <span className={`text-[11px] px-2 py-1 rounded-full font-bold ${
                                                 status === 'ACTIVE' ? 'bg-green-50 text-green-600' :
                                                 status === 'PENDING_VERIFICATION' ? 'bg-yellow-50 text-yellow-700' :
                                                 status === 'AGENDA_SUSPENDED' ? 'bg-orange-50 text-orange-600' :
                                                 'bg-red-50 text-red-600'
                                             }`}>{status}</span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
+                                        </div>
+                                        <div className="flex items-center justify-between text-[10px] text-gray-500">
+                                            <span>Integridad</span>
+                                            <span className={`text-[11px] px-2 py-1 rounded-full font-bold ${
                                                 shop.dataIntegrity === 'COMPLETE' ? 'bg-green-50 text-green-600' :
                                                 shop.dataIntegrity === 'MINIMAL' ? 'bg-yellow-50 text-yellow-600' :
                                                 'bg-red-50 text-red-600'
                                             }`}>{shop.dataIntegrity}</span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <button onClick={() => togglePenalty(shop.id)} className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded border ${shop.isPenalized ? 'bg-red-50 border-red-200 text-red-600' : 'border-gray-200'}`}>
+                                        </div>
+                                        <div className="flex items-center justify-between text-[10px] text-gray-500">
+                                            <span>Penalización</span>
+                                            <button onClick={() => togglePenalty(shop.id)} className={`text-[11px] font-bold px-2 py-1 rounded border ${shop.isPenalized ? 'bg-red-50 border-red-200 text-red-600' : 'border-gray-200'}`}>
                                                 {shop.isPenalized ? 'ACTIVA' : 'No'}
                                             </button>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                {status === 'PENDING_VERIFICATION' && (
-                                                    <>
-                                                      <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Activar</button>
-                                                      <button onClick={() => rejectShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-red-50 text-red-600 border-red-200">Rechazar</button>
-                                                      <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
-                                                    </>
-                                                )}
-                                                {status === 'ACTIVE' && (
-                                                    <>
-                                                      <button onClick={() => suspendAgenda(shop.id)} className="text-xs border px-2 py-1 rounded bg-orange-50 text-orange-600 border-orange-200">Suspender Agenda</button>
-                                                      <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
-                                                    </>
-                                                )}
-                                                {status === 'AGENDA_SUSPENDED' && (
-                                                    <>
-                                                      <button onClick={() => liftSuspension(shop.id)} className="text-xs border px-2 py-1 rounded bg-blue-50 text-blue-600 border-blue-200">Levantar Sancion</button>
-                                                      <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
-                                                    </>
-                                                )}
-                                                {(status === 'HIDDEN' || status === 'BANNED') && (
-                                                    <>
-                                                      <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Reactivar</button>
-                                                      <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
-                                                    </>
-                                                )}
-                                                <button onClick={() => assignOwner(shop.id)} className="text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200">
-                                                    Asignar dueño
-                                                </button>
-                                            </div>
-                                        </td>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 pt-2">
+                                            {status === 'PENDING_VERIFICATION' && (
+                                                <>
+                                                  <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Activar</button>
+                                                  <button onClick={() => rejectShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-red-50 text-red-600 border-red-200">Rechazar</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                </>
+                                            )}
+                                            {status === 'ACTIVE' && (
+                                                <>
+                                                  <button onClick={() => suspendAgenda(shop.id)} className="text-xs border px-2 py-1 rounded bg-orange-50 text-orange-600 border-orange-200">Suspender Agenda</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                </>
+                                            )}
+                                            {status === 'AGENDA_SUSPENDED' && (
+                                                <>
+                                                  <button onClick={() => liftSuspension(shop.id)} className="text-xs border px-2 py-1 rounded bg-blue-50 text-blue-600 border-blue-200">Levantar Sancion</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                </>
+                                            )}
+                                            {(status === 'HIDDEN' || status === 'BANNED') && (
+                                                <>
+                                                  <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Reactivar</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                </>
+                                            )}
+                                            <button onClick={() => assignOwner(shop.id)} className="text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200">
+                                                Asignar dueño
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="hidden md:block">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 border-b">
+                                    <tr>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Tienda</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Plan</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Integridad</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Penalización</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
                                     </tr>
-                                )})}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {filteredShops.map(shop => {
+                                        const status = shop.status || 'ACTIVE';
+                                        return (
+                                        <tr key={shop.id}>
+                                            <td className="px-6 py-4 font-bold text-sm">{shop.name}</td>
+                                            <td className="px-6 py-4 text-xs">{shop.plan}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
+                                                    status === 'ACTIVE' ? 'bg-green-50 text-green-600' :
+                                                    status === 'PENDING_VERIFICATION' ? 'bg-yellow-50 text-yellow-700' :
+                                                    status === 'AGENDA_SUSPENDED' ? 'bg-orange-50 text-orange-600' :
+                                                    'bg-red-50 text-red-600'
+                                                }`}>{status}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
+                                                    shop.dataIntegrity === 'COMPLETE' ? 'bg-green-50 text-green-600' :
+                                                    shop.dataIntegrity === 'MINIMAL' ? 'bg-yellow-50 text-yellow-600' :
+                                                    'bg-red-50 text-red-600'
+                                                }`}>{shop.dataIntegrity}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <button onClick={() => togglePenalty(shop.id)} className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded border ${shop.isPenalized ? 'bg-red-50 border-red-200 text-red-600' : 'border-gray-200'}`}>
+                                                    {shop.isPenalized ? 'ACTIVA' : 'No'}
+                                                </button>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    {status === 'PENDING_VERIFICATION' && (
+                                                        <>
+                                                          <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Activar</button>
+                                                          <button onClick={() => rejectShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-red-50 text-red-600 border-red-200">Rechazar</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                        </>
+                                                    )}
+                                                    {status === 'ACTIVE' && (
+                                                        <>
+                                                          <button onClick={() => suspendAgenda(shop.id)} className="text-xs border px-2 py-1 rounded bg-orange-50 text-orange-600 border-orange-200">Suspender Agenda</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                        </>
+                                                    )}
+                                                    {status === 'AGENDA_SUSPENDED' && (
+                                                        <>
+                                                          <button onClick={() => liftSuspension(shop.id)} className="text-xs border px-2 py-1 rounded bg-blue-50 text-blue-600 border-blue-200">Levantar Sancion</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                        </>
+                                                    )}
+                                                    {(status === 'HIDDEN' || status === 'BANNED') && (
+                                                        <>
+                                                          <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Reactivar</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                        </>
+                                                    )}
+                                                    <button onClick={() => assignOwner(shop.id)} className="text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200">
+                                                        Asignar dueño
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )})}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                  </div>
             )}
@@ -940,52 +1191,93 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                 <div className="space-y-6 animate-in fade-in">
                     <h2 className="font-serif text-2xl text-dm-dark">Control de Reels</h2>
                     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 border-b">
-                                <tr>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Tienda</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Plataforma</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Vistas</th>
-                                    <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {reels.map(reel => (
-                                    <tr key={reel.id}>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden"><img src={reel.shopLogo} className="w-full h-full object-cover"/></div>
-                                                <div>
-                                                    <p className="font-bold text-sm">{reel.shopName}</p>
-                                                    <p className="text-[10px] text-gray-400">{new Date(reel.createdAtISO).toLocaleDateString()}</p>
-                                                </div>
+                        <div className="md:hidden divide-y">
+                            {reels.map((reel) => (
+                                <div key={reel.id} className="p-4 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
+                                                <img src={reel.shopLogo} className="w-full h-full object-cover" />
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-xs">{reel.platform}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`text-[10px] px-2 py-1 rounded font-bold ${
-                                                reel.status === 'ACTIVE' ? 'bg-green-50 text-green-700' :
-                                                reel.status === 'EXPIRED' ? 'bg-gray-100 text-gray-500' :
-                                                'bg-red-50 text-red-600'
-                                            }`}>
-                                                {reel.status}
-                                            </span>
-                                            {reel.origin === 'EXTRA' && <span className="ml-2 text-[10px] bg-yellow-50 text-yellow-600 px-1 rounded border border-yellow-200">EXTRA</span>}
-                                        </td>
-                                        <td className="px-6 py-4 text-xs">{reel.views || 0}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button 
-                                                onClick={() => toggleReelHide(reel)}
-                                                className={`text-xs border px-2 py-1 rounded ${reel.status === 'HIDDEN' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}
-                                            >
-                                                {reel.status === 'HIDDEN' ? 'Reactivar' : 'Ocultar'}
-                                            </button>
-                                        </td>
+                                            <div>
+                                                <p className="text-sm font-bold text-dm-dark">{reel.shopName}</p>
+                                                <p className="text-[10px] text-gray-400">{new Date(reel.createdAtISO).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[11px] text-gray-500">{reel.platform}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className={`text-[11px] px-2 py-1 rounded font-bold ${
+                                            reel.status === 'ACTIVE' ? 'bg-green-50 text-green-700' :
+                                            reel.status === 'EXPIRED' ? 'bg-gray-100 text-gray-500' :
+                                            'bg-red-50 text-red-600'
+                                        }`}>
+                                            {reel.status}
+                                        </span>
+                                        <span className="text-[11px] text-gray-600">{reel.views || 0} vistas</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        {reel.origin === 'EXTRA' && (
+                                            <span className="text-[11px] bg-yellow-50 text-yellow-600 px-1 rounded border border-yellow-200">EXTRA</span>
+                                        )}
+                                        <button 
+                                            onClick={() => toggleReelHide(reel)}
+                                            className={`text-xs border px-2 py-1 rounded ${reel.status === 'HIDDEN' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}
+                                        >
+                                            {reel.status === 'HIDDEN' ? 'Reactivar' : 'Ocultar'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="hidden md:block">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 border-b">
+                                    <tr>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Tienda</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Plataforma</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Vistas</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {reels.map(reel => (
+                                        <tr key={reel.id}>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden"><img src={reel.shopLogo} className="w-full h-full object-cover"/></div>
+                                                    <div>
+                                                        <p className="font-bold text-sm">{reel.shopName}</p>
+                                                        <p className="text-[10px] text-gray-400">{new Date(reel.createdAtISO).toLocaleDateString()}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-xs">{reel.platform}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`text-[10px] px-2 py-1 rounded font-bold ${
+                                                    reel.status === 'ACTIVE' ? 'bg-green-50 text-green-700' :
+                                                    reel.status === 'EXPIRED' ? 'bg-gray-100 text-gray-500' :
+                                                    'bg-red-50 text-red-600'
+                                                }`}>
+                                                    {reel.status}
+                                                </span>
+                                                {reel.origin === 'EXTRA' && <span className="ml-2 text-[10px] bg-yellow-50 text-yellow-600 px-1 rounded border border-yellow-200">EXTRA</span>}
+                                            </td>
+                                            <td className="px-6 py-4 text-xs">{reel.views || 0}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button 
+                                                    onClick={() => toggleReelHide(reel)}
+                                                    className={`text-xs border px-2 py-1 rounded ${reel.status === 'HIDDEN' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}
+                                                >
+                                                    {reel.status === 'HIDDEN' ? 'Reactivar' : 'Ocultar'}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             )}

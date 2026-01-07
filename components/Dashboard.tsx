@@ -916,110 +916,198 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   </header>
 
                   <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                      <table className="w-full text-left">
-                          <thead className="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 font-bold">
-                              <tr>
-                                  <th className="px-6 py-4">Información</th>
-                                  <th className="px-6 py-4">Red Social</th>
-                                  <th className="px-6 py-4">Estado</th>
-                                  <th className="px-6 py-4">Calificación</th>
-                                  <th className="px-6 py-4 text-right">Acciones</th>
-                              </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-50">
-                              {myStreams.length > 0 ? myStreams.map(stream => (
-                                  <tr key={stream.id} className="hover:bg-gray-50/50 transition-colors">
-                                      <td className="px-6 py-4">
-                                          <div className="flex flex-col">
-                                              <span className="font-bold text-dm-dark text-sm">{stream.title}</span>
-                                              <span className="text-xs text-gray-500">
-                                                  {new Date(stream.fullDateISO).toLocaleDateString()} - {stream.scheduledTime} hs
-                                              </span>
-                                          </div>
-                                      </td>
-                                      <td className="px-6 py-4">
-                                          <span className={`text-[10px] font-bold px-2 py-1 rounded border ${
-                                             stream.platform === 'Instagram' ? 'border-pink-200 text-pink-600 bg-pink-50' : 
-                                             stream.platform === 'TikTok' ? 'border-gray-800 text-gray-900 bg-gray-100' :
-                                             'border-blue-200 text-blue-600 bg-blue-50'
-                                          }`}>
-                                             {stream.platform}
-                                          </span>
-                                      </td>
-                                      <td className="px-6 py-4">
-                                           {stream.status === StreamStatus.LIVE ? (
-                                               <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">EN VIVO</span>
-                                           ) : stream.status === StreamStatus.UPCOMING ? (
-                                               <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">PROGRAMADO</span>
-                                           ) : stream.status === StreamStatus.MISSED ? (
-                                               <span className="bg-orange-100 text-orange-600 text-[10px] font-bold px-2 py-1 rounded-full">NO REALIZADO</span>
-                                           ) : stream.status === StreamStatus.CANCELLED ? (
-                                               <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full">CANCELADO</span>
-                                           ) : stream.status === StreamStatus.BANNED ? (
-                                               <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full">BLOQUEADO</span>
-                                           ) : stream.status === StreamStatus.PENDING_REPROGRAMMATION ? (
-                                               <span className="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-1 rounded-full">REPROGRAMAR</span>
-                                           ) : (
-                                               <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-full">FINALIZADO</span>
-                                           )}
-                                      </td>
-                                      <td className="px-6 py-4">
-                                          <div className="flex items-center gap-1">
-                                              <Star size={14} className={stream.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
-                                              <span className="text-sm font-bold text-gray-700">{stream.rating || '-'}</span>
-                                              {stream.rating && <span className="text-xs text-gray-400">({Math.floor(Math.random() * 50) + 5})</span>}
-                                          </div>
-                                      </td>
-                                      <td className="px-6 py-4 text-right">
-                                          <div className="flex justify-end items-center gap-2">
-                                              {stream.status === StreamStatus.LIVE && onExtendStream && stream.extensionCount < 3 && (
-                                                  <Button 
-                                                      size="sm" 
-                                                      className="bg-green-500 hover:bg-green-600 text-white text-[10px] px-2 h-7"
-                                                      onClick={() => onExtendStream(stream.id)}
-                                                      title="Extender 30 minutos más"
-                                                  >
-                                                      <RefreshCw size={10} className="mr-1"/> Continuamos
-                                                  </Button>
-                                              )}
-                                              {(stream.status === StreamStatus.UPCOMING || stream.status === StreamStatus.PENDING_REPROGRAMMATION) && (
-                                                  <>
-                                                    <button
-                                                        onClick={() => openEditModal(stream)}
-                                                        disabled={!canManageAgenda}
-                                                        title={!canManageAgenda ? getRestrictionMessage() : 'Editar vivo'}
-                                                        className={`p-1.5 rounded ${!canManageAgenda ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
-                                                    >
-                                                        <Pencil size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            if (!canManageAgenda) return;
-                                                            setConfirmDialog({
-                                                                title: 'Cancelar vivo',
-                                                                message: '¿Confirmas la cancelación de este vivo?',
-                                                                confirmLabel: 'Cancelar vivo',
-                                                                onConfirm: () => onStreamDelete(stream.id),
-                                                            });
-                                                        }}
-                                                        disabled={!canManageAgenda}
-                                                        title={!canManageAgenda ? getRestrictionMessage() : 'Cancelar vivo'}
-                                                        className={`p-1.5 rounded ${!canManageAgenda ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'}`}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                  </>
-                                              )}
-                                          </div>
-                                      </td>
-                                  </tr>
-                              )) : (
+                      <div className="md:hidden divide-y">
+                          {myStreams.length > 0 ? myStreams.map(stream => (
+                              <div key={stream.id} className="p-4 space-y-3">
+                                  <div className="flex items-start justify-between">
+                                      <div>
+                                          <p className="text-sm font-bold text-dm-dark">{stream.title}</p>
+                                          <p className="text-[11px] text-gray-500">
+                                              {new Date(stream.fullDateISO).toLocaleDateString()} - {stream.scheduledTime} hs
+                                          </p>
+                                      </div>
+                                      <span className={`text-[11px] font-bold px-2 py-1 rounded-full ${
+                                          stream.status === StreamStatus.LIVE ? 'bg-red-100 text-red-600 animate-pulse' :
+                                          stream.status === StreamStatus.UPCOMING ? 'bg-blue-50 text-blue-600' :
+                                          stream.status === StreamStatus.MISSED ? 'bg-orange-100 text-orange-600' :
+                                          stream.status === StreamStatus.CANCELLED ? 'bg-gray-100 text-gray-600' :
+                                          stream.status === StreamStatus.BANNED ? 'bg-red-100 text-red-600' :
+                                          stream.status === StreamStatus.PENDING_REPROGRAMMATION ? 'bg-yellow-100 text-yellow-700' :
+                                          'bg-gray-100 text-gray-500'
+                                      }`}>
+                                          {stream.status === StreamStatus.UPCOMING ? 'PROGRAMADO' :
+                                           stream.status === StreamStatus.LIVE ? 'EN VIVO' :
+                                           stream.status === StreamStatus.MISSED ? 'NO REALIZADO' :
+                                           stream.status === StreamStatus.CANCELLED ? 'CANCELADO' :
+                                           stream.status === StreamStatus.BANNED ? 'BLOQUEADO' :
+                                           stream.status === StreamStatus.PENDING_REPROGRAMMATION ? 'REPROGRAMAR' :
+                                           'FINALIZADO'}
+                                      </span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-xs text-gray-500">
+                                      <span className={`text-[11px] font-bold px-2 py-1 rounded border ${
+                                         stream.platform === 'Instagram' ? 'border-pink-200 text-pink-600 bg-pink-50' : 
+                                         stream.platform === 'TikTok' ? 'border-gray-800 text-gray-900 bg-gray-100' :
+                                         'border-blue-200 text-blue-600 bg-blue-50'
+                                      }`}>
+                                         {stream.platform}
+                                      </span>
+                                      <div className="flex items-center gap-1">
+                                          <Star size={12} className={stream.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
+                                          <span className="text-xs font-bold text-gray-700">{stream.rating || '-'}</span>
+                                      </div>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2 pt-2">
+                                      {stream.status === StreamStatus.LIVE && onExtendStream && stream.extensionCount < 3 && (
+                                          <Button 
+                                              size="sm" 
+                                              className="bg-green-500 hover:bg-green-600 text-white text-[10px] px-2 h-7"
+                                              onClick={() => onExtendStream(stream.id)}
+                                              title="Extender 30 minutos más"
+                                          >
+                                              <RefreshCw size={10} className="mr-1"/> Continuamos
+                                          </Button>
+                                      )}
+                                      {(stream.status === StreamStatus.UPCOMING || stream.status === StreamStatus.PENDING_REPROGRAMMATION) && (
+                                          <>
+                                            <button
+                                                onClick={() => openEditModal(stream)}
+                                                disabled={!canManageAgenda}
+                                                title={!canManageAgenda ? getRestrictionMessage() : 'Editar vivo'}
+                                                className={`p-1.5 rounded ${!canManageAgenda ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                                            >
+                                                <Pencil size={14} />
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (!canManageAgenda) return;
+                                                    setConfirmDialog({
+                                                        title: 'Cancelar vivo',
+                                                        message: '¿Confirmas la cancelación de este vivo?',
+                                                        confirmLabel: 'Cancelar vivo',
+                                                        onConfirm: () => onStreamDelete(stream.id),
+                                                    });
+                                                }}
+                                                disabled={!canManageAgenda}
+                                                title={!canManageAgenda ? getRestrictionMessage() : 'Cancelar vivo'}
+                                                className={`p-1.5 rounded ${!canManageAgenda ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'}`}
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                          </>
+                                      )}
+                                  </div>
+                              </div>
+                          )) : (
+                              <div className="p-8 text-center text-gray-400 text-sm">No has creado ningún vivo aún.</div>
+                          )}
+                      </div>
+                      <div className="hidden md:block">
+                          <table className="w-full text-left">
+                              <thead className="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 font-bold">
                                   <tr>
-                                      <td colSpan={5} className="p-8 text-center text-gray-400 text-sm">No has creado ningún vivo aún.</td>
+                                      <th className="px-6 py-4">Información</th>
+                                      <th className="px-6 py-4">Red Social</th>
+                                      <th className="px-6 py-4">Estado</th>
+                                      <th className="px-6 py-4">Calificación</th>
+                                      <th className="px-6 py-4 text-right">Acciones</th>
                                   </tr>
-                              )}
-                          </tbody>
-                      </table>
+                              </thead>
+                              <tbody className="divide-y divide-gray-50">
+                                  {myStreams.length > 0 ? myStreams.map(stream => (
+                                      <tr key={stream.id} className="hover:bg-gray-50/50 transition-colors">
+                                          <td className="px-6 py-4">
+                                              <div className="flex flex-col">
+                                                  <span className="font-bold text-dm-dark text-sm">{stream.title}</span>
+                                                  <span className="text-xs text-gray-500">
+                                                      {new Date(stream.fullDateISO).toLocaleDateString()} - {stream.scheduledTime} hs
+                                                  </span>
+                                              </div>
+                                          </td>
+                                          <td className="px-6 py-4">
+                                              <span className={`text-[10px] font-bold px-2 py-1 rounded border ${
+                                                 stream.platform === 'Instagram' ? 'border-pink-200 text-pink-600 bg-pink-50' : 
+                                                 stream.platform === 'TikTok' ? 'border-gray-800 text-gray-900 bg-gray-100' :
+                                                 'border-blue-200 text-blue-600 bg-blue-50'
+                                              }`}>
+                                                 {stream.platform}
+                                              </span>
+                                          </td>
+                                          <td className="px-6 py-4">
+                                               {stream.status === StreamStatus.LIVE ? (
+                                                   <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">EN VIVO</span>
+                                               ) : stream.status === StreamStatus.UPCOMING ? (
+                                                   <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">PROGRAMADO</span>
+                                               ) : stream.status === StreamStatus.MISSED ? (
+                                                   <span className="bg-orange-100 text-orange-600 text-[10px] font-bold px-2 py-1 rounded-full">NO REALIZADO</span>
+                                               ) : stream.status === StreamStatus.CANCELLED ? (
+                                                   <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full">CANCELADO</span>
+                                               ) : stream.status === StreamStatus.BANNED ? (
+                                                   <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full">BLOQUEADO</span>
+                                               ) : stream.status === StreamStatus.PENDING_REPROGRAMMATION ? (
+                                                   <span className="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-1 rounded-full">REPROGRAMAR</span>
+                                               ) : (
+                                                   <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-full">FINALIZADO</span>
+                                               )}
+                                          </td>
+                                          <td className="px-6 py-4">
+                                              <div className="flex items-center gap-1">
+                                                  <Star size={14} className={stream.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
+                                                  <span className="text-sm font-bold text-gray-700">{stream.rating || '-'}</span>
+                                                  {stream.rating && <span className="text-xs text-gray-400">({Math.floor(Math.random() * 50) + 5})</span>}
+                                              </div>
+                                          </td>
+                                          <td className="px-6 py-4 text-right">
+                                              <div className="flex justify-end items-center gap-2">
+                                                  {stream.status === StreamStatus.LIVE && onExtendStream && stream.extensionCount < 3 && (
+                                                      <Button 
+                                                          size="sm" 
+                                                          className="bg-green-500 hover:bg-green-600 text-white text-[10px] px-2 h-7"
+                                                          onClick={() => onExtendStream(stream.id)}
+                                                          title="Extender 30 minutos más"
+                                                      >
+                                                          <RefreshCw size={10} className="mr-1"/> Continuamos
+                                                      </Button>
+                                                  )}
+                                                  {(stream.status === StreamStatus.UPCOMING || stream.status === StreamStatus.PENDING_REPROGRAMMATION) && (
+                                                      <>
+                                                        <button
+                                                            onClick={() => openEditModal(stream)}
+                                                            disabled={!canManageAgenda}
+                                                            title={!canManageAgenda ? getRestrictionMessage() : 'Editar vivo'}
+                                                            className={`p-1.5 rounded ${!canManageAgenda ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                                                        >
+                                                            <Pencil size={14} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                if (!canManageAgenda) return;
+                                                                setConfirmDialog({
+                                                                    title: 'Cancelar vivo',
+                                                                    message: '¿Confirmas la cancelación de este vivo?',
+                                                                    confirmLabel: 'Cancelar vivo',
+                                                                    onConfirm: () => onStreamDelete(stream.id),
+                                                                });
+                                                            }}
+                                                            disabled={!canManageAgenda}
+                                                            title={!canManageAgenda ? getRestrictionMessage() : 'Cancelar vivo'}
+                                                            className={`p-1.5 rounded ${!canManageAgenda ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'}`}
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                      </>
+                                                  )}
+                                              </div>
+                                          </td>
+                                      </tr>
+                                  )) : (
+                                      <tr>
+                                          <td colSpan={5} className="p-8 text-center text-gray-400 text-sm">No has creado ningún vivo aún.</td>
+                                      </tr>
+                                  )}
+                              </tbody>
+                          </table>
+                      </div>
                   </div>
               </div>
           )}

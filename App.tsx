@@ -955,7 +955,7 @@ const App: React.FC = () => {
               <button
                 key={item.id}
                 onClick={item.onSelect}
-                className={`flex flex-col items-center gap-1 text-[10px] font-semibold ${item.isCenter ? '-translate-y-3' : ''} ${isActive ? 'text-dm-crimson' : 'text-gray-400'}`}
+                className={`flex flex-col items-center gap-1 text-[11px] font-semibold ${item.isCenter ? '-translate-y-3' : ''} ${isActive ? 'text-dm-crimson' : 'text-gray-500'}`}
               >
                 <span className={`relative flex h-11 w-11 items-center justify-center rounded-full ${item.isCenter ? 'bg-dm-crimson text-white shadow-lg shadow-dm-crimson/30' : 'bg-white'}`}>
                   <Icon size={20} className={item.isCenter ? 'text-white' : (isActive ? 'text-dm-crimson' : 'text-gray-400')} />
@@ -1038,7 +1038,7 @@ const App: React.FC = () => {
                            <img src={shop.logoUrl} alt={shop.name} className="h-12 w-12 rounded-full object-cover border border-gray-200" />
                            <div>
                              <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
-                             <p className="text-[10px] text-gray-400 uppercase">{shop.plan}</p>
+                          <p className="text-[11px] text-gray-500 uppercase">{shop.plan}</p>
                            </div>
                          </div>
                          <div className="mt-2 flex items-center gap-2 text-[10px] text-gray-500">
@@ -1110,10 +1110,10 @@ const App: React.FC = () => {
                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                        {reminderStreams.map((stream) => (
                          <div key={stream.id} className="rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm">
-                           <p className="text-xs text-gray-400 uppercase">Recordatorio</p>
+                           <p className="text-xs text-gray-500 uppercase">Recordatorio</p>
                            <p className="mt-1 text-sm font-bold text-dm-dark">{stream.title}</p>
-                           <p className="text-[10px] text-gray-400">{stream.scheduledTime} • {stream.shop.name}</p>
-                           <div className="mt-4 flex items-center justify-between text-[10px] font-bold">
+                           <p className="text-[11px] text-gray-500">{stream.scheduledTime} • {stream.shop.name}</p>
+                           <div className="mt-4 flex items-center justify-between text-[11px] font-bold">
                              <button
                                className="text-dm-crimson hover:text-dm-dark"
                                onClick={() => handleOpenShop(stream.shop)}
@@ -1121,7 +1121,7 @@ const App: React.FC = () => {
                                Ver tienda
                              </button>
                              <button
-                               className="text-gray-400 hover:text-dm-crimson"
+                               className="text-gray-500 hover:text-dm-crimson"
                                onClick={() => handleToggleReminder(stream.id)}
                              >
                                Quitar
@@ -1268,7 +1268,7 @@ const App: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setAccountTab(tab.id as any)}
-                  className={`flex-1 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                  className={`flex-1 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${
                     accountTab === tab.id
                       ? 'border-dm-crimson text-dm-crimson bg-red-50'
                       : 'border-gray-200 text-gray-400'
