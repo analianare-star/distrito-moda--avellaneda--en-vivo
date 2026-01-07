@@ -763,6 +763,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                 <tr>
                                     <th className="px-6 py-3 text-xs font-bold text-gray-500">Vivo</th>
                                     <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Motivo</th>
                                     <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
                                 </tr>
                             </thead>
@@ -775,6 +776,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                 <p className="text-[10px] text-gray-400">{report?.stream?.shop?.name || 'Sin tienda'}</p>
                                             </td>
                                             <td className="px-6 py-4 text-xs font-bold">{report.status || 'OPEN'}</td>
+                                            <td className="px-6 py-4">
+                                                <p className="text-[10px] text-gray-500">{report.reason || 'Sin motivo'}</p>
+                                            </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <Button
@@ -828,7 +832,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={3} className="px-6 py-6 text-center text-xs text-gray-400">Sin reportes abiertos.</td>
+                                        <td colSpan={4} className="px-6 py-6 text-center text-xs text-gray-400">Sin reportes abiertos.</td>
                                     </tr>
                                 )}
                             </tbody>
