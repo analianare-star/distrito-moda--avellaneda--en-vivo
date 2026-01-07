@@ -756,10 +756,15 @@ const App: React.FC = () => {
 
   const handleClientNav = (id: string) => {
       setViewMode('CLIENT');
-      setActiveBottomNav(id);
+      if (id === 'favorites') {
+          setSavedTab('FAVORITES');
+          setActiveBottomNav('reminders');
+      } else {
+          setActiveBottomNav(id);
+      }
       if (id === 'home') setActiveFilter('Todos');
       if (id === 'live') setActiveFilter('En Vivo');
-      if (id === 'favorites') setSavedTab('FAVORITES');
+      if (id === 'reminders') setSavedTab('REMINDERS');
       if (id === 'account') {
           setIsAccountDrawerOpen(true);
           setAccountTab('RESUMEN');
@@ -804,6 +809,7 @@ const App: React.FC = () => {
 
   const isMerchantUser = authProfile?.userType === 'SHOP';
   const accountBadgeCount = unreadNotifications.length;
+  const reminderBadgeCount = reminderStreams.length;
   const accountTabs = [
       { id: 'RESUMEN', label: 'Resumen', icon: UserCircle, badge: 0 },
       { id: 'NOTIFICATIONS', label: 'Notificaciones', icon: Bell, badge: accountBadgeCount },
@@ -829,7 +835,7 @@ const App: React.FC = () => {
           { id: 'home', label: 'Inicio', icon: Home, isCenter: false, onSelect: () => handleClientNav('home') },
           { id: 'shops', label: 'Tiendas', icon: Store, isCenter: false, onSelect: () => handleClientNav('shops') },
           { id: 'live', label: 'En vivo', icon: Radio, isCenter: true, onSelect: () => handleClientNav('live') },
-          { id: 'favorites', label: 'Favoritos', icon: Heart, isCenter: false, onSelect: () => handleClientNav('favorites') },
+          { id: 'reminders', label: 'Recordatorios', icon: Clock, isCenter: false, onSelect: () => handleClientNav('reminders'), badge: reminderBadgeCount },
           { id: 'account', label: user.isLoggedIn ? 'Cuenta' : 'Ingresar', icon: User, isCenter: false, onSelect: () => handleClientNav('account'), badge: accountBadgeCount }
         ];
 
@@ -1052,7 +1058,7 @@ const App: React.FC = () => {
                  </>
                )}
 
-               {activeBottomNav === 'favorites' && (
+               {(activeBottomNav === 'favorites' || activeBottomNav === 'reminders') && (
                  <>
                    <div className="flex items-center justify-between mb-8">
                       <div>
