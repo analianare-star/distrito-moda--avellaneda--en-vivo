@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Reel } from '../types';
-import { X, ExternalLink, Clock, Share2 } from 'lucide-react';
+import { X, ExternalLink, Clock, Share2, Eye } from 'lucide-react';
 import { Button } from './Button';
 
 interface StoryModalProps {
@@ -69,9 +69,15 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify 
                     </div>
                     <div className="flex-1">
                         <p className="text-white font-bold text-sm">{reel.shopName}</p>
-                        <p className="text-gray-300 text-xs flex items-center gap-1">
-                            <Clock size={10} /> Expira en {hoursLeft}h {minutesLeft}m
-                        </p>
+                        <div className="flex items-center gap-2 text-gray-300 text-xs">
+                            <span className="flex items-center gap-1">
+                                <Clock size={10} /> Expira en {hoursLeft}h {minutesLeft}m
+                            </span>
+                            <span className="h-1 w-1 rounded-full bg-gray-500" />
+                            <span className="flex items-center gap-1">
+                                <Eye size={10} /> {reel.views || 0} vistas
+                            </span>
+                        </div>
                     </div>
                 </div>
 

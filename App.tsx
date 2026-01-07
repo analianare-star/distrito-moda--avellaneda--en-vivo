@@ -79,6 +79,7 @@ const App: React.FC = () => {
   const [selectedReel, setSelectedReel] = useState<Reel | null>(null);
   const [reportTarget, setReportTarget] = useState<Stream | null>(null);
   const [activeFilter, setActiveFilter] = useState('Todos');
+  const [savedTab, setSavedTab] = useState<'FAVORITES' | 'REMINDERS'>('FAVORITES');
   const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
   const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -663,6 +664,17 @@ const App: React.FC = () => {
       if (activeFilter === 'En Vivo') filtered = filtered.filter(s => s.status === StreamStatus.LIVE);
       if (activeFilter === 'PrÃ³ximos') filtered = filtered.filter(s => s.status === StreamStatus.UPCOMING);
       if (activeFilter === 'Finalizados') filtered = filtered.filter(s => s.status === StreamStatus.FINISHED || s.status === StreamStatus.MISSED);
+
+      if (activeFilter === 'En Vivo') {
+          filtered.sort((a, b) => {
+              const weightA = planWeight(a.shop.plan);
+              const weightB = planWeight(b.shop.plan);
+              if (weightA !== weightB) return weightB - weightA;
+              if (a.shop.ratingAverage !== b.shop.ratingAverage) return b.shop.ratingAverage - a.shop.ratingAverage;
+              return (b.views || 0) - (a.views || 0);
+          });
+          return filtered;
+      }
       
       filtered.sort((a, b) => {
           const getPriority = (status: StreamStatus) => {
@@ -683,19 +695,37 @@ const App: React.FC = () => {
       return filtered;
   };
 
+  const planWeight = (plan: string) => {
+      if (plan === 'Maxima Visibilidad') return 3;
+      if (plan === 'Alta Visibilidad') return 2;
+      return 1;
+  };
+
   const liveStreams = allStreams.filter(s => s.status === StreamStatus.LIVE && s.isVisible && s.shop?.status === 'ACTIVE');
   const sortedLiveStreams = [...liveStreams].sort((a, b) => {
-      const planWeight = (plan: string) => {
-          if (plan === 'Maxima Visibilidad') return 3;
-          if (plan === 'Alta Visibilidad') return 2;
-          return 1;
-      };
       const weightA = planWeight(a.shop.plan);
       const weightB = planWeight(b.shop.plan);
       if (weightA !== weightB) return weightB - weightA;
       if (a.shop.ratingAverage !== b.shop.ratingAverage) return b.shop.ratingAverage - a.shop.ratingAverage;
       return (b.views || 0) - (a.views || 0);
   });
+
+  const isPublicShop = (shop: Shop) => {
+      if (!shop.status) return true;
+      return shop.status === 'ACTIVE';
+  };
+
+  const sortShopsByPriority = (shops: Shop[]) =>
+      [...shops].sort((a, b) => {
+          const weightA = planWeight(a.plan);
+          const weightB = planWeight(b.plan);
+          if (weightA !== weightB) return weightB - weightA;
+          if (a.ratingAverage !== b.ratingAverage) return b.ratingAverage - a.ratingAverage;
+          return a.name.localeCompare(b.name);
+      });
+
+  const publicShops = sortShopsByPriority(allShops.filter(isPublicShop));
+  const favoriteShops = sortShopsByPriority(allShops.filter((shop) => user.favorites.includes(shop.id)));
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center font-bold text-dm-dark">Cargando Sistema Avellaneda...</div>;
 
@@ -729,6 +759,7 @@ const App: React.FC = () => {
       setActiveBottomNav(id);
       if (id === 'home') setActiveFilter('Todos');
       if (id === 'live') setActiveFilter('En Vivo');
+      if (id === 'favorites') setSavedTab('FAVORITES');
       if (id === 'account') {
           setIsAccountDrawerOpen(true);
           setAccountTab('RESUMEN');
@@ -803,7 +834,6 @@ const App: React.FC = () => {
         ];
 
   const canClientInteract = user.isLoggedIn && authProfile?.userType === 'CLIENT';
-  const favoriteShops = allShops.filter((shop) => user.favorites.includes(shop.id));
 
   return (
     <div className="min-h-screen bg-white">
@@ -988,11 +1018,11 @@ const App: React.FC = () => {
                    <div className="flex items-center justify-between mb-8">
                       <h2 className="font-serif text-3xl text-dm-dark">Tiendas</h2>
                       <div className="text-sm font-sans text-gray-500">
-                          {allShops.length} registradas
+                          {publicShops.length} registradas
                       </div>
                    </div>
                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                     {allShops.map((shop) => (
+                     {publicShops.map((shop) => (
                        <button
                          key={shop.id}
                          onClick={() => handleOpenShop(shop)}
@@ -1005,10 +1035,15 @@ const App: React.FC = () => {
                              <p className="text-[10px] text-gray-400 uppercase">{shop.plan}</p>
                            </div>
                          </div>
+                         <div className="mt-2 flex items-center gap-2 text-[10px] text-gray-500">
+                           <span className="font-bold text-dm-dark">{shop.ratingAverage?.toFixed(1) || '0.0'}</span>
+                           <span>★</span>
+                           <span>({shop.ratingCount || 0})</span>
+                         </div>
                          <p className="mt-3 text-xs text-gray-500 line-clamp-2">{shop.address || 'Sin dirección cargada'}</p>
                        </button>
                      ))}
-                     {allShops.length === 0 && (
+                     {publicShops.length === 0 && (
                        <div className="col-span-full text-center py-12 text-gray-400 font-sans">
                          No hay tiendas disponibles.
                        </div>
@@ -1020,34 +1055,87 @@ const App: React.FC = () => {
                {activeBottomNav === 'favorites' && (
                  <>
                    <div className="flex items-center justify-between mb-8">
-                      <h2 className="font-serif text-3xl text-dm-dark">Favoritos</h2>
-                      <div className="text-sm font-sans text-gray-500">
-                          {favoriteShops.length} tiendas guardadas
+                      <div>
+                        <h2 className="font-serif text-3xl text-dm-dark">Guardados</h2>
+                        <p className="text-sm font-sans text-gray-500">
+                          {savedTab === 'FAVORITES' ? `${favoriteShops.length} tiendas guardadas` : `${reminderStreams.length} recordatorios activos`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-full border border-gray-100 bg-white p-1 text-[11px] font-bold">
+                        <button
+                          onClick={() => setSavedTab('FAVORITES')}
+                          className={`rounded-full px-3 py-1 ${savedTab === 'FAVORITES' ? 'bg-dm-crimson text-white' : 'text-gray-400'}`}
+                        >
+                          Favoritos
+                        </button>
+                        <button
+                          onClick={() => setSavedTab('REMINDERS')}
+                          className={`rounded-full px-3 py-1 ${savedTab === 'REMINDERS' ? 'bg-dm-crimson text-white' : 'text-gray-400'}`}
+                        >
+                          Recordatorios
+                        </button>
                       </div>
                    </div>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                     {favoriteShops.map((shop) => (
-                       <button
-                         key={shop.id}
-                         onClick={() => handleOpenShop(shop)}
-                         className="rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
-                       >
-                         <div className="flex items-center gap-3">
-                           <img src={shop.logoUrl} alt={shop.name} className="h-12 w-12 rounded-full object-cover border border-gray-200" />
-                           <div>
-                             <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
-                             <p className="text-[10px] text-gray-400 uppercase">{shop.plan}</p>
+                   {savedTab === 'FAVORITES' ? (
+                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                       {favoriteShops.map((shop) => (
+                         <button
+                           key={shop.id}
+                           onClick={() => handleOpenShop(shop)}
+                           className="rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
+                         >
+                           <div className="flex items-center gap-3">
+                             <img src={shop.logoUrl} alt={shop.name} className="h-12 w-12 rounded-full object-cover border border-gray-200" />
+                             <div>
+                               <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
+                               <p className="text-[10px] text-gray-400 uppercase">{shop.plan}</p>
+                             </div>
+                           </div>
+                           <p className="mt-3 text-xs text-gray-500 line-clamp-2">{shop.address || 'Sin dirección cargada'}</p>
+                         </button>
+                       ))}
+                       {favoriteShops.length === 0 && (
+                         <div className="col-span-full text-center py-12 text-gray-400 font-sans">
+                           {canClientInteract ? 'Todavía no seguiste ninguna tienda.' : 'Inicia sesión para guardar favoritos.'}
+                         </div>
+                       )}
+                     </div>
+                   ) : (
+                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                       {reminderStreams.map((stream) => (
+                         <div key={stream.id} className="rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm">
+                           <p className="text-xs text-gray-400 uppercase">Recordatorio</p>
+                           <p className="mt-1 text-sm font-bold text-dm-dark">{stream.title}</p>
+                           <p className="text-[10px] text-gray-400">{stream.scheduledTime} • {stream.shop.name}</p>
+                           <div className="mt-4 flex items-center justify-between text-[10px] font-bold">
+                             <button
+                               className="text-dm-crimson hover:text-dm-dark"
+                               onClick={() => handleOpenShop(stream.shop)}
+                             >
+                               Ver tienda
+                             </button>
+                             <button
+                               className="text-gray-400 hover:text-dm-crimson"
+                               onClick={() => handleToggleReminder(stream.id)}
+                             >
+                               Quitar
+                             </button>
+                             <button
+                               className="text-dm-crimson hover:text-dm-dark"
+                               onClick={() => handleDownloadICS(stream)}
+                             >
+                               Descargar .ics
+                             </button>
                            </div>
                          </div>
-                         <p className="mt-3 text-xs text-gray-500 line-clamp-2">{shop.address || 'Sin dirección cargada'}</p>
-                       </button>
-                     ))}
-                     {favoriteShops.length === 0 && (
-                       <div className="col-span-full text-center py-12 text-gray-400 font-sans">
-                         {canClientInteract ? 'Todavía no seguiste ninguna tienda.' : 'Inicia sesión para guardar favoritos.'}
-                       </div>
-                     )}
-                   </div>
+                       ))}
+                       {reminderStreams.length === 0 && (
+                         <div className="col-span-full text-center py-12 text-gray-400 font-sans">
+                           {canClientInteract ? 'No tenés recordatorios activos.' : 'Inicia sesión para usar recordatorios.'}
+                         </div>
+                       )}
+                     </div>
+                   )}
                  </>
                )}
 

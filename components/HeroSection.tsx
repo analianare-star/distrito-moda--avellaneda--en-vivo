@@ -90,6 +90,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                                   <span className={`text-[10px] text-center truncate w-full transition-colors ${isSeen ? 'text-gray-400 font-normal' : 'text-dm-dark font-bold group-hover:text-dm-crimson'}`}>
                                       {reel.shopName}
                                   </span>
+                                  <span className="text-[9px] text-gray-400">{reel.views || 0} vistas</span>
                               </div>
                           );
                       })}

@@ -778,7 +778,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                            <div key={reel.id} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-100">
                                                <div className="overflow-hidden">
                                                    <p className="text-xs font-bold truncate w-40">{reel.url}</p>
-                                                   <p className="text-[10px] text-gray-500">{reel.platform} • Expira en {hours}h</p>
+                                                   <p className="text-[10px] text-gray-500">
+                                                     {reel.platform} • Expira en {hours}h • {reel.views || 0} vistas
+                                                   </p>
                                                </div>
                                                <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded font-bold">ACTIVA</span>
                                            </div>

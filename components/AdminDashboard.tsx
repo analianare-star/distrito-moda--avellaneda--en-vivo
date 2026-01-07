@@ -946,6 +946,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                     <th className="px-6 py-3 text-xs font-bold text-gray-500">Tienda</th>
                                     <th className="px-6 py-3 text-xs font-bold text-gray-500">Plataforma</th>
                                     <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-gray-500">Vistas</th>
                                     <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
                                 </tr>
                             </thead>
@@ -972,6 +973,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                             </span>
                                             {reel.origin === 'EXTRA' && <span className="ml-2 text-[10px] bg-yellow-50 text-yellow-600 px-1 rounded border border-yellow-200">EXTRA</span>}
                                         </td>
+                                        <td className="px-6 py-4 text-xs">{reel.views || 0}</td>
                                         <td className="px-6 py-4 text-right">
                                             <button 
                                                 onClick={() => toggleReelHide(reel)}

@@ -184,6 +184,7 @@ const mapReel = (reel: any): Reel => {
     status,
     origin: reel.origin || 'PLAN',
     platform: reel.platform as SocialPlatform,
+    views: Number(reel.views ?? 0),
   };
 };
 

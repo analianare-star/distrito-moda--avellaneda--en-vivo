@@ -80,6 +80,7 @@ export interface Reel {
   status: 'ACTIVE' | 'EXPIRED' | 'HIDDEN';
   origin: 'PLAN' | 'EXTRA';
   platform: SocialPlatform;
+  views?: number;
 }
 
 export interface Shop {
