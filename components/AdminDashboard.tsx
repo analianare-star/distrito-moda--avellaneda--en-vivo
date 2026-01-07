@@ -612,15 +612,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                         <div className="md:hidden divide-y">
                             {filteredAgendaStreams.length > 0 ? (
                                 filteredAgendaStreams.map((stream) => (
-                                    <div key={stream.id} className="p-4 space-y-2">
+                                    <div key={stream.id} className="p-3 space-y-2">
                                         <div className="flex items-center justify-between">
                                             <p className="text-sm font-bold text-dm-dark">{stream.shop?.name || 'Sin tienda'}</p>
                                             <span className="text-[11px] font-bold text-gray-600">{stream.status}</span>
                                         </div>
-                                        <p className="text-xs text-gray-500">
+                                        <p className="text-[11px] text-gray-600">
                                             {new Date(stream.fullDateISO).toLocaleDateString()} {stream.scheduledTime} hs
                                         </p>
-                                        <p className="text-[11px] text-gray-500 uppercase">{stream.platform}</p>
+                                        <p className="text-[11px] text-gray-600 uppercase">{stream.platform}</p>
                                     </div>
                                 ))
                             ) : (
@@ -667,17 +667,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
                         <div className="md:hidden divide-y">
                             {streams.map((stream) => (
-                                <div key={stream.id} className="p-4 space-y-3">
+                                <div key={stream.id} className="p-3 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-sm font-bold text-dm-dark">{stream.title}</p>
-                                            <p className="text-[11px] text-gray-500">{stream.shop.name}</p>
+                                            <p className="text-[11px] text-gray-600">{stream.shop.name}</p>
                                         </div>
                                         <span className={`text-[11px] px-2 py-1 rounded ${stream.status === 'LIVE' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
                                             {stream.status}
                                         </span>
                                     </div>
-                                    <div className="flex items-center justify-between text-xs text-gray-500">
+                                    <div className="flex items-center justify-between text-[11px] text-gray-600">
                                         <span>Reportes</span>
                                         {stream.reportCount > 0 ? (
                                             <span className="text-red-600 font-bold flex items-center gap-1"><AlertTriangle size={12}/> {stream.reportCount}</span>
@@ -878,13 +878,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                         <div className="md:hidden divide-y">
                             {reports.length > 0 ? (
                                 reports.map((report) => (
-                                    <div key={report.id} className="p-4 space-y-3">
+                                    <div key={report.id} className="p-3 space-y-2">
                                         <div>
                                             <p className="text-sm font-bold text-dm-dark">{report?.stream?.title || report.streamId}</p>
-                                            <p className="text-[11px] text-gray-500">{report?.stream?.shop?.name || 'Sin tienda'}</p>
+                                            <p className="text-[11px] text-gray-600">{report?.stream?.shop?.name || 'Sin tienda'}</p>
                                         </div>
                                         <div className="flex items-center justify-between text-xs">
-                                            <span className="font-bold text-gray-600">{report.status || 'OPEN'}</span>
+                                            <span className="font-bold text-gray-700">{report.status || 'OPEN'}</span>
                                             <span className="text-[11px] text-gray-600">{report.reason || 'Sin motivo'}</span>
                                         </div>
                                         <div className="flex gap-2">
@@ -1046,11 +1046,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                             {filteredShops.map((shop) => {
                                 const status = shop.status || 'ACTIVE';
                                 return (
-                                    <div key={shop.id} className="p-4 space-y-3">
+                                    <div key={shop.id} className="p-3 space-y-2">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
-                                                <p className="text-[11px] text-gray-500">{shop.plan}</p>
+                                                <p className="text-[11px] text-gray-600">{shop.plan}</p>
                                             </div>
                                             <span className={`text-[11px] px-2 py-1 rounded-full font-bold ${
                                                 status === 'ACTIVE' ? 'bg-green-50 text-green-600' :
@@ -1059,7 +1059,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                 'bg-red-50 text-red-600'
                                             }`}>{status}</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-[10px] text-gray-500">
+                                        <div className="flex items-center justify-between text-[11px] text-gray-600">
                                             <span>Integridad</span>
                                             <span className={`text-[11px] px-2 py-1 rounded-full font-bold ${
                                                 shop.dataIntegrity === 'COMPLETE' ? 'bg-green-50 text-green-600' :
@@ -1067,7 +1067,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                 'bg-red-50 text-red-600'
                                             }`}>{shop.dataIntegrity}</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-[10px] text-gray-500">
+                                        <div className="flex items-center justify-between text-[11px] text-gray-600">
                                             <span>Penalización</span>
                                             <button onClick={() => togglePenalty(shop.id)} className={`text-[11px] font-bold px-2 py-1 rounded border ${shop.isPenalized ? 'bg-red-50 border-red-200 text-red-600' : 'border-gray-200'}`}>
                                                 {shop.isPenalized ? 'ACTIVA' : 'No'}
@@ -1193,7 +1193,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
                         <div className="md:hidden divide-y">
                             {reels.map((reel) => (
-                                <div key={reel.id} className="p-4 space-y-3">
+                                <div key={reel.id} className="p-3 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
@@ -1201,7 +1201,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-dm-dark">{reel.shopName}</p>
-                                                <p className="text-[10px] text-gray-400">{new Date(reel.createdAtISO).toLocaleDateString()}</p>
+                                                <p className="text-[11px] text-gray-500">{new Date(reel.createdAtISO).toLocaleDateString()}</p>
                                             </div>
                                         </div>
                                         <span className="text-[11px] text-gray-500">{reel.platform}</span>

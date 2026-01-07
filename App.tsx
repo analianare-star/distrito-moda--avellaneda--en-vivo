@@ -946,7 +946,7 @@ const App: React.FC = () => {
       )}
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white/95 backdrop-blur-sm md:hidden">
-        <div className="mx-auto flex max-w-md items-end justify-between px-6 pb-3 pt-2">
+        <div className="mx-auto flex max-w-md items-end justify-between px-6 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2">
           {bottomNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeBottomNav === item.id;
@@ -972,7 +972,7 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      <div className="pt-16 pb-24 md:pb-12">
+      <div className="pt-16 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12">
         {viewMode === 'CLIENT' ? (
           <>
             <HeroSection 

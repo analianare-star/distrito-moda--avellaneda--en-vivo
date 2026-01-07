@@ -918,11 +918,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                       <div className="md:hidden divide-y">
                           {myStreams.length > 0 ? myStreams.map(stream => (
-                              <div key={stream.id} className="p-4 space-y-3">
+                              <div key={stream.id} className="p-3 space-y-2">
                                   <div className="flex items-start justify-between">
                                       <div>
                                           <p className="text-sm font-bold text-dm-dark">{stream.title}</p>
-                                          <p className="text-[11px] text-gray-500">
+                                          <p className="text-[11px] text-gray-600">
                                               {new Date(stream.fullDateISO).toLocaleDateString()} - {stream.scheduledTime} hs
                                           </p>
                                       </div>
@@ -944,7 +944,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                            'FINALIZADO'}
                                       </span>
                                   </div>
-                                  <div className="flex items-center justify-between text-xs text-gray-500">
+                                  <div className="flex items-center justify-between text-[11px] text-gray-600">
                                       <span className={`text-[11px] font-bold px-2 py-1 rounded border ${
                                          stream.platform === 'Instagram' ? 'border-pink-200 text-pink-600 bg-pink-50' : 
                                          stream.platform === 'TikTok' ? 'border-gray-800 text-gray-900 bg-gray-100' :
