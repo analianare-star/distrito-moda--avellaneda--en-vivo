@@ -49,6 +49,16 @@ export interface Review {
   date: string;
 }
 
+export interface NotificationItem {
+  id: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  type?: 'SYSTEM' | 'REMINDER' | 'PURCHASE';
+  refId?: string | null;
+  notifyAt?: string | null;
+}
+
 // Nuevo Modelo de Penalización
 export interface Penalty {
     id: string;
@@ -88,6 +98,7 @@ export interface Shop {
   status?: ShopStatus;
   statusReason?: string;
   statusChangedAt?: string;
+  ownerAcceptedAt?: string;
   agendaSuspendedUntil?: string;
   agendaSuspendedReason?: string;
   baseQuota: number; // Cupos base del plan (0, 1, 3)
@@ -122,6 +133,7 @@ export interface Shop {
   
   reviews: Review[];
   ratingAverage: number;
+  ratingCount?: number;
 }
 
 export interface Stream {
@@ -169,6 +181,7 @@ export interface UserContext {
   reminders: string[]; 
   history: string[]; // Historial de visitas
   viewedReels: string[]; // IDs de reels vistos - NEW
+  notifications?: NotificationItem[];
   
   reports: { streamId: string; timestamp: number }[]; 
   preferences: UserPreferences;

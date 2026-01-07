@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "firebase": "10.12.4",
+    "html-to-image": "^1.11.13",
+    "jspdf": "^4.0.0",
     "lucide-react": "^0.560.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1"

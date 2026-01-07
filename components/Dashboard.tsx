@@ -17,6 +17,7 @@ interface DashboardProps {
     onExtendStream?: (streamId: string) => void;
     onBuyQuota: (amount: number) => void;
     onReelChange: () => void;
+    onRefreshData: () => void;
     activeTab?: Tab;
     onTabChange?: (tab: Tab) => void;
 }
@@ -37,6 +38,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     onExtendStream,
     onBuyQuota,
     onReelChange,
+    onRefreshData,
     activeTab: activeTabProp,
     onTabChange
 }) => {
@@ -146,6 +148,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const isAgendaSuspended = shopStatus === 'AGENDA_SUSPENDED';
   const canManageAgenda = shopStatus === 'ACTIVE' && !isPenalized;
   const canSchedule = canManageAgenda && availableQuota > 0;
+  const canAcceptShop = shopStatus === 'PENDING_VERIFICATION' && !currentShop.ownerAcceptedAt;
 
   const getRestrictionMessage = () => {
       if (shopStatus === 'PENDING_VERIFICATION') return "Tu cuenta esta en verificacion. Podras agendar cuando sea activada.";
@@ -184,6 +187,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
           setShowPendingNotice(true);
       }
   }, [shopStatus]);
+
+  const handleAcceptShop = async () => {
+      try {
+          await api.acceptShop(currentShop.id);
+          setNotice({
+              title: 'Datos confirmados',
+              message: 'Tu aceptación fue registrada. Espera la aprobación del administrador.',
+              tone: 'success',
+          });
+          onRefreshData();
+      } catch (error) {
+          setNotice({
+              title: 'No se pudo confirmar',
+              message: 'Intenta nuevamente.',
+              tone: 'error',
+          });
+      } finally {
+          setShowPendingNotice(false);
+      }
+  };
 
   useEffect(() => {
       if (activeTabProp && activeTabProp !== activeTab) {
@@ -256,8 +279,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
           setReelUrl('');
           setReelPlatform('');
           if (onReelChange) onReelChange();
-          const allReels = await api.fetchAllReelsAdmin();
-          setShopReels(allReels.filter(r => r.shopId === currentShop.id));
+          const myReels = await api.fetchReelsByShop(currentShop.id);
+          setShopReels(myReels);
       } else {
           setNotice({
               title: 'No se pudo publicar',
@@ -268,16 +291,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleBuyReelConfirm = async () => {
-      // CORRECCIÓN AQUÍ: Agregamos el tercer argumento (payment simulado)
-      const updated = await api.buyReelQuota(currentShop.id, 5, { method: 'SIMULATED' });
-      if(updated) {
-          await onShopUpdate(updated);
-          if (onReelChange) onReelChange();
-      }
+      const result = await api.buyReelQuota(currentShop.id, 5, { method: 'SIMULATED' });
+      if (onReelChange) onReelChange();
+      onRefreshData();
+      const status = result?.purchase?.status;
       setNotice({
-          title: 'Compra realizada',
-          message: '¡Paquete de historias comprado!',
-          tone: 'success',
+          title: status === 'PENDING' ? 'Solicitud enviada' : 'Compra realizada',
+          message: status === 'PENDING'
+              ? 'Tu compra quedó pendiente de aprobación.'
+              : '¡Paquete de historias comprado!',
+          tone: status === 'PENDING' ? 'info' : 'success',
       });
   };
 
@@ -298,11 +321,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
               onConfirm: () => {
                   onBuyQuota(1);
                   setShowBuyModal(false);
-                  setNotice({
-                      title: 'Compra exitosa',
-                      message: '¡Cupo comprado exitosamente! Ya puedes agendar tu vivo.',
-                      tone: 'success',
-                  });
               },
       });
   };
@@ -1187,10 +1205,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <NoticeModal
         isOpen={showPendingNotice}
         title="Cuenta pendiente"
-        message="Tu tienda está en verificación. Podrás agendar y operar cuando sea aprobada."
+        message={
+          canAcceptShop
+            ? 'Confirmá tus datos para que el administrador pueda aprobar tu tienda.'
+            : 'Tus datos ya fueron confirmados. Espera la aprobación del administrador.'
+        }
         tone="warning"
         onClose={() => setShowPendingNotice(false)}
-        confirmLabel="Entendido"
+        confirmLabel={canAcceptShop ? 'Confirmar datos' : 'Entendido'}
+        onConfirm={canAcceptShop ? handleAcceptShop : undefined}
       />
 
     </div>

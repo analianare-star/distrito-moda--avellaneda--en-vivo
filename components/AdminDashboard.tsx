@@ -24,6 +24,10 @@ const PAYMENT_OPTIONS = ['Efectivo', 'Transferencia', 'Depósito', 'USDT', 'Cheq
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStreams, shops, setShops, onRefreshData, activeTab, onTabChange }) => {
   const [reels, setReels] = useState<Reel[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [purchaseRequests, setPurchaseRequests] = useState<any[]>([]);
+  const [adminNotifications, setAdminNotifications] = useState<any[]>([]);
+  const [notificationFilter, setNotificationFilter] = useState<'ALL' | 'UNREAD'>('UNREAD');
+  const [notificationType, setNotificationType] = useState<'ALL' | 'SYSTEM' | 'REMINDER' | 'PURCHASE'>('ALL');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [agendaQuery, setAgendaQuery] = useState('');
   const [agendaStatus, setAgendaStatus] = useState<'ALL' | StreamStatus>('ALL');
@@ -32,6 +36,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   const [quotaType, setQuotaType] = useState<'STREAM' | 'REEL'>('STREAM');
   const [quotaAmount, setQuotaAmount] = useState(1);
   const [officialMode, setOfficialMode] = useState(false);
+  const [sanctionsRunning, setSanctionsRunning] = useState(false);
+  const [notificationsRunning, setNotificationsRunning] = useState(false);
+  const [sanctionsSummary, setSanctionsSummary] = useState<any | null>(null);
+  const [notificationsSummary, setNotificationsSummary] = useState<any | null>(null);
   const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
@@ -78,7 +86,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
       if (activeTab === 'REPORTS') {
           api.fetchReportsAdmin().then(setReports);
       }
-  }, [activeTab]);
+      if (activeTab === 'ADMIN') {
+          api.fetchPurchaseRequests('PENDING').then(setPurchaseRequests);
+          api.fetchNotificationsAdmin({
+              limit: 50,
+              unreadOnly: notificationFilter === 'UNREAD',
+              type: notificationType,
+          }).then(setAdminNotifications);
+      }
+  }, [activeTab, notificationFilter, notificationType]);
   
   const liveCount = streams.filter(s => s.status === StreamStatus.LIVE).length;
   const missedCount = streams.filter(s => s.status === StreamStatus.MISSED).length;
@@ -102,6 +118,74 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
       if (!stream) return;
       await api.updateStream({ ...stream, extensionCount: (stream.extensionCount || 0) + 1, isAdminOverride: true });
       onRefreshData();
+  };
+
+  const runSanctions = async () => {
+      if (sanctionsRunning) return;
+      setSanctionsRunning(true);
+      try {
+          const result = await api.runSanctions();
+          setSanctionsSummary(result);
+          setNotice({
+              title: 'Motor ejecutado',
+              message: `Procesados ${result?.candidates ?? 0} vivos. Sancionados: ${result?.sanctioned ?? 0}. Reprogramados: ${result?.reprogrammed ?? 0}.`,
+              tone: 'success',
+          });
+          onRefreshData();
+      } catch (error: any) {
+          setNotice({
+              title: 'Error en motor',
+              message: error?.message || 'No se pudo ejecutar el motor.',
+              tone: 'error',
+          });
+      } finally {
+          setSanctionsRunning(false);
+      }
+  };
+
+  const runNotifications = async () => {
+      if (notificationsRunning) return;
+      setNotificationsRunning(true);
+      try {
+          const result = await api.runNotifications(15);
+          setNotificationsSummary(result);
+          setNotice({
+              title: 'Notificaciones ejecutadas',
+              message: `Creadas: ${result?.created ?? 0}. Omitidas: ${result?.skipped ?? 0}.`,
+              tone: 'success',
+          });
+      } catch (error: any) {
+          setNotice({
+              title: 'Error en notificaciones',
+              message: error?.message || 'No se pudo ejecutar la cola.',
+              tone: 'error',
+          });
+      } finally {
+          setNotificationsRunning(false);
+      }
+  };
+
+  const refreshAdminNotifications = async () => {
+      const data = await api.fetchNotificationsAdmin({
+          limit: 50,
+          unreadOnly: notificationFilter === 'UNREAD',
+          type: notificationType,
+      });
+      setAdminNotifications(data);
+  };
+
+  const markNotificationRead = async (id: string) => {
+      await api.markNotificationRead(id);
+      setAdminNotifications((prev) => prev.map((note) => (note.id === id ? { ...note, read: true } : note)));
+  };
+
+  const formatNotificationDate = (value?: string) => {
+      if (!value) return '';
+      try {
+          return new Date(value).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+      } catch {
+          return value;
+      }
   };
 
   const editStreamUrl = async (streamId: string) => {
@@ -377,6 +461,55 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
           tone: 'success',
       });
       onRefreshData();
+  };
+
+  const handleApprovePurchase = async (purchaseId: string) => {
+      try {
+          await api.approvePurchase(purchaseId);
+          setNotice({
+              title: 'Compra aprobada',
+              message: 'La solicitud fue aprobada y los cupos se acreditaron.',
+              tone: 'success',
+          });
+          const data = await api.fetchPurchaseRequests('PENDING');
+          setPurchaseRequests(data);
+          onRefreshData();
+      } catch (error: any) {
+          setNotice({
+              title: 'Error al aprobar',
+              message: error?.message || 'No se pudo aprobar la compra.',
+              tone: 'error',
+          });
+      }
+  };
+
+  const handleRejectPurchase = async (purchaseId: string) => {
+      setInputDialog({
+          title: 'Rechazar compra',
+          message: 'Ingresa el motivo del rechazo (opcional).',
+          placeholders: ['Motivo...'],
+          confirmLabel: 'Rechazar',
+          onConfirm: async ([reason]) => {
+              try {
+                  await api.rejectPurchase(purchaseId, reason || undefined);
+                  setNotice({
+                      title: 'Compra rechazada',
+                      message: 'La solicitud fue rechazada.',
+                      tone: 'info',
+                  });
+                  const data = await api.fetchPurchaseRequests('PENDING');
+                  setPurchaseRequests(data);
+                  onRefreshData();
+              } catch (error: any) {
+                  setNotice({
+                      title: 'Error al rechazar',
+                      message: error?.message || 'No se pudo rechazar la compra.',
+                      tone: 'error',
+                  });
+              }
+          },
+      });
+      setInputValues(['']);
   };
 
   const filteredShops = shopFilter === 'PENDING' ? pendingShops : shops;
@@ -830,14 +963,48 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                         <div className="bg-white rounded-xl shadow-sm border p-6 space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="font-bold text-dm-dark">Solicitudes de Compra</h3>
-                                <span className="text-[10px] font-bold uppercase bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full px-2 py-0.5">
-                                    Pendiente API
-                                </span>
                             </div>
                             <p className="text-xs text-gray-500">Bandeja de solicitudes pendientes (PENDING).</p>
-                            <div className="text-xs text-gray-400 border border-dashed border-gray-200 rounded-lg p-4">
-                                Sin solicitudes registradas.
-                            </div>
+                            {purchaseRequests.length === 0 ? (
+                                <div className="text-xs text-gray-400 border border-dashed border-gray-200 rounded-lg p-4">
+                                    Sin solicitudes registradas.
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {purchaseRequests.map((req) => (
+                                        <div key={req.purchaseId} className="border border-gray-100 rounded-lg p-3 text-xs">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-bold text-dm-dark">{req.shop?.name || 'Tienda'}</p>
+                                                    <p className="text-[10px] text-gray-500 uppercase">
+                                                        {req.type === 'LIVE_PACK' ? 'Cupos Vivos' : req.type === 'REEL_PACK' ? 'Cupos Reels' : req.type}
+                                                    </p>
+                                                </div>
+                                                <span className="text-[10px] font-bold bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full px-2 py-0.5">
+                                                    PENDING
+                                                </span>
+                                            </div>
+                                            <div className="mt-2 flex items-center justify-between">
+                                                <span className="text-gray-500">Cantidad: <span className="font-bold text-dm-dark">{req.quantity}</span></span>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleRejectPurchase(req.purchaseId)}
+                                                        className="text-[10px] px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50"
+                                                    >
+                                                        Rechazar
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleApprovePurchase(req.purchaseId)}
+                                                        className="text-[10px] px-2 py-1 rounded border border-green-200 text-green-600 hover:bg-green-50"
+                                                    >
+                                                        Aprobar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         <div className="bg-white rounded-xl shadow-sm border p-6 space-y-4">
                             <h3 className="font-bold text-dm-dark">Asignación Manual de Cupos</h3>
@@ -893,13 +1060,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                 <h3 className="font-bold text-dm-dark">Motor de sanciones</h3>
                                 <p className="text-xs text-gray-500">Ejecuta la corrida del motor (Paso 7).</p>
                             </div>
-                            <span className="text-[10px] font-bold uppercase bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full px-2 py-0.5">
-                                Pendiente API
+                            <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">
+                                Activo
                             </span>
                         </div>
-                        <Button className="mt-4 w-full" disabled>
-                            Ejecutar motor
+                        <Button className="mt-4 w-full" onClick={runSanctions} disabled={sanctionsRunning}>
+                            {sanctionsRunning ? 'Ejecutando...' : 'Ejecutar motor'}
                         </Button>
+                        {sanctionsSummary && (
+                          <p className="mt-3 text-xs text-gray-500">
+                            Última corrida: {sanctionsSummary.candidates ?? 0} candidatos · {sanctionsSummary.sanctioned ?? 0} sancionados.
+                          </p>
+                        )}
                     </div>
                     <div className="bg-white rounded-xl shadow-sm border p-6">
                         <div className="flex items-center justify-between">
@@ -907,12 +1079,70 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                 <h3 className="font-bold text-dm-dark">Notificaciones</h3>
                                 <p className="text-xs text-gray-500">Cola y estados del sistema.</p>
                             </div>
-                            <span className="text-[10px] font-bold uppercase bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full px-2 py-0.5">
-                                Pendiente API
+                            <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">
+                                Activo
                             </span>
                         </div>
-                        <div className="mt-4 text-xs text-gray-400 border border-dashed border-gray-200 rounded-lg p-4">
-                            Sin endpoints activos para listar o enviar notificaciones.
+                        <Button className="mt-4 w-full" onClick={runNotifications} disabled={notificationsRunning}>
+                            {notificationsRunning ? 'Procesando...' : 'Ejecutar cola'}
+                        </Button>
+                        {notificationsSummary && (
+                          <p className="mt-3 text-xs text-gray-500">
+                            Última corrida: {notificationsSummary.created ?? 0} creadas · {notificationsSummary.skipped ?? 0} omitidas.
+                          </p>
+                        )}
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                          <select
+                            value={notificationFilter}
+                            onChange={(e) => setNotificationFilter(e.target.value as any)}
+                            className="rounded-lg border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-600"
+                          >
+                            <option value="UNREAD">No leídas</option>
+                            <option value="ALL">Todas</option>
+                          </select>
+                          <select
+                            value={notificationType}
+                            onChange={(e) => setNotificationType(e.target.value as any)}
+                            className="rounded-lg border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-600"
+                          >
+                            <option value="ALL">Todos los tipos</option>
+                            <option value="SYSTEM">Sistema</option>
+                            <option value="REMINDER">Recordatorio</option>
+                            <option value="PURCHASE">Compra</option>
+                          </select>
+                          <button
+                            className="text-[10px] font-bold text-dm-crimson"
+                            onClick={refreshAdminNotifications}
+                          >
+                            Actualizar
+                          </button>
+                        </div>
+                        <div className="mt-4 max-h-44 space-y-3 overflow-y-auto pr-1">
+                          {adminNotifications.length === 0 ? (
+                            <p className="text-xs text-gray-400">No hay notificaciones para mostrar.</p>
+                          ) : (
+                            adminNotifications.map((note) => (
+                              <div key={note.id} className="rounded-lg border border-gray-100 p-3 text-[11px] text-gray-600">
+                                <div className="flex items-center justify-between">
+                                  <span className={`text-[10px] font-bold uppercase ${note.read ? 'text-gray-400' : 'text-dm-crimson'}`}>
+                                    {note.type || 'SYSTEM'}
+                                  </span>
+                                  <span className="text-[10px] text-gray-400">{formatNotificationDate(note.createdAt)}</span>
+                                </div>
+                                <p className={`mt-1 ${note.read ? 'text-gray-500' : 'text-dm-dark font-semibold'}`}>
+                                  {note.message}
+                                </p>
+                                <div className="mt-2 flex items-center justify-between text-[10px] text-gray-400">
+                                  <span>{note.user?.email || 'Usuario sin email'}</span>
+                                  {!note.read && (
+                                    <button className="text-[10px] font-bold text-gray-500" onClick={() => markNotificationRead(note.id)}>
+                                      Marcar leído
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            ))
+                          )}
                         </div>
                     </div>
                 </div>

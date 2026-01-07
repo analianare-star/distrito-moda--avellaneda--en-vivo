@@ -109,6 +109,7 @@ const mapShop = (shop: any): Shop => {
     statusChangedAt: shop?.statusChangedAt ? new Date(shop.statusChangedAt).toISOString() : undefined,
     agendaSuspendedUntil: shop?.agendaSuspendedUntil ? new Date(shop.agendaSuspendedUntil).toISOString() : undefined,
     agendaSuspendedReason: shop?.agendaSuspendedReason || undefined,
+    ownerAcceptedAt: shop?.ownerAcceptedAt ? new Date(shop.ownerAcceptedAt).toISOString() : undefined,
     baseQuota: quotaWallet ? liveBaseRemaining : Number(shop?.streamQuota ?? shop?.baseQuota ?? 0),
     extraQuota: quotaWallet ? liveExtraBalance : Number(shop?.extraQuota ?? 0),
     reelsExtraQuota: quotaWallet ? reelExtraBalance : Number(shop?.reelQuota ?? shop?.reelsExtraQuota ?? 0),
@@ -125,6 +126,7 @@ const mapShop = (shop: any): Shop => {
     })),
     reviews: shop?.reviews || [],
     ratingAverage: Number(shop?.ratingAverage ?? 0),
+    ratingCount: Number(shop?.ratingCount ?? 0),
     logoUrl: shop?.logoUrl || '',
     quotaWallet,
   };
@@ -186,7 +188,7 @@ const mapReel = (reel: any): Reel => {
 };
 
 export const api = {
-  fetchAuthMe: async (): Promise<{ userType?: string; shopId?: string; adminRole?: string } | null> => {
+  fetchAuthMe: async (): Promise<{ userType?: string; shopId?: string; adminRole?: string; authUserId?: string } | null> => {
     try {
       const res = await fetchWithAuth('/auth/me');
       if (!res.ok) return null;
@@ -205,7 +207,7 @@ export const api = {
     if (!res.ok) return null;
     return res.json();
   },
-  fetchClientState: async (): Promise<{ favorites: string[]; reminders: string[] } | null> => {
+  fetchClientState: async (): Promise<{ favorites: string[]; reminders: string[]; viewedReels?: string[] } | null> => {
     try {
       const res = await fetchWithAuth('/clients/me');
       if (!res.ok) return null;
@@ -213,6 +215,65 @@ export const api = {
     } catch (error) {
       console.error('Error fetching client state:', error);
       return null;
+    }
+  },
+  fetchNotifications: async (userId: string) => {
+    try {
+      const res = await fetchWithAuth(`/notifications/${userId}`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      return [];
+    }
+  },
+  markNotificationRead: async (id: string) => {
+    try {
+      const res = await fetchWithAuth(`/notifications/${id}/read`, { method: 'POST' });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (error) {
+      console.error('Error marking notification read:', error);
+      return null;
+    }
+  },
+  markAllNotificationsRead: async (userId: string) => {
+    try {
+      const res = await fetchWithAuth(`/notifications/${userId}/read-all`, { method: 'POST' });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (error) {
+      console.error('Error marking all notifications read:', error);
+      return null;
+    }
+  },
+  runNotifications: async (minutesAhead: number = 15) => {
+    try {
+      const res = await fetchWithAuth('/notifications/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ minutesAhead }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (error) {
+      console.error('Error running notifications:', error);
+      return null;
+    }
+  },
+  fetchNotificationsAdmin: async (options?: { limit?: number; unreadOnly?: boolean; type?: string }) => {
+    try {
+      const params = new URLSearchParams();
+      if (options?.limit) params.set('limit', String(options.limit));
+      if (options?.unreadOnly) params.set('unread', 'true');
+      if (options?.type && options.type !== 'ALL') params.set('type', options.type);
+      const query = params.toString();
+      const res = await fetchWithAuth(`/notifications${query ? `?${query}` : ''}`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (error) {
+      console.error('Error fetching admin notifications:', error);
+      return [];
     }
   },
   addFavorite: async (shopId: string): Promise<string[] | null> => {
@@ -433,7 +494,11 @@ export const api = {
       body: JSON.stringify({ amount }),
     });
     if (!res.ok) return null;
-    return mapShop(await res.json());
+    const data = await res.json();
+    return {
+      shop: data?.shop ? mapShop(data.shop) : null,
+      purchase: data?.purchase || null,
+    };
   },
 
   buyStreamQuota: async (shopId: string, amount: number, _payment?: any) => {
@@ -443,7 +508,11 @@ export const api = {
       body: JSON.stringify({ amount }),
     });
     if (!res.ok) return null;
-    return mapShop(await res.json());
+    const data = await res.json();
+    return {
+      shop: data?.shop ? mapShop(data.shop) : null,
+      purchase: data?.purchase || null,
+    };
   },
 
   buyQuota: async (shopId: string, amount: number) => {
@@ -529,6 +598,45 @@ export const api = {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       throw new Error(data?.message || 'Error al resolver reporte');
+    }
+    return data;
+  },
+  fetchPurchaseRequests: async (status?: string) => {
+    try {
+      const query = status ? `?status=${status}` : '';
+      const res = await fetchWithAuth(`/purchases${query}`);
+      if (!res.ok) throw new Error('Error al obtener compras');
+      return await res.json();
+    } catch (error) {
+      console.error('Error fetching purchases:', error);
+      return [];
+    }
+  },
+  approvePurchase: async (id: string) => {
+    const res = await fetchWithAuth(`/purchases/${id}/approve`, { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || 'Error al aprobar compra');
+    }
+    return data;
+  },
+  rejectPurchase: async (id: string, notes?: string) => {
+    const res = await fetchWithAuth(`/purchases/${id}/reject`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || 'Error al rechazar compra');
+    }
+    return data;
+  },
+  runSanctions: async () => {
+    const res = await fetchWithAuth('/penalties/run', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || 'Error al ejecutar motor');
     }
     return data;
   },
@@ -624,6 +732,16 @@ export const api = {
     const data = await res.json();
     if (!res.ok) {
       throw new Error(data?.message || 'Error al asignar dueño');
+    }
+    return mapShop(data);
+  },
+  acceptShop: async (shopId: string) => {
+    const res = await fetchWithAuth(`/shops/${shopId}/accept`, {
+      method: 'POST',
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.message || 'Error al aceptar tienda');
     }
     return mapShop(data);
   },

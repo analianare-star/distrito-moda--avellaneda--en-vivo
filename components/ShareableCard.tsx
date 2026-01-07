@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Shop, Stream } from '../types';
 import { Instagram, Globe, Download, Phone, MapPin, ShoppingBag, Video, CreditCard, Banknote } from 'lucide-react';
 import { Button } from './Button';
+import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 
 interface ShareableCardProps {
   shop: Shop;
@@ -11,6 +13,8 @@ interface ShareableCardProps {
 }
 
 export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode, onNotify }) => {
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   // LOGIC: Formating Date
   const dateObj = stream ? new Date(stream.fullDateISO) : new Date();
@@ -26,11 +30,50 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
   // Extract Primary WhatsApp
   const primaryWa = shop.whatsappLines && shop.whatsappLines.length > 0 ? shop.whatsappLines[0] : null;
 
+  const handleDownload = async () => {
+    if (!cardRef.current) return;
+    if (isDownloading) return;
+    setIsDownloading(true);
+    const safeName = shop.name.toLowerCase().replace(/[^a-z0-9]+/gi, '-');
+    const downloadPng = (dataUrl: string) => {
+      const link = document.createElement('a');
+      link.download = `tarjeta-${safeName || 'tienda'}.png`;
+      link.href = dataUrl;
+      link.click();
+    };
+    try {
+      const rect = cardRef.current.getBoundingClientRect();
+      const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        useCORS: true,
+      });
+      try {
+        const pdf = new jsPDF({
+          orientation: rect.width > rect.height ? 'l' : 'p',
+          unit: 'px',
+          format: [rect.width, rect.height],
+        });
+        pdf.addImage(dataUrl, 'PNG', 0, 0, rect.width, rect.height);
+        pdf.save(`tarjeta-${safeName || 'tienda'}.pdf`);
+        onNotify?.('Tarjeta descargada', 'El PDF se guardó en tu dispositivo.', 'success');
+      } catch (pdfError) {
+        downloadPng(dataUrl);
+        onNotify?.('Tarjeta descargada', 'Se guardó la imagen PNG de la tarjeta.', 'success');
+      }
+    } catch (error) {
+      onNotify?.('No se pudo descargar', 'Intenta nuevamente en unos segundos.', 'error');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center gap-4">
       {/* The Visual Card Container */}
       <div 
         id="downloadable-card" 
+        ref={cardRef}
         className="relative w-[300px] h-[580px] bg-dm-dark shadow-2xl flex flex-col overflow-hidden border border-gray-800"
       >
         
@@ -40,7 +83,7 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
         {/* --- HEADER --- */}
         <div className="relative z-10 pt-8 pb-4 flex flex-col items-center bg-gradient-to-b from-black/40 to-transparent">
             <div className="w-20 h-20 rounded-full border-2 border-white/20 overflow-hidden mb-3 bg-white shadow-lg">
-                <img src={shop.logoUrl} alt={shop.name} className="w-full h-full object-cover" />
+                <img src={shop.logoUrl} alt={shop.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
             </div>
             <h2 className="font-serif text-3xl text-white leading-tight text-center px-4">
                 {shop.name}
@@ -145,18 +188,11 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
       <Button
         variant="secondary"
         size="sm"
-        onClick={() =>
-          onNotify?.(
-            'Descarga pendiente',
-            mode === 'CLIENT'
-              ? 'Estamos preparando la tarjeta para descargar.'
-              : 'Generamos una versión lista para promo.',
-            'info'
-          )
-        }
+        onClick={handleDownload}
+        disabled={isDownloading}
       >
         <Download size={16} className="mr-2" />
-        {mode === 'CLIENT' ? 'Guardar Tarjeta' : 'Descargar para Promo'}
+        {isDownloading ? 'Generando...' : mode === 'CLIENT' ? 'Guardar Tarjeta (PDF)' : 'Descargar PDF'}
       </Button>
     </div>
   );

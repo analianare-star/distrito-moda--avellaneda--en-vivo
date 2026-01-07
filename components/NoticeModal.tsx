@@ -18,6 +18,7 @@ interface NoticeModalProps {
   tone?: NoticeTone;
   onClose: () => void;
   confirmLabel?: string;
+  onConfirm?: () => void;
 }
 
 export const NoticeModal: React.FC<NoticeModalProps> = ({
@@ -27,6 +28,7 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({
   tone = 'info',
   onClose,
   confirmLabel,
+  onConfirm,
 }) => {
   if (!isOpen) return null;
   const styles = TONE_STYLES[tone];
@@ -45,7 +47,16 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({
           {title}
         </div>
         <p className="mt-4 text-sm text-gray-600">{message}</p>
-        <Button className="mt-6 w-full" onClick={onClose}>
+        <Button
+          className="mt-6 w-full"
+          onClick={() => {
+            if (onConfirm) {
+              onConfirm();
+              return;
+            }
+            onClose();
+          }}
+        >
           {confirmLabel || 'Entendido'}
         </Button>
       </div>

@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 // AsegÃºrate de que la ruta a 'types' sea correcta (a veces es './types' o '../types')
-import { ViewMode, Shop, Stream, StreamStatus, UserContext, Reel } from './types';
+import { ViewMode, Shop, Stream, StreamStatus, UserContext, Reel, NotificationItem } from './types';
 import { HeroSection } from './components/HeroSection';
 import { StreamCard } from './components/StreamCard';
 import { Dashboard } from './components/Dashboard';
@@ -11,12 +11,13 @@ import { StoryModal } from './components/StoryModal';
 import { NoticeModal } from './components/NoticeModal';
 import { ReportModal } from './components/ReportModal';
 import { api } from './services/api';
-import { X, User, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown, Globe, Film } from 'lucide-react';
+import { X, User, UserCircle, Bell, Clock, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown, Globe, Film } from 'lucide-react';
 import { auth, googleProvider } from './firebase';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 
 type AuthProfile = {
   userType: 'ADMIN' | 'SHOP' | 'CLIENT';
+  authUserId?: string;
   shopId?: string;
   adminRole?: string;
 };
@@ -80,6 +81,8 @@ const App: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState('Todos');
   const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
   const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [accountTab, setAccountTab] = useState<'RESUMEN' | 'NOTIFICATIONS' | 'REMINDERS'>('RESUMEN');
   const notify = (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => {
       setNotice({ title, message, tone });
   };
@@ -104,9 +107,20 @@ const App: React.FC = () => {
       return true;
   };
 
+  const refreshNotifications = async (profile?: AuthProfile | null) => {
+      if (!profile?.authUserId) return;
+      const data = await api.fetchNotifications(profile.authUserId);
+      setNotifications(Array.isArray(data) ? data : []);
+  };
+
   // --- Derived States (CON PROTECCIÃ“N ANTI-CRASH) ---
   // Si no encuentra la tienda o la lista estÃ¡ vacÃ­a, usa la EMPTY_SHOP para no romper la pantalla.
   const currentShop = allShops.find(s => s.id === currentShopId) || allShops[0] || EMPTY_SHOP;
+  const reminderStreams = allStreams
+      .filter((stream) => user.reminders.includes(stream.id))
+      .sort((a, b) => new Date(a.fullDateISO).getTime() - new Date(b.fullDateISO).getTime());
+  const unreadNotifications = notifications.filter((note) => !note.read);
+  const userInitial = (user.name || user.email || 'C').trim().charAt(0).toUpperCase() || 'C';
 
   // --- DATA LOADING & AUTO-UPDATE ---
   const refreshData = async () => {
@@ -174,8 +188,10 @@ const App: React.FC = () => {
                   ...prev,
                   favorites: clientState.favorites || [],
                   reminders: clientState.reminders || [],
+                  viewedReels: clientState.viewedReels || [],
                 }));
               }
+              await refreshNotifications(profile);
             }
           } else {
             setAuthProfile(null);
@@ -194,6 +210,7 @@ const App: React.FC = () => {
           viewedReels: [],
           reports: []
         }));
+        setNotifications([]);
         setAuthProfile(null);
         setViewMode('CLIENT');
         setActiveBottomNav('home');
@@ -358,7 +375,20 @@ const App: React.FC = () => {
           return;
       }
       try {
-          await api.buyQuota(currentShopId, amount);
+          const result = await api.buyQuota(currentShopId, amount);
+          if (result?.purchase?.status === 'PENDING') {
+              setNotice({
+                  title: 'Solicitud enviada',
+                  message: 'Tu compra quedó pendiente de aprobación.',
+                  tone: 'info',
+              });
+          } else {
+              setNotice({
+                  title: 'Cupos actualizados',
+                  message: 'La compra fue aprobada.',
+                  tone: 'success',
+              });
+          }
           refreshData();
       } catch (error) {
           console.error('Error comprando cupo:', error);
@@ -458,6 +488,7 @@ const App: React.FC = () => {
               if (updated) {
                   setUser(prev => ({ ...prev, reminders: updated }));
               }
+              await refreshNotifications(authProfile);
           } catch (error) {
               setNotice({
                   title: 'No se pudo actualizar',
@@ -465,6 +496,34 @@ const App: React.FC = () => {
                   tone: 'error',
               });
           }
+      })();
+  };
+
+  const formatNotificationDate = (value?: string) => {
+      if (!value) return '';
+      try {
+          return new Date(value).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+      } catch {
+          return value;
+      }
+  };
+
+  const handleMarkNotificationRead = (id: string) => {
+      void (async () => {
+          const updated = await api.markNotificationRead(id);
+          if (updated) {
+              setNotifications((prev) =>
+                  prev.map((note) => (note.id === id ? { ...note, read: true } : note))
+              );
+          }
+      })();
+  };
+
+  const handleMarkAllNotificationsRead = () => {
+      if (!authProfile?.authUserId) return;
+      void (async () => {
+          await api.markAllNotificationsRead(authProfile.authUserId);
+          setNotifications((prev) => prev.map((note) => ({ ...note, read: true })));
       })();
   };
 
@@ -629,6 +688,8 @@ const App: React.FC = () => {
       if (id === 'live') setActiveFilter('En Vivo');
       if (id === 'account') {
           setIsAccountDrawerOpen(true);
+          setAccountTab('RESUMEN');
+          void refreshNotifications(authProfile);
       }
   };
 
@@ -668,6 +729,12 @@ const App: React.FC = () => {
   };
 
   const isMerchantUser = authProfile?.userType === 'SHOP';
+  const accountBadgeCount = unreadNotifications.length;
+  const accountTabs = [
+      { id: 'RESUMEN', label: 'Resumen', icon: UserCircle, badge: 0 },
+      { id: 'NOTIFICATIONS', label: 'Notificaciones', icon: Bell, badge: accountBadgeCount },
+      { id: 'REMINDERS', label: 'Recordatorios', icon: Clock, badge: 0 },
+  ];
   const bottomNavItems = isAdminUser
       ? [
           { id: 'shops', label: 'Tiendas', icon: Store, isCenter: false, onSelect: () => handleAdminNav('shops') },
@@ -689,7 +756,7 @@ const App: React.FC = () => {
           { id: 'shops', label: 'Tiendas', icon: Store, isCenter: false, onSelect: () => handleClientNav('shops') },
           { id: 'live', label: 'En vivo', icon: Radio, isCenter: true, onSelect: () => handleClientNav('live') },
           { id: 'favorites', label: 'Favoritos', icon: Heart, isCenter: false, onSelect: () => handleClientNav('favorites') },
-          { id: 'account', label: user.isLoggedIn ? 'Cuenta' : 'Ingresar', icon: User, isCenter: false, onSelect: () => handleClientNav('account') }
+          { id: 'account', label: user.isLoggedIn ? 'Cuenta' : 'Ingresar', icon: User, isCenter: false, onSelect: () => handleClientNav('account'), badge: accountBadgeCount }
         ];
 
   const canClientInteract = user.isLoggedIn && authProfile?.userType === 'CLIENT';
@@ -713,6 +780,7 @@ const App: React.FC = () => {
                 <div className="py-2">
                   {bottomNavItems.map((item) => {
                     const isActive = activeBottomNav === item.id;
+                    const badgeCount = typeof (item as any).badge === 'number' ? (item as any).badge : 0;
                     return (
                       <button
                         key={item.id}
@@ -722,7 +790,15 @@ const App: React.FC = () => {
                         }}
                         className={`flex w-full items-center justify-between px-4 py-2 text-xs font-bold ${isActive ? 'text-dm-crimson' : 'text-gray-500'} hover:bg-gray-50`}
                       >
-                        <span>{item.label}</span>
+                        <span className="flex items-center gap-2">
+                          {item.label}
+                          {badgeCount > 0 && (
+                            <span className="rounded-full bg-dm-crimson px-1.5 py-0.5 text-[9px] font-bold text-white">
+                              {badgeCount > 9 ? '9+' : badgeCount}
+                            </span>
+                          )}
+                        </span>
+                        <item.icon size={14} />
                       </button>
                     );
                   })}
@@ -795,14 +871,20 @@ const App: React.FC = () => {
           {bottomNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeBottomNav === item.id;
+            const badgeCount = typeof (item as any).badge === 'number' ? (item as any).badge : 0;
             return (
               <button
                 key={item.id}
                 onClick={item.onSelect}
                 className={`flex flex-col items-center gap-1 text-[10px] font-semibold ${item.isCenter ? '-translate-y-3' : ''} ${isActive ? 'text-dm-crimson' : 'text-gray-400'}`}
               >
-                <span className={`flex h-11 w-11 items-center justify-center rounded-full ${item.isCenter ? 'bg-dm-crimson text-white shadow-lg shadow-dm-crimson/30' : 'bg-white'}`}>
+                <span className={`relative flex h-11 w-11 items-center justify-center rounded-full ${item.isCenter ? 'bg-dm-crimson text-white shadow-lg shadow-dm-crimson/30' : 'bg-white'}`}>
                   <Icon size={20} className={item.isCenter ? 'text-white' : (isActive ? 'text-dm-crimson' : 'text-gray-400')} />
+                  {badgeCount > 0 && !item.isCenter && (
+                    <span className="absolute -right-0.5 -top-0.5 rounded-full bg-dm-crimson px-1.5 py-0.5 text-[9px] font-bold text-white">
+                      {badgeCount > 9 ? '9+' : badgeCount}
+                    </span>
+                  )}
                 </span>
                 <span>{item.label}</span>
               </button>
@@ -967,19 +1049,20 @@ const App: React.FC = () => {
             )}
           </>
         ) : viewMode === 'MERCHANT' ? (
-          <Dashboard 
-            currentShop={currentShop} 
-            streams={allStreams} 
-            onStreamCreate={handleStreamCreate}
-            onStreamUpdate={handleStreamUpdate}
-            onStreamDelete={handleStreamDelete}
-            onShopUpdate={handleShopUpdate}
-            onExtendStream={handleExtendStream}
-            onBuyQuota={handleBuyQuota}
-            onReelChange={refreshData}
-            activeTab={merchantTab}
-            onTabChange={syncMerchantTab}
-          />
+            <Dashboard
+              currentShop={currentShop}
+              streams={allStreams}
+              onStreamCreate={handleStreamCreate}
+              onStreamUpdate={handleStreamUpdate}
+              onStreamDelete={handleStreamDelete}
+              onShopUpdate={handleShopUpdate}
+              onExtendStream={handleExtendStream}
+              onBuyQuota={handleBuyQuota}
+              onReelChange={refreshData}
+              onRefreshData={refreshData}
+              activeTab={merchantTab}
+              onTabChange={syncMerchantTab}
+            />
         ) : (
           <AdminDashboard 
             streams={allStreams} 
@@ -1022,9 +1105,15 @@ const App: React.FC = () => {
             }`}
           >
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-gray-400">Cuenta</p>
-                <h3 className="font-serif text-xl text-dm-dark">Perfil y estado</h3>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-dm-crimson/10 text-dm-crimson font-bold">
+                  {user.isLoggedIn ? userInitial : 'G'}
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest text-gray-400">Cuenta</p>
+                  <h3 className="font-serif text-xl text-dm-dark">Perfil y estado</h3>
+                  <p className="text-[10px] text-gray-400">{authProfile?.userType || 'CLIENT'}</p>
+                </div>
               </div>
               <button
                 className="text-gray-400 hover:text-dm-dark"
@@ -1034,36 +1123,154 @@ const App: React.FC = () => {
                 <X size={18} />
               </button>
             </div>
+            <div className="px-6 pt-4 pb-2 border-b border-gray-100 flex gap-2">
+              {accountTabs.map((tab) => {
+                const TabIcon = tab.icon;
+                const badgeCount = tab.badge || 0;
+                return (
+                <button
+                  key={tab.id}
+                  onClick={() => setAccountTab(tab.id as any)}
+                  className={`flex-1 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                    accountTab === tab.id
+                      ? 'border-dm-crimson text-dm-crimson bg-red-50'
+                      : 'border-gray-200 text-gray-400'
+                  }`}
+                >
+                  <span className="flex items-center justify-center gap-1">
+                    <TabIcon size={12} />
+                    {tab.label}
+                    {badgeCount > 0 && (
+                      <span className="ml-1 rounded-full bg-dm-crimson px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        {badgeCount > 9 ? '9+' : badgeCount}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+            </div>
             <div className="p-6 space-y-5">
               {user.isLoggedIn ? (
-                <>
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <p className="text-xs text-gray-400 uppercase tracking-widest">Identidad</p>
-                    <p className="mt-1 text-sm font-bold text-dm-dark">{user.name || user.email}</p>
-                    <p className="text-[11px] text-gray-500">{user.email || 'Correo no disponible'}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="rounded-lg border border-gray-100 p-3 text-center">
-                      <p className="text-gray-400 uppercase tracking-widest">Favoritos</p>
-                      <p className="mt-1 text-lg font-bold text-dm-dark">{user.favorites.length}</p>
+                accountTab === 'RESUMEN' ? (
+                  <>
+                    <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                      <p className="text-xs text-gray-400 uppercase tracking-widest">Identidad</p>
+                      <p className="mt-1 text-sm font-bold text-dm-dark">{user.name || user.email}</p>
+                      <p className="text-[11px] text-gray-500">{user.email || 'Correo no disponible'}</p>
                     </div>
-                    <div className="rounded-lg border border-gray-100 p-3 text-center">
-                      <p className="text-gray-400 uppercase tracking-widest">Recordatorios</p>
-                      <p className="mt-1 text-lg font-bold text-dm-dark">{user.reminders.length}</p>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="rounded-lg border border-gray-100 p-3 text-center">
+                        <p className="text-gray-400 uppercase tracking-widest">Favoritos</p>
+                        <p className="mt-1 text-lg font-bold text-dm-dark">{user.favorites.length}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-100 p-3 text-center">
+                        <p className="text-gray-400 uppercase tracking-widest">Recordatorios</p>
+                        <p className="mt-1 text-lg font-bold text-dm-dark">{user.reminders.length}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-100 p-3 text-center">
+                        <p className="text-gray-400 uppercase tracking-widest">Reportes</p>
+                        <p className="mt-1 text-lg font-bold text-dm-dark">{user.reports.length}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-100 p-3 text-center">
+                        <p className="text-gray-400 uppercase tracking-widest">Rol</p>
+                        <p className="mt-1 text-sm font-bold text-dm-dark">{authProfile?.userType || 'CLIENT'}</p>
+                      </div>
                     </div>
-                    <div className="rounded-lg border border-gray-100 p-3 text-center">
-                      <p className="text-gray-400 uppercase tracking-widest">Reportes</p>
-                      <p className="mt-1 text-lg font-bold text-dm-dark">{user.reports.length}</p>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <button
+                        className="rounded-lg border border-gray-100 p-3 text-left hover:border-dm-crimson"
+                        onClick={() => setAccountTab('NOTIFICATIONS')}
+                      >
+                        <p className="text-gray-400 uppercase tracking-widest">Notificaciones</p>
+                        <p className="mt-1 text-lg font-bold text-dm-dark">{unreadNotifications.length}</p>
+                        <p className="text-[10px] text-gray-400">Pendientes</p>
+                      </button>
+                      <button
+                        className="rounded-lg border border-gray-100 p-3 text-left hover:border-dm-crimson"
+                        onClick={() => setAccountTab('REMINDERS')}
+                      >
+                        <p className="text-gray-400 uppercase tracking-widest">Recordatorios</p>
+                        <p className="mt-1 text-lg font-bold text-dm-dark">{reminderStreams.length}</p>
+                        <p className="text-[10px] text-gray-400">Activos</p>
+                      </button>
                     </div>
-                    <div className="rounded-lg border border-gray-100 p-3 text-center">
-                      <p className="text-gray-400 uppercase tracking-widest">Rol</p>
-                      <p className="mt-1 text-sm font-bold text-dm-dark">{authProfile?.userType || 'CLIENT'}</p>
+                    <Button className="w-full" onClick={handleToggleClientLogin}>
+                      Cerrar sesión
+                    </Button>
+                  </>
+                ) : accountTab === 'NOTIFICATIONS' ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Notificaciones</p>
+                      {unreadNotifications.length > 0 && (
+                        <button
+                          className="text-[10px] font-bold text-dm-crimson"
+                          onClick={handleMarkAllNotificationsRead}
+                        >
+                          Marcar todo
+                        </button>
+                      )}
                     </div>
-                  </div>
-                  <Button className="w-full" onClick={handleToggleClientLogin}>
-                    Cerrar sesión
-                  </Button>
-                </>
+                    {notifications.length === 0 ? (
+                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center text-xs text-gray-500">
+                        Sin notificaciones por ahora.
+                      </div>
+                    ) : (
+                      <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
+                        {notifications.map((note) => (
+                          <div key={note.id} className="flex items-start gap-2 rounded-lg border border-gray-100 p-3">
+                            <span
+                              className={`mt-1 h-2 w-2 rounded-full ${note.read ? 'bg-gray-200' : 'bg-dm-crimson'}`}
+                            />
+                            <div className="flex-1">
+                              <p className={`text-xs ${note.read ? 'text-gray-500' : 'text-dm-dark font-semibold'}`}>
+                                {note.message}
+                              </p>
+                              <p className="text-[10px] text-gray-400">{formatNotificationDate(note.createdAt)}</p>
+                            </div>
+                            {!note.read && (
+                              <button
+                                className="text-[10px] font-bold text-gray-400 hover:text-dm-dark"
+                                onClick={() => handleMarkNotificationRead(note.id)}
+                              >
+                                Leído
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Mis recordatorios</p>
+                    {reminderStreams.length === 0 ? (
+                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center text-xs text-gray-500">
+                        No tenés recordatorios activos.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {reminderStreams.map((stream) => (
+                          <div key={stream.id} className="rounded-lg border border-gray-100 p-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-semibold text-dm-dark">{stream.title}</p>
+                                <p className="text-[10px] text-gray-400">{stream.scheduledTime} • {stream.shop.name}</p>
+                              </div>
+                              <button
+                                className="text-[10px] font-bold text-gray-400 hover:text-dm-crimson"
+                                onClick={() => handleToggleReminder(stream.id)}
+                              >
+                                Quitar
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )
               ) : (
                 <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center">
                   <p className="text-sm text-gray-500">Inicia sesión para interactuar con tiendas.</p>
