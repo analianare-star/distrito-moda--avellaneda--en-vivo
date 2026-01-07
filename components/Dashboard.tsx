@@ -57,6 +57,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   } | null>(null);
   const [editingStream, setEditingStream] = useState<Stream | null>(null);
   const [shopReels, setShopReels] = useState<Reel[]>([]); 
+  const [purchaseHistory, setPurchaseHistory] = useState<any[]>([]);
+  const [isPurchaseLoading, setIsPurchaseLoading] = useState(false);
   
   // Local states
   const [shopForm, setShopForm] = useState<Partial<Shop>>({});
@@ -72,6 +74,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [reelPlatform, setReelPlatform] = useState<SocialPlatform | ''>('');
 
   // Sync Logic & Load Reels
+  const loadPurchases = async () => {
+      if (!currentShop.id) return;
+      setIsPurchaseLoading(true);
+      try {
+          const data = await api.fetchPurchasesByShop(currentShop.id);
+          setPurchaseHistory(data || []);
+      } catch (error) {
+          console.error('Error cargando compras', error);
+      } finally {
+          setIsPurchaseLoading(false);
+      }
+  };
+
   useEffect(() => {
       const initialLines = [
           { label: 'Ventas por mayor', number: '' },
@@ -107,6 +122,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           }
       };
       loadReels();
+      loadPurchases();
   }, [currentShop]);
 
   // --- LOGIC: QUOTAS & PERMISSIONS (CORREGIDO PARA EVITAR NaN) ---
@@ -181,6 +197,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
   const statusLabel = statusLabels[shopStatus] || 'Activa';
   const statusTone = statusTones[shopStatus] || statusTones.ACTIVE;
+
+  const purchaseStatusLabels: Record<string, string> = {
+      PENDING: 'Pendiente',
+      APPROVED: 'Aprobada',
+      REJECTED: 'Rechazada',
+  };
+
+  const purchaseTypeLabels: Record<string, string> = {
+      LIVE_PACK: 'Cupos de vivos',
+      REEL_PACK: 'Cupos de historias',
+  };
+
+  const formatPurchaseDate = (value?: string) => {
+      if (!value) return '';
+      try {
+          return new Date(value).toLocaleDateString('es-AR', { dateStyle: 'short' });
+      } catch {
+          return value;
+      }
+  };
 
   useEffect(() => {
       if (shopStatus === 'PENDING_VERIFICATION') {
@@ -294,6 +330,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       const result = await api.buyReelQuota(currentShop.id, 5, { method: 'SIMULATED' });
       if (onReelChange) onReelChange();
       onRefreshData();
+      loadPurchases();
       const status = result?.purchase?.status;
       setNotice({
           title: status === 'PENDING' ? 'Solicitud enviada' : 'Compra realizada',
@@ -320,6 +357,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           confirmLabel: 'Confirmar compra',
               onConfirm: () => {
                   onBuyQuota(1);
+                  loadPurchases();
                   setShowBuyModal(false);
               },
       });
@@ -620,6 +658,45 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                </Button>
                            )}
                       </div>
+                  </div>
+                  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                      <div className="flex items-center justify-between">
+                          <h3 className="font-bold text-dm-dark text-lg flex items-center gap-2">
+                              <History size={16} /> Historial de compras
+                          </h3>
+                          <span className="text-[10px] text-gray-400">{purchaseHistory.length} movimientos</span>
+                      </div>
+                      {isPurchaseLoading ? (
+                          <p className="mt-3 text-xs text-gray-400">Cargando compras...</p>
+                      ) : purchaseHistory.length === 0 ? (
+                          <p className="mt-3 text-xs text-gray-400">Sin compras registradas todavía.</p>
+                      ) : (
+                          <div className="mt-4 space-y-3">
+                              {purchaseHistory.slice(0, 6).map((purchase) => {
+                                  const statusLabel = purchaseStatusLabels[purchase.status] || purchase.status;
+                                  const typeLabel = purchaseTypeLabels[purchase.type] || purchase.type;
+                                  return (
+                                      <div key={purchase.purchaseId} className="flex items-center justify-between rounded-lg border border-gray-100 p-3 text-xs">
+                                          <div>
+                                              <p className="font-bold text-dm-dark">{typeLabel}</p>
+                                              <p className="text-[10px] text-gray-400">
+                                                  {formatPurchaseDate(purchase.createdAt)} • Cantidad {purchase.quantity}
+                                              </p>
+                                          </div>
+                                          <span className={`text-[10px] font-bold ${
+                                              purchase.status === 'APPROVED'
+                                                  ? 'text-green-600'
+                                                  : purchase.status === 'REJECTED'
+                                                  ? 'text-red-600'
+                                                  : 'text-yellow-600'
+                                          }`}>
+                                              {statusLabel}
+                                          </span>
+                                      </div>
+                                  );
+                              })}
+                          </div>
+                      )}
                   </div>
               </div>
           )}

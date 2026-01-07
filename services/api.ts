@@ -601,6 +601,14 @@ export const api = {
     }
     return data;
   },
+  rejectReportAdmin: async (id: string) => {
+    const res = await fetchWithAuth(`/reports/${id}/reject`, { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || 'Error al rechazar reporte');
+    }
+    return data;
+  },
   fetchPurchaseRequests: async (status?: string) => {
     try {
       const query = status ? `?status=${status}` : '';
@@ -609,6 +617,17 @@ export const api = {
       return await res.json();
     } catch (error) {
       console.error('Error fetching purchases:', error);
+      return [];
+    }
+  },
+  fetchPurchasesByShop: async (shopId: string, status?: string) => {
+    try {
+      const query = status ? `?status=${status}` : '';
+      const res = await fetchWithAuth(`/purchases/shop/${shopId}${query}`);
+      if (!res.ok) throw new Error('Error al obtener compras');
+      return await res.json();
+    } catch (error) {
+      console.error('Error fetching shop purchases:', error);
       return [];
     }
   },

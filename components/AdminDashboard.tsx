@@ -776,25 +776,53 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                             </td>
                                             <td className="px-6 py-4 text-xs font-bold">{report.status || 'OPEN'}</td>
                                             <td className="px-6 py-4 text-right">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={async () => {
-                                                        try {
-                                                            await api.resolveReportAdmin(report.id);
-                                                            const next = reports.filter((item) => item.id !== report.id);
-                                                            setReports(next);
-                                                        } catch (error: any) {
-                                                            setNotice({
-                                                                title: 'Error al resolver',
-                                                                message: error?.message || 'No se pudo resolver el reporte.',
-                                                                tone: 'error',
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={async () => {
+                                                            try {
+                                                                await api.resolveReportAdmin(report.id);
+                                                                const next = reports.filter((item) => item.id !== report.id);
+                                                                setReports(next);
+                                                            } catch (error: any) {
+                                                                setNotice({
+                                                                    title: 'Error al resolver',
+                                                                    message: error?.message || 'No se pudo resolver el reporte.',
+                                                                    tone: 'error',
+                                                                });
+                                                            }
+                                                        }}
+                                                    >
+                                                        Resolver
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        onClick={() => {
+                                                            setConfirmDialog({
+                                                                title: 'Rechazar reporte',
+                                                                message: 'El reporte quedara marcado como rechazado. Esta accion no se puede deshacer.',
+                                                                confirmLabel: 'Rechazar',
+                                                                onConfirm: async () => {
+                                                                    try {
+                                                                        await api.rejectReportAdmin(report.id);
+                                                                        const next = reports.filter((item) => item.id !== report.id);
+                                                                        setReports(next);
+                                                                    } catch (error: any) {
+                                                                        setNotice({
+                                                                            title: 'Error al rechazar',
+                                                                            message: error?.message || 'No se pudo rechazar el reporte.',
+                                                                            tone: 'error',
+                                                                        });
+                                                                    }
+                                                                },
                                                             });
-                                                        }
-                                                    }}
-                                                >
-                                                    Resolver
-                                                </Button>
+                                                        }}
+                                                    >
+                                                        Rechazar
+                                                    </Button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))

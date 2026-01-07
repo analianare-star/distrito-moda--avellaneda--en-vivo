@@ -508,6 +508,49 @@ const App: React.FC = () => {
       }
   };
 
+  const formatICSDate = (date: Date) =>
+      date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+
+  const escapeICSValue = (value: string) =>
+      value.replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
+
+  const handleDownloadICS = (stream: Stream) => {
+      try {
+          const start = new Date(stream.fullDateISO);
+          const end = new Date(start.getTime() + 30 * 60 * 1000);
+          const icsContent = [
+              'BEGIN:VCALENDAR',
+              'VERSION:2.0',
+              'PRODID:-//Distrito Moda//Avellaneda en Vivo//ES',
+              'CALSCALE:GREGORIAN',
+              'METHOD:PUBLISH',
+              'BEGIN:VEVENT',
+              `UID:${stream.id}@avellaneda-envivo`,
+              `DTSTAMP:${formatICSDate(new Date())}`,
+              `DTSTART:${formatICSDate(start)}`,
+              `DTEND:${formatICSDate(end)}`,
+              `SUMMARY:${escapeICSValue(stream.title || 'Vivo en Avellaneda en Vivo')}`,
+              `DESCRIPTION:${escapeICSValue(`Tienda: ${stream.shop?.name || 'Distrito Moda'}`)}`,
+              `LOCATION:${escapeICSValue(stream.shop?.address || 'Avellaneda en Vivo')}`,
+              'END:VEVENT',
+              'END:VCALENDAR',
+          ].join('\r\n');
+          const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `recordatorio-${stream.id}.ics`;
+          link.click();
+          window.URL.revokeObjectURL(url);
+      } catch {
+          setNotice({
+              title: 'No se pudo descargar',
+              message: 'Intenta nuevamente.',
+              tone: 'error',
+          });
+      }
+  };
+
   const handleMarkNotificationRead = (id: string) => {
       void (async () => {
           const updated = await api.markNotificationRead(id);
@@ -1263,6 +1306,14 @@ const App: React.FC = () => {
                                 onClick={() => handleToggleReminder(stream.id)}
                               >
                                 Quitar
+                              </button>
+                            </div>
+                            <div className="mt-2 flex justify-end">
+                              <button
+                                className="text-[10px] font-bold text-dm-crimson hover:text-dm-dark"
+                                onClick={() => handleDownloadICS(stream)}
+                              >
+                                Descargar .ics
                               </button>
                             </div>
                           </div>
