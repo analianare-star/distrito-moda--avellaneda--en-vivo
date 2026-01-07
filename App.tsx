@@ -850,12 +850,14 @@ const App: React.FC = () => {
             <button
               onClick={() => setIsDesktopMenuOpen((prev) => !prev)}
               className="flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-[11px] font-bold text-gray-500 hover:text-dm-dark"
+              aria-expanded={isDesktopMenuOpen}
+              aria-controls="desktop-menu"
             >
               Menu
               <ChevronDown size={14} className={`transition-transform ${isDesktopMenuOpen ? 'rotate-180' : ''}`} />
             </button>
             {isDesktopMenuOpen && (
-              <div className="absolute left-0 top-11 z-50 w-48 rounded-xl border border-gray-100 bg-white shadow-xl">
+              <div id="desktop-menu" className="absolute left-0 top-11 z-50 w-48 rounded-xl border border-gray-100 bg-white shadow-xl">
                 <div className="py-2">
                   {bottomNavItems.map((item) => {
                     const isActive = activeBottomNav === item.id;
@@ -955,7 +957,7 @@ const App: React.FC = () => {
               <button
                 key={item.id}
                 onClick={item.onSelect}
-                className={`flex flex-col items-center gap-1 text-[11px] font-semibold ${item.isCenter ? '-translate-y-3' : ''} ${isActive ? 'text-dm-crimson' : 'text-gray-500'}`}
+                className={`flex min-h-[44px] flex-col items-center gap-1 text-[11px] font-semibold ${item.isCenter ? '-translate-y-3' : ''} ${isActive ? 'text-dm-crimson' : 'text-gray-500'}`}
               >
                 <span className={`relative flex h-11 w-11 items-center justify-center rounded-full ${item.isCenter ? 'bg-dm-crimson text-white shadow-lg shadow-dm-crimson/30' : 'bg-white'}`}>
                   <Icon size={20} className={item.isCenter ? 'text-white' : (isActive ? 'text-dm-crimson' : 'text-gray-400')} />
@@ -1032,10 +1034,10 @@ const App: React.FC = () => {
                        <button
                          key={shop.id}
                          onClick={() => handleOpenShop(shop)}
-                         className="rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
+                         className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm transition hover:shadow-md"
                        >
                          <div className="flex items-center gap-3">
-                           <img src={shop.logoUrl} alt={shop.name} className="h-12 w-12 rounded-full object-cover border border-gray-200" />
+                           <img src={shop.logoUrl} alt={shop.name} loading="lazy" decoding="async" className="h-12 w-12 rounded-full object-cover border border-gray-200" />
                            <div>
                              <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
                           <p className="text-[11px] text-gray-500 uppercase">{shop.plan}</p>
@@ -1088,13 +1090,13 @@ const App: React.FC = () => {
                          <button
                            key={shop.id}
                            onClick={() => handleOpenShop(shop)}
-                           className="rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
+                           className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm transition hover:shadow-md"
                          >
                            <div className="flex items-center gap-3">
-                             <img src={shop.logoUrl} alt={shop.name} className="h-12 w-12 rounded-full object-cover border border-gray-200" />
+                             <img src={shop.logoUrl} alt={shop.name} loading="lazy" decoding="async" className="h-12 w-12 rounded-full object-cover border border-gray-200" />
                              <div>
                                <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
-                               <p className="text-[10px] text-gray-400 uppercase">{shop.plan}</p>
+                               <p className="text-[11px] text-gray-500 uppercase">{shop.plan}</p>
                              </div>
                            </div>
                            <p className="mt-3 text-xs text-gray-500 line-clamp-2">{shop.address || 'Sin dirección cargada'}</p>
@@ -1109,7 +1111,7 @@ const App: React.FC = () => {
                    ) : (
                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                        {reminderStreams.map((stream) => (
-                         <div key={stream.id} className="rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm">
+                         <div key={stream.id} className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm">
                            <p className="text-xs text-gray-500 uppercase">Recordatorio</p>
                            <p className="mt-1 text-sm font-bold text-dm-dark">{stream.title}</p>
                            <p className="text-[11px] text-gray-500">{stream.scheduledTime} • {stream.shop.name}</p>
@@ -1287,7 +1289,7 @@ const App: React.FC = () => {
               );
             })}
             </div>
-            <div className="p-6 space-y-5">
+            <div className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5">
               {user.isLoggedIn ? (
                 accountTab === 'RESUMEN' ? (
                   <>

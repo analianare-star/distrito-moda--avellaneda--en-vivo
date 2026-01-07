@@ -561,19 +561,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                 <div className="space-y-8 animate-in fade-in">
                     <h2 className="font-serif text-2xl text-dm-dark">Estado del Sistema</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-6 rounded-xl border flex justify-between">
+                        <div className="bg-white p-4 md:p-6 rounded-xl border flex justify-between">
                             <div><p className="text-xs font-bold text-gray-400">EN VIVO</p><p className="text-3xl font-serif">{liveCount}</p></div>
                             <Radio className="text-red-500" />
                         </div>
-                        <div className="bg-white p-6 rounded-xl border flex justify-between">
+                        <div className="bg-white p-4 md:p-6 rounded-xl border flex justify-between">
                             <div><p className="text-xs font-bold text-gray-400">INCUMPLIDOS</p><p className="text-3xl font-serif">{missedCount}</p></div>
                             <AlertTriangle className="text-orange-500" />
                         </div>
-                        <div className="bg-white p-6 rounded-xl border flex justify-between">
+                        <div className="bg-white p-4 md:p-6 rounded-xl border flex justify-between">
                             <div><p className="text-xs font-bold text-gray-400">PENALIZADAS</p><p className="text-3xl font-serif">{penalizedShops}</p></div>
                             <AlertOctagon className="text-gray-500" />
                         </div>
-                        <div className="bg-white p-6 rounded-xl border flex justify-between">
+                        <div className="bg-white p-4 md:p-6 rounded-xl border flex justify-between">
                             <div><p className="text-xs font-bold text-gray-400">REELS ACTIVOS</p><p className="text-3xl font-serif">{reels.filter(r => r.status === 'ACTIVE').length}</p></div>
                             <Film className="text-dm-crimson" />
                         </div>
@@ -1197,7 +1197,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
-                                                <img src={reel.shopLogo} className="w-full h-full object-cover" />
+                                                <img src={reel.shopLogo} alt={reel.shopName} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-dm-dark">{reel.shopName}</p>
@@ -1246,7 +1246,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                         <tr key={reel.id}>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden"><img src={reel.shopLogo} className="w-full h-full object-cover"/></div>
+                                                    <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden"><img src={reel.shopLogo} alt={reel.shopName} loading="lazy" decoding="async" className="w-full h-full object-cover"/></div>
                                                     <div>
                                                         <p className="font-bold text-sm">{reel.shopName}</p>
                                                         <p className="text-[10px] text-gray-400">{new Date(reel.createdAtISO).toLocaleDateString()}</p>

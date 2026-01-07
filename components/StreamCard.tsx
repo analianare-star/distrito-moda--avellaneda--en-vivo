@@ -98,6 +98,8 @@ export const StreamCard: React.FC<StreamCardProps> = ({
         <img 
           src={stream.coverImage} 
           alt={stream.title} 
+          loading="lazy"
+          decoding="async"
           className={`w-full h-full object-cover transition-transform duration-700 ${isHovered ? 'scale-105' : 'scale-100'} ${isFinished ? 'grayscale' : ''}`}
         />
         
@@ -111,14 +113,14 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                 className="flex items-center gap-2 bg-white/90 backdrop-blur-sm pr-3 pl-1 py-1 rounded-full cursor-pointer hover:bg-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); onOpenShop(); }}
             >
-                 <img src={stream.shop.logoUrl} className="w-6 h-6 rounded-full object-cover border border-gray-200" alt=""/>
-                 <span className="text-[10px] font-bold text-dm-dark uppercase tracking-wide truncate max-w-[100px]">{stream.shop.name}</span>
+                 <img src={stream.shop.logoUrl} className="w-6 h-6 rounded-full object-cover border border-gray-200" alt={stream.shop.name} loading="lazy" decoding="async" />
+                 <span className="text-[11px] font-bold text-dm-dark uppercase tracking-wide truncate max-w-[110px]">{stream.shop.name}</span>
              </div>
 
              {/* Rating */}
              <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm px-2 py-1 rounded-full text-white">
                  <Star size={10} className="fill-yellow-400 text-yellow-400" />
-                 <span className="text-[10px] font-bold">{shopRating}</span>
+                 <span className="text-[11px] font-bold">{shopRating}</span>
              </div>
         </div>
 
@@ -126,10 +128,10 @@ export const StreamCard: React.FC<StreamCardProps> = ({
         <div className="absolute bottom-4 left-4 z-10">
              {isLive ? (
                  <div className="flex flex-col items-start gap-1">
-                    <span className="bg-dm-crimson text-white text-[10px] font-bold px-2 py-0.5 rounded-sm flex items-center gap-1 animate-pulse">
+                    <span className="bg-dm-crimson text-white text-[11px] font-bold px-2 py-0.5 rounded-sm flex items-center gap-1 animate-pulse">
                         <span className="w-1.5 h-1.5 bg-white rounded-full"></span> EN VIVO
                     </span>
-                    <span className="text-white text-xs font-serif italic">Transmisión en curso</span>
+                    <span className="text-white text-[11px] font-serif italic">Transmisión en curso</span>
                  </div>
              ) : (
                 <div className="flex items-center gap-2 text-white">
@@ -137,10 +139,10 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                         {isMissed ? <AlertTriangleIcon size={12}/> : isFinished ? <Check size={12}/> : <Clock size={12}/>}
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">
+                        <p className="text-[11px] font-bold uppercase tracking-wider opacity-80">
                             {isMissed ? 'No Realizado' : isFinished ? 'Finalizado' : 'Próximo Vivo'}
                         </p>
-                        {!isFinished && !isMissed && <p className="text-sm font-bold shadow-black drop-shadow-md">{dateText}</p>}
+                        {!isFinished && !isMissed && <p className="text-[12px] font-bold shadow-black drop-shadow-md">{dateText}</p>}
                     </div>
                 </div>
              )}
@@ -148,14 +150,14 @@ export const StreamCard: React.FC<StreamCardProps> = ({
       </div>
 
       {/* 2. BODY CONTENT */}
-      <div className="p-4 flex flex-col flex-1">
-        <div className="flex justify-between items-start mb-2">
+      <div className="p-3 md:p-4 flex flex-col flex-1">
+        <div className="flex justify-between items-start mb-1">
             <div>
-                <h3 className="font-serif text-lg font-bold text-dm-dark leading-tight line-clamp-2" title={stream.title}>
+                <h3 className="font-serif text-[17px] font-bold text-dm-dark leading-tight line-clamp-2" title={stream.title}>
                     {stream.title}
                 </h3>
-                <div className="flex items-center gap-2 mt-2">
-                     <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
+                <div className="flex items-center gap-2 mt-1.5">
+                     <span className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded border ${
                          stream.platform === 'Instagram' ? 'border-pink-200 text-pink-600 bg-pink-50' : 
                          stream.platform === 'TikTok' ? 'border-gray-800 text-gray-900 bg-gray-100' :
                          'border-blue-200 text-blue-600 bg-blue-50'
@@ -167,7 +169,7 @@ export const StreamCard: React.FC<StreamCardProps> = ({
         </div>
 
         {/* 3. ACTION BAR */}
-        <div className="mt-auto pt-4 flex flex-col gap-3">
+        <div className="mt-auto pt-3 flex flex-col gap-2.5">
             
             {/* Primary Action Button */}
             {isLive ? (
@@ -203,28 +205,31 @@ export const StreamCard: React.FC<StreamCardProps> = ({
             )}
 
             {/* Secondary Actions Row */}
-            <div className="flex justify-between items-center border-t border-gray-100 pt-3">
+            <div className="flex justify-between items-center border-t border-gray-100 pt-2.5">
                  <div className="flex gap-1">
                     <button 
                         onClick={() => canClientInteract && onLike && onLike(stream.id)} 
-                        className={`p-2 rounded-full transition-colors ${canClientInteract ? 'text-gray-400 hover:text-dm-crimson hover:bg-red-50' : 'text-gray-300 cursor-not-allowed'}`}
+                        className={`p-2 rounded-full transition-colors ${canClientInteract ? 'text-gray-500 hover:text-dm-crimson hover:bg-red-50' : 'text-gray-300 cursor-not-allowed'}`}
                         title="Me gusta"
                         disabled={!canClientInteract}
+                        aria-label="Me gusta"
                     >
                         <Heart size={18} />
                     </button>
                     <button 
                         onClick={handleShare}
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                         title="Compartir"
+                        aria-label="Compartir"
                     >
                         <Share2 size={18} />
                     </button>
                     <button 
                         onClick={() => canClientInteract && onDownloadCard && onDownloadCard(stream)}
-                        className={`p-2 rounded-full transition-colors ${canClientInteract ? 'text-gray-400 hover:text-dm-dark hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
+                        className={`p-2 rounded-full transition-colors ${canClientInteract ? 'text-gray-500 hover:text-dm-dark hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                         title="Descargar Tarjeta"
                         disabled={!canClientInteract}
+                        aria-label="Descargar tarjeta"
                     >
                         <Download size={18} />
                     </button>
@@ -234,15 +239,16 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                  {canClientInteract && isFinished ? (
                      <button 
                         onClick={() => onRate && onRate(stream.id, 5)} 
-                        className="text-xs font-bold text-yellow-500 hover:text-yellow-600 flex items-center gap-1"
+                        className="text-[11px] font-bold text-yellow-500 hover:text-yellow-600 flex items-center gap-1"
                      >
                          <Star size={14} className="fill-current"/> Calificar
                      </button>
                  ) : canClientInteract && canReport ? (
                      <button 
                         onClick={() => onReport(stream.id)}
-                        className="text-[10px] text-gray-300 hover:text-red-400 flex items-center gap-1"
+                        className="text-[11px] text-gray-500 hover:text-red-500 flex items-center gap-1"
                         title="Reportar problema"
+                        aria-label="Reportar vivo"
                      >
                          <Flag size={12}/> 
                      </button>

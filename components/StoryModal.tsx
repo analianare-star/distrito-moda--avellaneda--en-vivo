@@ -65,7 +65,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify 
                 {/* Header Info */}
                 <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/80 to-transparent z-20 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full border-2 border-dm-crimson p-0.5 bg-white">
-                        <img src={reel.shopLogo} alt="" className="w-full h-full rounded-full object-cover" />
+                        <img src={reel.shopLogo} alt={reel.shopName} loading="lazy" decoding="async" className="w-full h-full rounded-full object-cover" />
                     </div>
                     <div className="flex-1">
                         <p className="text-white font-bold text-sm">{reel.shopName}</p>
@@ -85,7 +85,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify 
                 <div className="flex-1 bg-black flex flex-col items-center justify-center text-center p-8 relative">
                     {/* Background blurry effect */}
                     <div className="absolute inset-0 opacity-30">
-                         <img src={reel.shopLogo} className="w-full h-full object-cover blur-2xl" alt="" />
+                         <img src={reel.shopLogo} className="w-full h-full object-cover blur-2xl" alt={reel.shopName} />
                     </div>
                     
                     <div className="relative z-10 space-y-6">

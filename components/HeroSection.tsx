@@ -83,6 +83,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                                           <img 
                                             src={reel.shopLogo} 
                                             alt={reel.shopName} 
+                                            loading="lazy"
+                                            decoding="async"
                                             className={`w-full h-full object-cover transition-all duration-500 ${isSeen ? 'opacity-60 grayscale scale-100' : 'opacity-100 scale-100 group-hover:scale-110'}`} 
                                           />
                                       </div>
@@ -105,7 +107,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               
               {/* Dynamic Background Blur */}
               <div key={activeStream.id + '-bg'} className="absolute inset-0 z-0 animate-in fade-in duration-700">
-                  <img src={activeStream.coverImage} className="w-full h-full object-cover opacity-30 blur-xl scale-110" alt="" />
+                  <img src={activeStream.coverImage} className="w-full h-full object-cover opacity-30 blur-xl scale-110" alt={activeStream.title} />
                   <div className="absolute inset-0 bg-black/20"></div>
               </div>
               
@@ -116,6 +118,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <button 
                         onClick={prevSlide}
                         className="hidden md:flex p-2 rounded-full bg-black/20 hover:bg-white/20 text-white transition-all backdrop-blur-sm z-20"
+                        aria-label="Anterior"
                       >
                           <ChevronLeft size={32} />
                       </button>
@@ -146,7 +149,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <div className="w-full md:w-1/2 text-left space-y-4 relative">
                           <div className="flex items-center gap-3">
                               <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-white shadow-md">
-                                  <img src={activeStream.shop.logoUrl} alt="" className="w-full h-full object-cover"/>
+                                  <img src={activeStream.shop.logoUrl} alt={activeStream.shop.name} loading="lazy" decoding="async" className="w-full h-full object-cover"/>
                               </div>
                               <div>
                                   <h3 className="font-serif text-xl font-bold leading-none text-white">{activeStream.shop.name}</h3>
@@ -192,6 +195,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <button 
                         onClick={nextSlide}
                         className="hidden md:flex p-2 rounded-full bg-black/20 hover:bg-white/20 text-white transition-all backdrop-blur-sm z-20"
+                        aria-label="Siguiente"
                       >
                           <ChevronRight size={32} />
                       </button>

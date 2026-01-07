@@ -57,15 +57,16 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
         
         {/* Header */}
         <div className="relative h-32 bg-dm-dark flex-shrink-0">
-           <button 
+            <button 
                 onClick={onClose}
                 className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/20 hover:bg-black/40 rounded-full p-2 transition-colors z-10"
+                aria-label="Cerrar"
             >
                 <X size={20} />
             </button>
             <div className="absolute -bottom-10 left-6 flex items-end justify-between w-[calc(100%-48px)]">
                 <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-white shadow-md relative z-10">
-                    <img src={shop.logoUrl} alt={shop.name} className="w-full h-full object-cover" />
+                    <img src={shop.logoUrl} alt={shop.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 </div>
                 
                 <button 
@@ -78,6 +79,8 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                           : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
                     }`}
                     disabled={!canClientInteract}
+                    aria-pressed={isFollowing}
+                    aria-label={isFollowing ? 'Dejar de seguir tienda' : 'Seguir tienda'}
                 >
                     {canClientInteract ? (
                         isFollowing ? (
