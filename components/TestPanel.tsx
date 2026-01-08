@@ -172,14 +172,14 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
                 <div className="bg-red-50 p-6 rounded-xl border border-red-100 shadow-sm flex flex-col justify-between">
                     <div>
                         <h3 className="font-bold text-red-700 mb-2 flex items-center gap-2">
-                            <Lock size={18}/> Hard Reset
+                            <Lock size={18}/> Reinicio total
                         </h3>
                         <p className="text-xs text-red-600 mb-4">
                             Restaura las tiendas y vivos a su estado original. Elimina reportes, penalizaciones y cupos extra comprados.
                         </p>
                     </div>
                     <Button onClick={handleReset} variant="primary" className="w-full bg-red-600 hover:bg-red-700 border-none">
-                        <RefreshCw size={16} className="mr-2"/> Resetear Sistema
+                        <RefreshCw size={16} className="mr-2"/> Restablecer sistema
                     </Button>
                 </div>
 
@@ -188,7 +188,7 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
             {confirmReset && (
                 <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-                        <h3 className="font-serif text-xl text-dm-dark">Resetear sistema</h3>
+                        <h3 className="font-serif text-xl text-dm-dark">Restablecer sistema</h3>
                         <p className="mt-2 text-xs text-gray-500">
                             Se perderán reportes, penalizaciones y compras simuladas. ¿Continuar?
                         </p>
@@ -202,10 +202,10 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
                                     setConfirmReset(false);
                                     await api.resetSystem();
                                     onRefreshData();
-                                    notify('Sistema reseteado', 'La base de prueba volvió a su estado inicial.', 'success');
+                                    notify('Sistema restablecido', 'La base de prueba volvió a su estado inicial.', 'success');
                                 }}
                             >
-                                Resetear
+                                Restablecer
                             </Button>
                         </div>
                     </div>

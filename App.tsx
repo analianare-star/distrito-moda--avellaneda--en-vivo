@@ -912,7 +912,7 @@ const App: React.FC = () => {
               aria-expanded={isDesktopMenuOpen}
               aria-controls="desktop-menu"
             >
-              Menu
+              Menú
               <ChevronDown size={14} className={`transition-transform ${isDesktopMenuOpen ? 'rotate-180' : ''}`} />
             </button>
             {isDesktopMenuOpen && (

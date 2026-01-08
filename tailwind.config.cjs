@@ -14,17 +14,17 @@ module.exports = {
     extend: {
       colors: {
         dm: {
-          crimson: '#ED1650',
-          dark: '#6A5E56',
-          light: '#C1B5AB',
+          crimson: '#FF1F6A',
+          dark: '#1F1A1C',
+          light: '#E6DED5',
           bg: '#FFFFFF',
-          alert: '#D32F2F',
-          finished: '#999999',
+          alert: '#FF3B3B',
+          finished: '#6B6B6B',
         },
       },
       fontFamily: {
-        serif: ['"Bodoni Moda"', 'serif'],
-        sans: ['"Roboto Condensed"', 'sans-serif'],
+        serif: ['"Sora"', 'sans-serif'],
+        sans: ['"Manrope"', 'sans-serif'],
       },
       animation: {
         'pulse-slow': 'pulse 3s ease-in-out infinite',

@@ -113,7 +113,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify,
                         <Share2 size={18} /> Compartir
                     </button>
                     <div className="text-[10px] text-gray-500 uppercase tracking-widest font-sans">
-                        Distrito Moda Stories
+                        Historias de Distrito Moda
                     </div>
                 </div>
             </div>

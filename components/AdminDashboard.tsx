@@ -125,6 +125,56 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   const penalizedShops = shops.filter(s => s.isPenalized).length;
   const pendingShops = shops.filter(s => (s.status || 'ACTIVE') === 'PENDING_VERIFICATION');
   const openReports = reports.filter((report) => (report.status || 'OPEN') === 'OPEN');
+
+  const streamStatusLabels: Record<string, string> = {
+      LIVE: 'En vivo',
+      UPCOMING: 'Próximo',
+      FINISHED: 'Finalizado',
+      MISSED: 'No realizado',
+      CANCELLED: 'Cancelado',
+      BANNED: 'Bloqueado',
+      PENDING_REPROGRAMMATION: 'Reprogramación pendiente',
+  };
+  const reportStatusLabels: Record<string, string> = {
+      OPEN: 'Abierto',
+      RESOLVED: 'Resuelto',
+      DISMISSED: 'Rechazado',
+  };
+  const reelStatusLabels: Record<string, string> = {
+      ACTIVE: 'Activo',
+      HIDDEN: 'Oculto',
+      EXPIRED: 'Expirado',
+  };
+  const purchaseStatusLabels: Record<string, string> = {
+      PENDING: 'Pendiente',
+      APPROVED: 'Aprobada',
+      REJECTED: 'Rechazada',
+  };
+  const dataIntegrityLabels: Record<string, string> = {
+      COMPLETE: 'Completa',
+      MINIMAL: 'Mínima',
+      INSUFFICIENT: 'Insuficiente',
+  };
+  const notificationTypeLabels: Record<string, string> = {
+      SYSTEM: 'Sistema',
+      REMINDER: 'Recordatorio',
+      PURCHASE: 'Compra',
+  };
+  const shopStatusLabels: Record<string, string> = {
+      ACTIVE: 'Activa',
+      PENDING_VERIFICATION: 'Pendiente',
+      AGENDA_SUSPENDED: 'Agenda suspendida',
+      HIDDEN: 'Oculta',
+      BANNED: 'Bloqueada',
+  };
+
+  const formatStreamStatus = (status?: string) => streamStatusLabels[status || ''] || status || '-';
+  const formatReportStatus = (status?: string) => reportStatusLabels[status || 'OPEN'] || status || '-';
+  const formatReelStatus = (status?: string) => reelStatusLabels[status || ''] || status || '-';
+  const formatPurchaseStatus = (status?: string) => purchaseStatusLabels[status || ''] || status || '-';
+  const formatNotificationType = (value?: string) => notificationTypeLabels[value || ''] || value || '-';
+  const formatIntegrity = (value?: string) => dataIntegrityLabels[value || ''] || value || '-';
+  const formatShopStatus = (status?: string) => shopStatusLabels[status || ''] || status || '-';
   const pendingPurchases = purchaseRequests.filter((purchase) => (purchase.status || 'PENDING') === 'PENDING');
 
   const handleStatusChange = async (streamId: string, newStatus: StreamStatus) => {
@@ -357,9 +407,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
 
   const resetPassword = async (shopId: string) => {
       setConfirmDialog({
-          title: 'Resetear clave',
+          title: 'Restablecer clave',
           message: '¿Confirmas el reseteo de clave de la tienda?',
-          confirmLabel: 'Resetear',
+          confirmLabel: 'Restablecer',
           onConfirm: async () => {
               const result = await api.resetShopPassword(shopId);
               setNotice({
@@ -599,7 +649,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
       <header className="bg-dm-dark text-white px-8 py-4 shadow-md z-10 shrink-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
             <h1 className="font-serif text-xl tracking-wide">Panel de Control ADMIN</h1>
-            <span className="text-xs bg-dm-crimson px-2 py-1 rounded">Super Admin</span>
+            <span className="text-xs bg-dm-crimson px-2 py-1 rounded">Superadmin</span>
         </div>
       </header>
 
@@ -783,13 +833,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                             className="p-3 border border-gray-200 rounded-lg text-sm bg-white"
                         >
                             <option value="ALL">Todos los estados</option>
-                            <option value={StreamStatus.LIVE}>LIVE</option>
-                            <option value={StreamStatus.UPCOMING}>UPCOMING</option>
-                            <option value={StreamStatus.FINISHED}>FINISHED</option>
-                            <option value={StreamStatus.MISSED}>MISSED</option>
-                            <option value={StreamStatus.CANCELLED}>CANCELLED</option>
-                            <option value={StreamStatus.BANNED}>BANNED</option>
-                            <option value={StreamStatus.PENDING_REPROGRAMMATION}>PENDING_REPROGRAMMATION</option>
+                            <option value={StreamStatus.LIVE}>En vivo</option>
+                            <option value={StreamStatus.UPCOMING}>Próximo</option>
+                            <option value={StreamStatus.FINISHED}>Finalizado</option>
+                            <option value={StreamStatus.MISSED}>No realizado</option>
+                            <option value={StreamStatus.CANCELLED}>Cancelado</option>
+                            <option value={StreamStatus.BANNED}>Bloqueado</option>
+                            <option value={StreamStatus.PENDING_REPROGRAMMATION}>Reprogramación pendiente</option>
                         </select>
                     </div>
 
@@ -800,7 +850,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                     <div key={stream.id} className="p-3 space-y-2">
                                         <div className="flex items-center justify-between">
                                             <p className="text-sm font-bold text-dm-dark">{stream.shop?.name || 'Sin tienda'}</p>
-                                            <span className="text-[11px] font-bold text-gray-600">{stream.status}</span>
+                                            <span className="text-[11px] font-bold text-gray-600">{formatStreamStatus(stream.status)}</span>
                                         </div>
                                         <p className="text-[11px] text-gray-600">
                                             {new Date(stream.fullDateISO).toLocaleDateString()} {stream.scheduledTime} hs
@@ -830,7 +880,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                 <td className="px-6 py-4 text-xs text-gray-500">
                                                     {new Date(stream.fullDateISO).toLocaleDateString()} {stream.scheduledTime} hs
                                                 </td>
-                                                <td className="px-6 py-4 text-xs font-bold">{stream.status}</td>
+                                                <td className="px-6 py-4 text-xs font-bold">{formatStreamStatus(stream.status)}</td>
                                                 <td className="px-6 py-4 text-xs">{stream.platform}</td>
                                             </tr>
                                         ))
@@ -863,13 +913,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                             className="p-3 border border-gray-200 rounded-lg text-sm bg-white"
                         >
                             <option value="ALL">Todos los estados</option>
-                            <option value={StreamStatus.LIVE}>LIVE</option>
-                            <option value={StreamStatus.UPCOMING}>UPCOMING</option>
-                            <option value={StreamStatus.FINISHED}>FINISHED</option>
-                            <option value={StreamStatus.MISSED}>MISSED</option>
-                            <option value={StreamStatus.CANCELLED}>CANCELLED</option>
-                            <option value={StreamStatus.BANNED}>BANNED</option>
-                            <option value={StreamStatus.PENDING_REPROGRAMMATION}>REPROGRAMMATION</option>
+                            <option value={StreamStatus.LIVE}>En vivo</option>
+                            <option value={StreamStatus.UPCOMING}>Próximo</option>
+                            <option value={StreamStatus.FINISHED}>Finalizado</option>
+                            <option value={StreamStatus.MISSED}>No realizado</option>
+                            <option value={StreamStatus.CANCELLED}>Cancelado</option>
+                            <option value={StreamStatus.BANNED}>Bloqueado</option>
+                            <option value={StreamStatus.PENDING_REPROGRAMMATION}>Reprogramación pendiente</option>
                         </select>
                     </div>
                     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
@@ -883,7 +933,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                             <p className="text-[11px] text-gray-600">{stream.shop.name}</p>
                                         </div>
                                         <span className={`text-[11px] px-2 py-1 rounded ${stream.status === 'LIVE' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                                            {stream.status}
+                                            {formatStreamStatus(stream.status)}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between text-[11px] text-gray-600">
@@ -988,7 +1038,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                             <td className="px-6 py-4">
                                                 <p className="font-bold text-sm">{stream.title}</p>
                                                 <p className="text-xs text-gray-500">{stream.shop.name}</p>
-                                                <span className={`text-[10px] px-1 rounded ${stream.status === 'LIVE' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}>{stream.status}</span>
+                                                <span className={`text-[10px] px-1 rounded ${stream.status === 'LIVE' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}>{formatStreamStatus(stream.status)}</span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 {stream.reportCount > 0 ? <span className="text-red-600 font-bold flex items-center gap-1"><AlertTriangle size={12}/> {stream.reportCount}</span> : '-'}
@@ -1129,7 +1179,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                             <p className="text-[11px] text-gray-600">{report?.stream?.shop?.name || 'Sin tienda'}</p>
                                         </div>
                                         <div className="flex items-center justify-between text-xs">
-                                            <span className="font-bold text-gray-700">{report.status || 'OPEN'}</span>
+                                            <span className="font-bold text-gray-700">{formatReportStatus(report.status)}</span>
                                             <span className="text-[11px] text-gray-600">{report.reason || 'Sin motivo'}</span>
                                         </div>
                                         <div className="flex gap-2">
@@ -1221,7 +1271,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                     <p className="text-xs font-bold">{report?.stream?.title || report.streamId}</p>
                                                     <p className="text-[10px] text-gray-400">{report?.stream?.shop?.name || 'Sin tienda'}</p>
                                                 </td>
-                                                <td className="px-6 py-4 text-xs font-bold">{report.status || 'OPEN'}</td>
+                                                <td className="px-6 py-4 text-xs font-bold">{formatReportStatus(report.status)}</td>
                                                 <td className="px-6 py-4">
                                                     <p className="text-[10px] text-gray-500">{report.reason || 'Sin motivo'}</p>
                                                 </td>
@@ -1342,7 +1392,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                 status === 'PENDING_VERIFICATION' ? 'bg-yellow-50 text-yellow-700' :
                                                 status === 'AGENDA_SUSPENDED' ? 'bg-orange-50 text-orange-600' :
                                                 'bg-red-50 text-red-600'
-                                            }`}>{status}</span>
+                                            }`}>{formatShopStatus(status)}</span>
                                         </div>
                                         <div className="flex items-center justify-between text-[11px] text-gray-600">
                                             <span>Integridad</span>
@@ -1350,7 +1400,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                 shop.dataIntegrity === 'COMPLETE' ? 'bg-green-50 text-green-600' :
                                                 shop.dataIntegrity === 'MINIMAL' ? 'bg-yellow-50 text-yellow-600' :
                                                 'bg-red-50 text-red-600'
-                                            }`}>{shop.dataIntegrity}</span>
+                                            }`}>{formatIntegrity(shop.dataIntegrity)}</span>
                                         </div>
                                         <div className="flex items-center justify-between text-[11px] text-gray-600">
                                             <span>Penalización</span>
@@ -1363,25 +1413,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                 <>
                                                   <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Activar</button>
                                                   <button onClick={() => rejectShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-red-50 text-red-600 border-red-200">Rechazar</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
                                                 </>
                                             )}
                                             {status === 'ACTIVE' && (
                                                 <>
                                                   <button onClick={() => suspendAgenda(shop.id)} className="text-xs border px-2 py-1 rounded bg-orange-50 text-orange-600 border-orange-200">Suspender Agenda</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
                                                 </>
                                             )}
                                             {status === 'AGENDA_SUSPENDED' && (
                                                 <>
                                                   <button onClick={() => liftSuspension(shop.id)} className="text-xs border px-2 py-1 rounded bg-blue-50 text-blue-600 border-blue-200">Levantar Sancion</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
                                                 </>
                                             )}
                                             {(status === 'HIDDEN' || status === 'BANNED') && (
                                                 <>
                                                   <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Reactivar</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
                                                 </>
                                             )}
                                             <button onClick={() => assignOwner(shop.id)} className="text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200">
@@ -1421,14 +1471,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                     status === 'PENDING_VERIFICATION' ? 'bg-yellow-50 text-yellow-700' :
                                                     status === 'AGENDA_SUSPENDED' ? 'bg-orange-50 text-orange-600' :
                                                     'bg-red-50 text-red-600'
-                                                }`}>{status}</span>
+                                                }`}>{formatShopStatus(status)}</span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
                                                     shop.dataIntegrity === 'COMPLETE' ? 'bg-green-50 text-green-600' :
                                                     shop.dataIntegrity === 'MINIMAL' ? 'bg-yellow-50 text-yellow-600' :
                                                     'bg-red-50 text-red-600'
-                                                }`}>{shop.dataIntegrity}</span>
+                                                }`}>{formatIntegrity(shop.dataIntegrity)}</span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <button onClick={() => togglePenalty(shop.id)} className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded border ${shop.isPenalized ? 'bg-red-50 border-red-200 text-red-600' : 'border-gray-200'}`}>
@@ -1441,25 +1491,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                         <>
                                                           <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Activar</button>
                                                           <button onClick={() => rejectShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-red-50 text-red-600 border-red-200">Rechazar</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
                                                         </>
                                                     )}
                                                     {status === 'ACTIVE' && (
                                                         <>
                                                           <button onClick={() => suspendAgenda(shop.id)} className="text-xs border px-2 py-1 rounded bg-orange-50 text-orange-600 border-orange-200">Suspender Agenda</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
                                                         </>
                                                     )}
                                                     {status === 'AGENDA_SUSPENDED' && (
                                                         <>
                                                           <button onClick={() => liftSuspension(shop.id)} className="text-xs border px-2 py-1 rounded bg-blue-50 text-blue-600 border-blue-200">Levantar Sancion</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
                                                         </>
                                                     )}
                                                     {(status === 'HIDDEN' || status === 'BANNED') && (
                                                         <>
                                                           <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Reactivar</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Reset Clave</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
                                                         </>
                                                     )}
                                                     <button onClick={() => assignOwner(shop.id)} className="text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200">
@@ -1506,7 +1556,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                             reel.status === 'EXPIRED' ? 'bg-gray-100 text-gray-500' :
                                             'bg-red-50 text-red-600'
                                         }`}>
-                                            {reel.status}
+                                            {formatReelStatus(reel.status)}
                                         </span>
                                         <span className="text-[11px] text-gray-600">{reel.views || 0} vistas</span>
                                     </div>
@@ -1554,7 +1604,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                     reel.status === 'EXPIRED' ? 'bg-gray-100 text-gray-500' :
                                                     'bg-red-50 text-red-600'
                                                 }`}>
-                                                    {reel.status}
+                                                    {formatReelStatus(reel.status)}
                                                 </span>
                                                 {reel.origin === 'EXTRA' && <span className="ml-2 text-[10px] bg-yellow-50 text-yellow-600 px-1 rounded border border-yellow-200">EXTRA</span>}
                                             </td>
@@ -1626,7 +1676,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                 <div>
                                                     <p className="font-bold text-dm-dark">{req.shop?.name || 'Tienda'}</p>
                                                     <p className="text-[10px] text-gray-500 uppercase">
-                                                        {req.type === 'LIVE_PACK' ? 'Cupos Vivos' : req.type === 'REEL_PACK' ? 'Cupos Reels' : req.type}
+                                                        {req.type === 'LIVE_PACK' ? 'Cupos de vivos' : req.type === 'REEL_PACK' ? 'Cupos de historias' : req.type}
                                                     </p>
                                                 </div>
                                                 <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 border ${
@@ -1636,7 +1686,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                       ? 'bg-red-50 text-red-600 border-red-200'
                                                       : 'bg-yellow-50 text-yellow-700 border-yellow-200'
                                                 }`}>
-                                                    {req.status || 'PENDING'}
+                                                    {formatPurchaseStatus(req.status)}
                                                 </span>
                                             </div>
                                             <div className="mt-2 flex items-center justify-between">
@@ -1807,7 +1857,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                               <div key={note.id} className="rounded-lg border border-gray-100 p-3 text-[11px] text-gray-600">
                                 <div className="flex items-center justify-between">
                                   <span className={`text-[10px] font-bold uppercase ${note.read ? 'text-gray-400' : 'text-dm-crimson'}`}>
-                                    {note.type || 'SYSTEM'}
+                                    {formatNotificationType(note.type)}
                                   </span>
                                   <span className="text-[10px] text-gray-400">{formatNotificationDate(note.createdAt)}</span>
                                 </div>
@@ -1991,7 +2041,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                           </h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="md:col-span-2">
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Email Administrativo (Login) *</label>
+                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Email administrativo (inicio de sesión) *</label>
                                   <input 
                                       type="email" required value={formData.email}
                                       onChange={(e) => setFormData({...formData, email: e.target.value})}

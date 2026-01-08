@@ -40,7 +40,7 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
     doc.text(shop.name || 'Tienda', 24, 60);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(mode === 'MERCHANT' ? 'PROXIMO LIVE' : 'TE ESPERAMOS', 24, 80);
+    doc.text(mode === 'MERCHANT' ? 'PROXIMO VIVO' : 'TE ESPERAMOS', 24, 80);
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     doc.text(`${timeStr} hs`, 24, 120);
@@ -150,7 +150,7 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
             {/* Context Badge */}
             <div className="mb-6">
                 <span className={`inline-block px-3 py-1 border text-xs font-sans tracking-widest uppercase backdrop-blur-md ${isLive ? 'border-dm-crimson text-dm-crimson bg-black/40' : 'border-white/50 text-white bg-white/10'}`}>
-                    {isLive ? 'EN VIVO' : mode === 'MERCHANT' ? 'PRÓXIMO LIVE' : 'TE ESPERAMOS'}
+                    {isLive ? 'EN VIVO' : mode === 'MERCHANT' ? 'PRÓXIMO VIVO' : 'TE ESPERAMOS'}
                 </span>
             </div>
 
