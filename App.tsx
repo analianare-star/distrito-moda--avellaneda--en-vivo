@@ -901,7 +901,7 @@ const App: React.FC = () => {
   const canClientInteract = user.isLoggedIn && authProfile?.userType === 'CLIENT';
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-x-hidden">
             {/* Navigation Bar */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-3 shadow-sm">
         <div className="grid grid-cols-3 items-center">
@@ -955,7 +955,10 @@ const App: React.FC = () => {
           </div>
           <div className="flex flex-col items-end text-xs font-sans text-gray-500">
             <span>
-              Hola: <span className="ml-1 font-semibold text-dm-dark">{user.isLoggedIn ? (user.name || 'Cliente') : 'Invitado'}</span>
+              Hola:{' '}
+              <span className="ml-1 inline-block max-w-[140px] truncate align-bottom font-semibold text-dm-dark">
+                {user.isLoggedIn ? (user.name || 'Cliente') : 'Invitado'}
+              </span>
             </span>
             {user.isLoggedIn && (
               <button
@@ -1006,8 +1009,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white/95 backdrop-blur-sm md:hidden">
-        <div className="mx-auto flex max-w-md items-end justify-between px-6 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white/95 backdrop-blur-sm md:hidden overflow-x-hidden">
+        <div className="mx-auto flex w-full max-w-md items-end justify-between px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2">
           {bottomNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeBottomNav === item.id;

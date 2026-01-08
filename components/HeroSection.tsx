@@ -54,7 +54,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   };
 
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col overflow-x-hidden">
       
       {/* --- STORIES / REELS CAROUSEL --- */}
       {sortedReels.length > 0 && (
@@ -68,7 +68,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </h2>
               </div>
 
-              <div className="max-w-7xl mx-auto px-4 overflow-x-auto no-scrollbar">
+              <div className="max-w-7xl mx-auto px-4 overflow-x-auto no-scrollbar overscroll-x-contain">
                   <div className="flex gap-5 min-w-max px-1 pb-2">
                       {sortedReels.map(reel => {
                           const isSeen = viewedReels.includes(reel.id);
@@ -245,7 +245,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       {/* FILTERS BAR */}
       <div className="bg-white border-b border-gray-100 shadow-sm sticky top-16 z-30">
-          <div className="max-w-7xl mx-auto px-4 py-4 overflow-x-auto no-scrollbar">
+          <div className="max-w-7xl mx-auto px-4 py-4 overflow-x-auto no-scrollbar overscroll-x-contain">
                <div className="flex gap-2 md:justify-center min-w-max">
                     {FILTERS.map((filter) => (
                         <button
