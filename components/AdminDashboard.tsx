@@ -408,13 +408,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   const resetPassword = async (shopId: string) => {
       setConfirmDialog({
           title: 'Restablecer clave',
-          message: '¿Confirmas el reseteo de clave de la tienda?',
+          message: 'Se generará un enlace para definir una nueva clave.',
           confirmLabel: 'Restablecer',
           onConfirm: async () => {
               const result = await api.resetShopPassword(shopId);
+              if (result?.resetLink) {
+                  let copied = false;
+                  try {
+                      await navigator.clipboard.writeText(result.resetLink);
+                      copied = true;
+                  } catch {}
+                  setNotice({
+                      title: 'Enlace generado',
+                      message: copied
+                          ? 'Se copió el enlace de restablecimiento.'
+                          : `Enlace: ${result.resetLink}`,
+                      tone: 'success',
+                  });
+                  return;
+              }
               setNotice({
                   title: 'Clave reseteada',
-                  message: `Nueva clave: ${result.password}`,
+                  message: 'No se recibió enlace de restablecimiento.',
                   tone: 'success',
               });
           },

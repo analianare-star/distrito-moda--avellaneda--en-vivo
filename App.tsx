@@ -14,7 +14,7 @@ import { ReportModal } from './components/ReportModal';
 import { api } from './services/api';
 import { X, User, UserCircle, Bell, Clock, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown, Globe, Film } from 'lucide-react';
 import { auth, googleProvider } from './firebase';
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth';
 
 type AuthProfile = {
   userType: 'ADMIN' | 'SHOP' | 'CLIENT';
@@ -55,6 +55,12 @@ const App: React.FC = () => {
   const [merchantTab, setMerchantTab] = useState<MerchantTab>('RESUMEN');
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
   const [authProfile, setAuthProfile] = useState<AuthProfile | null>(null);
+  const [loginMode, setLoginMode] = useState<'GOOGLE' | 'EMAIL'>('GOOGLE');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
 
   // --- CENTRALIZED STATE ---
   const [allShops, setAllShops] = useState<Shop[]>([]);
@@ -100,7 +106,7 @@ const App: React.FC = () => {
   const requireLogin = () => {
       setViewMode('CLIENT');
       setActiveBottomNav('account');
-      setLoginPromptDismissed(false);
+      openLoginModal();
   };
   const requireClient = () => {
       if (!user.isLoggedIn) {
@@ -579,20 +585,101 @@ const App: React.FC = () => {
   };
 
   const handleLoginRequest = async () => {
+      openLoginModal();
+  };
+
+  const openLoginModal = (mode?: 'GOOGLE' | 'EMAIL') => {
+      setLoginMode(mode || 'GOOGLE');
+      setLoginError('');
+      setLoginPassword('');
+      setLoginPromptDismissed(false);
+  };
+
+  const handleGoogleLogin = async () => {
       try {
+          setLoginBusy(true);
           await signInWithPopup(auth, googleProvider);
       } catch (error) {
           console.error('Error iniciando sesion:', error);
+          setLoginError('No se pudo iniciar sesión con Google.');
           setNotice({
               title: 'No se pudo iniciar sesión',
               message: 'Reintentá con tu cuenta de Google.',
               tone: 'error',
           });
+      } finally {
+          setLoginBusy(false);
+      }
+  };
+
+  const handleEmailLogin = async () => {
+      const email = loginEmail.trim().toLowerCase();
+      if (!email || !loginPassword) {
+          setLoginError('Ingresá tu correo y contraseña.');
+          return;
+      }
+      setLoginBusy(true);
+      setLoginError('');
+      try {
+          await signInWithEmailAndPassword(auth, email, loginPassword);
+      } catch (error: any) {
+          const code = error?.code || '';
+          const message = code === 'auth/user-not-found'
+              ? 'No encontramos una cuenta con ese correo.'
+              : code === 'auth/wrong-password'
+              ? 'La contraseña es incorrecta.'
+              : code === 'auth/invalid-email'
+              ? 'El correo no es válido.'
+              : code === 'auth/too-many-requests'
+              ? 'Se bloquearon intentos por seguridad. Probá más tarde.'
+              : 'No se pudo iniciar sesión.';
+          setLoginError(message);
+          setNotice({
+              title: 'No se pudo iniciar sesión',
+              message,
+              tone: 'error',
+          });
+      } finally {
+          setLoginBusy(false);
+      }
+  };
+
+  const handlePasswordReset = async () => {
+      const email = loginEmail.trim().toLowerCase();
+      if (!email) {
+          setLoginError('Escribí tu correo para restablecer la clave.');
+          return;
+      }
+      setResetBusy(true);
+      setLoginError('');
+      try {
+          await sendPasswordResetEmail(auth, email);
+          setNotice({
+              title: 'Enlace enviado',
+              message: 'Revisá tu correo para restablecer la clave.',
+              tone: 'success',
+          });
+      } catch (error: any) {
+          const code = error?.code || '';
+          const message = code === 'auth/user-not-found'
+              ? 'Ese correo no tiene una cuenta creada.'
+              : code === 'auth/invalid-email'
+              ? 'El correo no es válido.'
+              : 'No se pudo enviar el enlace.';
+          setLoginError(message);
+          setNotice({
+              title: 'No se pudo enviar el enlace',
+              message,
+              tone: 'error',
+          });
+      } finally {
+          setResetBusy(false);
       }
   };
 
   const handleContinueAsGuest = () => {
       setLoginPromptDismissed(true);
+      setLoginError('');
   };
 
   const handleToggleClientLogin = async () => {
@@ -610,8 +697,7 @@ const App: React.FC = () => {
           }
           return;
       }
-
-      await handleLoginRequest();
+      openLoginModal();
   };
 
   const handleLikeStream = (streamId: string) => {
@@ -996,21 +1082,106 @@ const App: React.FC = () => {
                 <X size={14} />
               </button>
             </div>
-            <button
-              onClick={handleLoginRequest}
-              className="mt-5 w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90"
-            >
-              Continuar con Google
-            </button>
+            <div className="mt-5 flex items-center rounded-full bg-gray-100 p-1 text-[11px] font-semibold">
+              <button
+                onClick={() => {
+                  setLoginMode('GOOGLE');
+                  setLoginError('');
+                  setLoginPassword('');
+                }}
+                className={`flex-1 rounded-full px-3 py-1 ${loginMode === 'GOOGLE' ? 'bg-white text-dm-dark shadow-sm' : 'text-gray-500'}`}
+              >
+                Google
+              </button>
+              <button
+                onClick={() => {
+                  setLoginMode('EMAIL');
+                  setLoginError('');
+                }}
+                className={`flex-1 rounded-full px-3 py-1 ${loginMode === 'EMAIL' ? 'bg-white text-dm-dark shadow-sm' : 'text-gray-500'}`}
+              >
+                Correo y clave
+              </button>
+            </div>
+
+            {loginMode === 'GOOGLE' ? (
+              <>
+                <button
+                  onClick={handleGoogleLogin}
+                  disabled={loginBusy}
+                  className="mt-4 w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loginBusy ? 'Conectando...' : 'Continuar con Google'}
+                </button>
+                {loginError && (
+                  <p className="mt-2 text-[11px] font-semibold text-dm-alert">{loginError}</p>
+                )}
+                <p className="mt-3 text-[11px] font-sans text-gray-400">
+                  Autenticación con Google vía Firebase.
+                </p>
+              </>
+            ) : (
+              <form
+                className="mt-4 space-y-3"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleEmailLogin();
+                }}
+              >
+                <label className="block text-[11px] font-bold text-gray-500">
+                  Correo electrónico
+                  <input
+                    type="email"
+                    value={loginEmail}
+                    onChange={(event) => setLoginEmail(event.target.value)}
+                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-dm-dark outline-none focus:border-dm-crimson"
+                    placeholder="tu@email.com"
+                    autoComplete="email"
+                    required
+                  />
+                </label>
+                <label className="block text-[11px] font-bold text-gray-500">
+                  Contraseña
+                  <input
+                    type="password"
+                    value={loginPassword}
+                    onChange={(event) => setLoginPassword(event.target.value)}
+                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-dm-dark outline-none focus:border-dm-crimson"
+                    placeholder="Tu contraseña"
+                    autoComplete="current-password"
+                    required
+                  />
+                </label>
+                {loginError && (
+                  <p className="text-[11px] font-semibold text-dm-alert">{loginError}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={loginBusy}
+                  className="w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loginBusy ? 'Ingresando...' : 'Ingresar'}
+                </button>
+                <button
+                  type="button"
+                  disabled={resetBusy}
+                  onClick={handlePasswordReset}
+                  className="w-full rounded-full border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {resetBusy ? 'Enviando enlace...' : 'Olvidé mi contraseña'}
+                </button>
+                <p className="text-[11px] font-sans text-gray-400">
+                  Si tu tienda fue creada por el administrador, usá el correo registrado.
+                </p>
+              </form>
+            )}
+
             <button
               onClick={handleContinueAsGuest}
-              className="mt-2 w-full rounded-full border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50"
+              className="mt-4 w-full rounded-full border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50"
             >
               Continuar como visitante
             </button>
-            <p className="mt-3 text-[11px] font-sans text-gray-400">
-              Autenticacion con Google via Firebase.
-            </p>
           </div>
         </div>
       )}
@@ -1266,7 +1437,7 @@ const App: React.FC = () => {
                      <>
                        <p className="mt-2 text-sm text-gray-500">Inicia sesión para interactuar con tiendas.</p>
                        <Button className="mt-5" onClick={handleLoginRequest}>
-                         Ingresar con Google
+                         Ingresar
                        </Button>
                      </>
                    )}
@@ -1561,7 +1732,7 @@ const App: React.FC = () => {
                 <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center">
                   <p className="text-sm text-gray-500">Inicia sesión para interactuar con tiendas.</p>
                   <Button className="mt-4 w-full" onClick={handleLoginRequest}>
-                    Ingresar con Google
+                    Ingresar
                   </Button>
                 </div>
               )}
