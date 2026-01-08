@@ -61,6 +61,7 @@ const App: React.FC = () => {
   const [loginError, setLoginError] = useState('');
   const [loginBusy, setLoginBusy] = useState(false);
   const [resetBusy, setResetBusy] = useState(false);
+  const [loginAudience, setLoginAudience] = useState<'SHOP' | null>(null);
 
   // --- CENTRALIZED STATE ---
   const [allShops, setAllShops] = useState<Shop[]>([]);
@@ -592,6 +593,7 @@ const App: React.FC = () => {
       setLoginMode(mode || 'GOOGLE');
       setLoginError('');
       setLoginPassword('');
+      setLoginAudience(null);
       setLoginPromptDismissed(false);
   };
 
@@ -1088,6 +1090,7 @@ const App: React.FC = () => {
                   setLoginMode('GOOGLE');
                   setLoginError('');
                   setLoginPassword('');
+                  setLoginAudience(null);
                 }}
                 className={`flex-1 rounded-full px-3 py-1 ${loginMode === 'GOOGLE' ? 'bg-white text-dm-dark shadow-sm' : 'text-gray-500'}`}
               >
@@ -1097,10 +1100,26 @@ const App: React.FC = () => {
                 onClick={() => {
                   setLoginMode('EMAIL');
                   setLoginError('');
+                  setLoginAudience(null);
                 }}
                 className={`flex-1 rounded-full px-3 py-1 ${loginMode === 'EMAIL' ? 'bg-white text-dm-dark shadow-sm' : 'text-gray-500'}`}
               >
                 Correo y clave
+              </button>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between text-[11px] text-gray-500">
+              <span>¿Tenés tienda?</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMode('EMAIL');
+                  setLoginError('');
+                  setLoginAudience('SHOP');
+                }}
+                className="font-semibold text-dm-crimson hover:text-dm-dark"
+              >
+                Soy tienda
               </button>
             </div>
 
@@ -1135,7 +1154,7 @@ const App: React.FC = () => {
                     value={loginEmail}
                     onChange={(event) => setLoginEmail(event.target.value)}
                     className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-dm-dark outline-none focus:border-dm-crimson"
-                    placeholder="tu@email.com"
+                    placeholder={loginAudience === 'SHOP' ? 'correo de la tienda' : 'tu@email.com'}
                     autoComplete="email"
                     required
                   />
@@ -1170,9 +1189,15 @@ const App: React.FC = () => {
                 >
                   {resetBusy ? 'Enviando enlace...' : 'Olvidé mi contraseña'}
                 </button>
-                <p className="text-[11px] font-sans text-gray-400">
-                  Si tu tienda fue creada por el administrador, usá el correo registrado.
-                </p>
+                {loginAudience === 'SHOP' && (
+                  <div className="rounded-xl border border-dm-crimson/15 bg-dm-crimson/5 px-3 py-2 text-[11px] text-gray-600">
+                    <p className="font-semibold text-dm-dark">Acceso para tiendas</p>
+                    <p>
+                      Usá el correo registrado de tu tienda. Si no tenés clave,
+                      pedí el enlace de acceso.
+                    </p>
+                  </div>
+                )}
               </form>
             )}
 
