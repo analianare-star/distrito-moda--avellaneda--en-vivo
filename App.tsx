@@ -88,6 +88,13 @@ const App: React.FC = () => {
   const notify = (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => {
       setNotice({ title, message, tone });
   };
+  const pushHistory = (label: string) => {
+      setUser((prev) => {
+          if (!prev.isLoggedIn) return prev;
+          const next = [{ label, at: new Date().toISOString() }, ...prev.history].slice(0, 10);
+          return { ...prev, history: next };
+      });
+  };
   const requireLogin = () => {
       setViewMode('CLIENT');
       setActiveBottomNav('account');
@@ -177,6 +184,7 @@ const App: React.FC = () => {
               if (profile.shopId) {
                 setCurrentShopId(profile.shopId);
               }
+              await refreshNotifications(profile);
             } else {
               setViewMode('CLIENT');
               setActiveBottomNav('home');
@@ -211,6 +219,7 @@ const App: React.FC = () => {
           favorites: [],
           reminders: [],
           viewedReels: [],
+          history: [],
           likes: [],
           reports: []
         }));
@@ -405,6 +414,7 @@ const App: React.FC = () => {
               ...prev,
               reports: [...prev.reports, { streamId: reportTarget.id, timestamp: Date.now() }]
           }));
+          pushHistory(`Reporte enviado: ${reportTarget.title}`);
           setNotice({
               title: 'Reporte enviado',
               message: result.message,
@@ -424,6 +434,7 @@ const App: React.FC = () => {
   const handleToggleFavorite = (shopId: string) => {
       if (!requireClient()) return;
       if (!user.isLoggedIn) return;
+      const wasFollowing = user.favorites.includes(shopId);
       void (async () => {
           try {
               const updated = user.favorites.includes(shopId)
@@ -432,12 +443,17 @@ const App: React.FC = () => {
               if (updated) {
                   setUser(prev => ({ ...prev, favorites: updated }));
               }
-              if (!user.favorites.includes(shopId)) {
+              if (!wasFollowing) {
                   setNotice({
                       title: 'Favorito guardado',
                       message: '¡Siguiendo tienda!',
                       tone: 'success',
                   });
+                  const shop = allShops.find((item) => item.id === shopId);
+                  if (shop) pushHistory(`Seguiste: ${shop.name}`);
+              } else {
+                  const shop = allShops.find((item) => item.id === shopId);
+                  if (shop) pushHistory(`Dejaste de seguir: ${shop.name}`);
               }
           } catch (error) {
               setNotice({
@@ -452,6 +468,7 @@ const App: React.FC = () => {
   const handleToggleReminder = (streamId: string) => {
       if (!requireClient()) return;
       if (!user.isLoggedIn) return;
+      const wasActive = user.reminders.includes(streamId);
       void (async () => {
           try {
               const updated = user.reminders.includes(streamId)
@@ -461,6 +478,10 @@ const App: React.FC = () => {
                   setUser(prev => ({ ...prev, reminders: updated }));
               }
               await refreshNotifications(authProfile);
+              const stream = allStreams.find((item) => item.id === streamId);
+              if (stream) {
+                  pushHistory(`${wasActive ? 'Quitaste' : 'Agendaste'} recordatorio: ${stream.title}`);
+              }
           } catch (error) {
               setNotice({
                   title: 'No se pudo actualizar',
@@ -596,6 +617,10 @@ const App: React.FC = () => {
                       : prev.likes.filter((id) => id !== streamId);
                   return { ...prev, likes: nextLikes };
               });
+              if (result.liked) {
+                  const stream = allStreams.find((item) => item.id === streamId);
+                  if (stream) pushHistory(`Te gustó: ${stream.title}`);
+              }
           } catch (error: any) {
               setNotice({
                   title: 'No se pudo guardar el like',
@@ -616,6 +641,8 @@ const App: React.FC = () => {
                   message: `Calificaste con ${rating} estrellas.`,
                   tone: 'success',
               });
+              const stream = allStreams.find((item) => item.id === streamId);
+              if (stream) pushHistory(`Calificaste: ${stream.title}`);
               refreshData();
           } catch (error: any) {
               setNotice({
@@ -634,6 +661,9 @@ const App: React.FC = () => {
 
   const handleOpenShop = (shop: Shop) => {
       setSelectedShopForModal(shop);
+      if (user.isLoggedIn && authProfile?.userType === 'CLIENT') {
+          pushHistory(`Visitaste: ${shop.name}`);
+      }
   };
 
   const handleViewReel = (reel: Reel) => {
@@ -643,6 +673,7 @@ const App: React.FC = () => {
               setUser(prev => ({ ...prev, viewedReels: [...prev.viewedReels, reel.id] }));
           }
           void api.registerReelView(reel.id);
+          pushHistory(`Viste historia de ${reel.shopName}`);
       }
   };
 
@@ -1173,7 +1204,12 @@ const App: React.FC = () => {
             )}
 
             {selectedReel && (
-                <StoryModal reel={selectedReel} onClose={() => setSelectedReel(null)} onNotify={notify} />
+                <StoryModal
+                  reel={selectedReel}
+                  onClose={() => setSelectedReel(null)}
+                  onNotify={notify}
+                  isSeen={user.viewedReels.includes(selectedReel.id)}
+                />
             )}
           </>
         ) : viewMode === 'MERCHANT' ? (
@@ -1190,6 +1226,9 @@ const App: React.FC = () => {
               onRefreshData={refreshData}
               activeTab={merchantTab}
               onTabChange={syncMerchantTab}
+              notifications={notifications}
+              onMarkNotificationRead={handleMarkNotificationRead}
+              onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
             />
         ) : (
           <AdminDashboard 
@@ -1323,6 +1362,19 @@ const App: React.FC = () => {
                         <p className="text-[10px] text-gray-400">Activos</p>
                       </button>
                     </div>
+                    {user.history.length > 0 && (
+                      <div className="rounded-xl border border-gray-100 bg-white p-4">
+                        <p className="text-[10px] uppercase tracking-widest text-gray-400">Actividad reciente</p>
+                        <div className="mt-2 space-y-2 max-h-32 overflow-y-auto pr-1 text-xs text-gray-500">
+                          {user.history.slice(0, 6).map((item, index) => (
+                            <div key={`${item.at}-${index}`} className="flex items-start justify-between gap-2">
+                              <span className="flex-1">{item.label}</span>
+                              <span className="text-[10px] text-gray-400">{formatNotificationDate(item.at)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <Button className="w-full" onClick={handleToggleClientLogin}>
                       Cerrar sesión
                     </Button>

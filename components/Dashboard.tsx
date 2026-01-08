@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './Button';
 import { Plus, X, Instagram, Facebook, Video, AlertOctagon, Check, Save, Lock, RefreshCw, Pencil, Trash2, Star, History, LayoutDashboard, Store, Radio, Globe, Phone, MapPin, ExternalLink, User, CreditCard, DollarSign, ShoppingCart, AlertTriangle, Info, ArrowUpCircle, Film } from 'lucide-react';
-import { StreamStatus, Shop, SocialHandles, Stream, SocialPlatform, WhatsappLine, WhatsappLabel, Reel } from '../types';
+import { StreamStatus, Shop, SocialHandles, Stream, SocialPlatform, WhatsappLine, WhatsappLabel, Reel, NotificationItem } from '../types';
 import { PLANES_URL } from '../constants';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { api } from '../services/api';
@@ -20,6 +20,9 @@ interface DashboardProps {
     onRefreshData: () => void;
     activeTab?: Tab;
     onTabChange?: (tab: Tab) => void;
+    notifications?: NotificationItem[];
+    onMarkNotificationRead?: (id: string) => void;
+    onMarkAllNotificationsRead?: () => void;
 }
 
 type Tab = 'RESUMEN' | 'REDES' | 'VIVOS' | 'REELS' | 'PERFIL';
@@ -40,7 +43,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
     onReelChange,
     onRefreshData,
     activeTab: activeTabProp,
-    onTabChange
+    onTabChange,
+    notifications = [],
+    onMarkNotificationRead,
+    onMarkAllNotificationsRead
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('RESUMEN');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -240,6 +246,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
           return value;
       }
   };
+
+  const formatNotificationDate = (value?: string) => {
+      if (!value) return '';
+      try {
+          return new Date(value).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+      } catch {
+          return value;
+      }
+  };
+
+  const unreadNotifications = notifications.filter((note) => !note.read);
 
   useEffect(() => {
       if (shopStatus === 'PENDING_VERIFICATION') {
@@ -762,6 +779,48 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               Comprar extras
                           </button>
                       </div>
+                  </div>
+                  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                      <div className="flex items-center justify-between">
+                          <h3 className="font-bold text-dm-dark text-lg flex items-center gap-2">
+                              <AlertTriangle size={16} /> Notificaciones
+                          </h3>
+                          <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                              <span>{unreadNotifications.length} nuevas</span>
+                              {unreadNotifications.length > 0 && onMarkAllNotificationsRead && (
+                                  <button
+                                      className="text-[10px] font-bold text-dm-crimson"
+                                      onClick={onMarkAllNotificationsRead}
+                                  >
+                                      Marcar todo
+                                  </button>
+                              )}
+                          </div>
+                      </div>
+                      {notifications.length === 0 ? (
+                          <p className="mt-3 text-xs text-gray-400">Sin notificaciones por ahora.</p>
+                      ) : (
+                          <div className="mt-4 space-y-3 max-h-44 overflow-y-auto pr-1">
+                              {notifications.slice(0, 6).map((note) => (
+                                  <div key={note.id} className="flex items-start justify-between gap-3 rounded-lg border border-gray-100 p-3 text-xs">
+                                      <div className="flex-1">
+                                          <p className={`text-xs ${note.read ? 'text-gray-500' : 'text-dm-dark font-semibold'}`}>
+                                              {note.message}
+                                          </p>
+                                          <p className="text-[10px] text-gray-400">{formatNotificationDate(note.createdAt)}</p>
+                                      </div>
+                                      {!note.read && onMarkNotificationRead && (
+                                          <button
+                                              className="text-[10px] font-bold text-gray-400 hover:text-dm-crimson"
+                                              onClick={() => onMarkNotificationRead(note.id)}
+                                          >
+                                              Leído
+                                          </button>
+                                      )}
+                                  </div>
+                              ))}
+                          </div>
+                      )}
                   </div>
                   <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                       <div className="flex items-center justify-between">

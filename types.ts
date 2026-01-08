@@ -59,6 +59,11 @@ export interface NotificationItem {
   notifyAt?: string | null;
 }
 
+export interface HistoryItem {
+  label: string;
+  at: string;
+}
+
 // Nuevo Modelo de Penalización
 export interface Penalty {
     id: string;
@@ -180,7 +185,7 @@ export interface UserContext {
   // Persistencia (Local para Anónimo, Server para Logueado)
   favorites: string[]; 
   reminders: string[]; 
-  history: string[]; // Historial de visitas
+  history: HistoryItem[]; // Historial de visitas
   viewedReels: string[]; // IDs de reels vistos - NEW
   likes: string[]; // IDs de vivos con like
   notifications?: NotificationItem[];

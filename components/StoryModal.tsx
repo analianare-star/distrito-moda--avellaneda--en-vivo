@@ -8,9 +8,10 @@ interface StoryModalProps {
     reel: Reel;
     onClose: () => void;
     onNotify?: (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => void;
+    isSeen?: boolean;
 }
 
-export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify }) => {
+export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify, isSeen }) => {
     
     // Calculate time left
     const now = new Date();
@@ -76,6 +77,10 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify 
                             <span className="h-1 w-1 rounded-full bg-gray-500" />
                             <span className="flex items-center gap-1">
                                 <Eye size={10} /> {reel.views || 0} vistas
+                            </span>
+                            <span className="h-1 w-1 rounded-full bg-gray-500" />
+                            <span className={`text-[10px] font-bold uppercase ${isSeen ? 'text-gray-400' : 'text-dm-crimson'}`}>
+                                {isSeen ? 'Visto' : 'Nuevo'}
                             </span>
                         </div>
                     </div>
