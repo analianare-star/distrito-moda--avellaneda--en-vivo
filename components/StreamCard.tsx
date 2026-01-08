@@ -37,7 +37,7 @@ export const StreamCard: React.FC<StreamCardProps> = ({
   const isMissed = stream.status === StreamStatus.MISSED;
   const isCancelled = stream.status === StreamStatus.CANCELLED || stream.status === StreamStatus.BANNED;
   const isUpcoming = stream.status === StreamStatus.UPCOMING;
-  const canReport = stream.status === StreamStatus.FINISHED;
+  const canReport = stream.status === StreamStatus.LIVE;
   
   const reminderSet = user.reminders.includes(stream.id);
   const isLiked = user.likes.includes(stream.id);

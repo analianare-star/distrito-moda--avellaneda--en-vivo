@@ -388,10 +388,10 @@ const App: React.FC = () => {
       const stream = allStreams.find(s => s.id === streamId);
       if (!stream) return;
 
-      if (stream.status !== StreamStatus.FINISHED) {
+      if (stream.status !== StreamStatus.LIVE) {
           setNotice({
               title: 'Reporte no disponible',
-              message: 'Solo se pueden reportar vivos finalizados.',
+              message: 'Solo se pueden reportar vivos en vivo.',
               tone: 'warning',
           });
           return;
