@@ -18,6 +18,21 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
-      }
+      },
+      build: {
+        chunkSizeWarningLimit: 750,
+        rollupOptions: {
+          output: {
+            manualChunks(id) {
+              if (id.includes('node_modules')) {
+                if (id.includes('firebase')) return 'firebase';
+                if (id.includes('jspdf') || id.includes('html-to-image')) return 'media';
+                if (id.includes('lucide-react')) return 'icons';
+                return 'vendor';
+              }
+            },
+          },
+        },
+      },
     };
 });

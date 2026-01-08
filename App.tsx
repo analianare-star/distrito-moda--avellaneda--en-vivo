@@ -6,6 +6,7 @@ import { StreamCard } from './components/StreamCard';
 import { Dashboard } from './components/Dashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { Button } from './components/Button';
+import { EmptyState } from './components/EmptyState';
 import { ShopDetailModal } from './components/ShopDetailModal';
 import { StoryModal } from './components/StoryModal';
 import { NoticeModal } from './components/NoticeModal';
@@ -747,7 +748,29 @@ const App: React.FC = () => {
   const publicShops = sortShopsByPriority(allShops.filter(isPublicShop));
   const favoriteShops = sortShopsByPriority(allShops.filter((shop) => user.favorites.includes(shop.id)));
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center font-bold text-dm-dark">Cargando Sistema Avellaneda...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="fixed top-0 left-0 right-0 z-50 border-b border-gray-100 bg-white/95 px-6 py-3 shadow-sm">
+          <div className="mx-auto flex max-w-6xl items-center justify-between">
+            <div className="h-4 w-24 rounded-full bg-gray-200 animate-pulse" />
+            <div className="h-6 w-28 rounded-full bg-gray-200 animate-pulse" />
+            <div className="h-4 w-20 rounded-full bg-gray-200 animate-pulse" />
+          </div>
+        </div>
+        <div className="mx-auto max-w-6xl px-6 pt-24">
+          <div className="space-y-4">
+            <div className="h-8 w-48 rounded-full bg-gray-200 animate-pulse" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="h-56 rounded-2xl border border-gray-100 bg-gray-50 animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const isAdminUser = authProfile?.userType === 'ADMIN';
   const isShopUser = authProfile?.userType === 'SHOP';
@@ -1033,9 +1056,15 @@ const App: React.FC = () => {
                         />
                      ))}
                      {getFilteredStreams().length === 0 && (
-                         <div className="col-span-full text-center py-12 text-gray-400 font-sans">
-                             No hay vivos que coincidan con este filtro.
-                         </div>
+                         <EmptyState
+                           title="No hay vivos con este filtro"
+                           message="Probá ver todos los vivos o revisá más tarde."
+                           actionLabel="Ver todos"
+                           onAction={() => {
+                             setActiveFilter('Todos');
+                             setActiveBottomNav('home');
+                           }}
+                         />
                      )}
                    </div>
                  </>
@@ -1072,9 +1101,12 @@ const App: React.FC = () => {
                        </button>
                      ))}
                      {publicShops.length === 0 && (
-                       <div className="col-span-full text-center py-12 text-gray-400 font-sans">
-                         No hay tiendas disponibles.
-                       </div>
+                       <EmptyState
+                         title="Aún no hay tiendas publicadas"
+                         message="Volvé más tarde o refrescá la lista."
+                         actionLabel="Actualizar"
+                         onAction={refreshData}
+                       />
                      )}
                    </div>
                  </>
@@ -1122,14 +1154,27 @@ const App: React.FC = () => {
                            <p className="mt-3 text-xs text-gray-500 line-clamp-2">{shop.address || 'Sin dirección cargada'}</p>
                          </button>
                        ))}
-                       {favoriteShops.length === 0 && (
-                         <div className="col-span-full text-center py-12 text-gray-400 font-sans">
-                           {canClientInteract ? 'Todavía no seguiste ninguna tienda.' : 'Inicia sesión para guardar favoritos.'}
-                         </div>
-                       )}
-                     </div>
-                   ) : (
-                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {favoriteShops.length === 0 && (
+                         <EmptyState
+                           title={canClientInteract ? 'Sin favoritos todavía' : 'Ingresá para guardar tiendas'}
+                           message={
+                             canClientInteract
+                               ? 'Explorá tiendas y guardá las que te interesen.'
+                               : 'Necesitás iniciar sesión para guardar favoritos.'
+                           }
+                           actionLabel={canClientInteract ? 'Explorar tiendas' : 'Ingresar'}
+                           onAction={() => {
+                             if (canClientInteract) {
+                               setActiveBottomNav('shops');
+                             } else {
+                               handleLoginRequest();
+                             }
+                           }}
+                         />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                        {reminderStreams.map((stream) => (
                          <div key={stream.id} className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm">
                            <p className="text-xs text-gray-500 uppercase">Recordatorio</p>
@@ -1157,13 +1202,27 @@ const App: React.FC = () => {
                            </div>
                          </div>
                        ))}
-                       {reminderStreams.length === 0 && (
-                         <div className="col-span-full text-center py-12 text-gray-400 font-sans">
-                           {canClientInteract ? 'No tenés recordatorios activos.' : 'Inicia sesión para usar recordatorios.'}
-                         </div>
-                       )}
-                     </div>
-                   )}
+                      {reminderStreams.length === 0 && (
+                         <EmptyState
+                           title={canClientInteract ? 'Sin recordatorios activos' : 'Ingresá para usar recordatorios'}
+                           message={
+                             canClientInteract
+                               ? 'Agendá un vivo para recibir un aviso antes de empezar.'
+                               : 'Iniciá sesión para activar recordatorios.'
+                           }
+                           actionLabel={canClientInteract ? 'Ver vivos' : 'Ingresar'}
+                           onAction={() => {
+                             if (canClientInteract) {
+                               setActiveBottomNav('home');
+                               setActiveFilter('Todos');
+                             } else {
+                               handleLoginRequest();
+                             }
+                           }}
+                         />
+                      )}
+                    </div>
+                  )}
                  </>
                )}
 
