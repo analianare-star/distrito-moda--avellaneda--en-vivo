@@ -658,7 +658,7 @@ const App: React.FC = () => {
           await sendPasswordResetEmail(auth, email);
           setNotice({
               title: 'Enlace enviado',
-              message: 'Revisá tu correo para restablecer la clave.',
+              message: 'Revisá tu correo para restablecer la clave. Mirá también Spam/Promociones.',
               tone: 'success',
           });
       } catch (error: any) {
