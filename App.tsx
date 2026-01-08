@@ -1108,7 +1108,7 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            <div className="mt-3 flex items-center justify-between text-[11px] text-gray-500">
+            <div className="mt-3 flex items-center justify-between rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] text-gray-500">
               <span>¿Tenés tienda?</span>
               <button
                 type="button"
@@ -1117,11 +1117,20 @@ const App: React.FC = () => {
                   setLoginError('');
                   setLoginAudience('SHOP');
                 }}
-                className="font-semibold text-dm-crimson hover:text-dm-dark"
+                className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
+                  loginAudience === 'SHOP'
+                    ? 'bg-dm-crimson text-white shadow-sm'
+                    : 'bg-dm-crimson/10 text-dm-crimson hover:text-dm-dark'
+                }`}
               >
                 Soy tienda
               </button>
             </div>
+            {loginAudience === 'SHOP' && (
+              <p className="mt-2 text-[10px] font-medium text-gray-500">
+                Usá el correo registrado de tu tienda. Si no tenés clave, pedí el enlace de acceso.
+              </p>
+            )}
 
             {loginMode === 'GOOGLE' ? (
               <>
@@ -1136,7 +1145,7 @@ const App: React.FC = () => {
                   <p className="mt-2 text-[11px] font-semibold text-dm-alert">{loginError}</p>
                 )}
                 <p className="mt-3 text-[11px] font-sans text-gray-400">
-                  Autenticación con Google vía Firebase.
+                  Recomendado para clientes.
                 </p>
               </>
             ) : (
@@ -1185,25 +1194,16 @@ const App: React.FC = () => {
                   type="button"
                   disabled={resetBusy}
                   onClick={handlePasswordReset}
-                  className="w-full rounded-full border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full text-center text-[11px] font-semibold text-gray-500 hover:text-dm-crimson disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {resetBusy ? 'Enviando enlace...' : 'Olvidé mi contraseña'}
                 </button>
-                {loginAudience === 'SHOP' && (
-                  <div className="rounded-xl border border-dm-crimson/15 bg-dm-crimson/5 px-3 py-2 text-[11px] text-gray-600">
-                    <p className="font-semibold text-dm-dark">Acceso para tiendas</p>
-                    <p>
-                      Usá el correo registrado de tu tienda. Si no tenés clave,
-                      pedí el enlace de acceso.
-                    </p>
-                  </div>
-                )}
               </form>
             )}
 
             <button
               onClick={handleContinueAsGuest}
-              className="mt-4 w-full rounded-full border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50"
+              className="mt-4 w-full text-center text-[11px] font-semibold text-gray-500 hover:text-dm-dark"
             >
               Continuar como visitante
             </button>
