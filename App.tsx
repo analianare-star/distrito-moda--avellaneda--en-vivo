@@ -70,7 +70,10 @@ const App: React.FC = () => {
   const [resetViewError, setResetViewError] = useState('');
   const [resetViewBusy, setResetViewBusy] = useState(false);
 
-  const isResetView = typeof window !== 'undefined' && window.location.pathname.startsWith('/reset');
+  const isResetView =
+    typeof window !== 'undefined' &&
+    (window.location.pathname.startsWith('/reset') ||
+      new URLSearchParams(window.location.search).get('mode') === 'resetPassword');
 
   // --- CENTRALIZED STATE ---
   const [allShops, setAllShops] = useState<Shop[]>([]);
