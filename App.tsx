@@ -919,7 +919,7 @@ const App: React.FC = () => {
   const publicShops = sortShopsByPriority(allShops.filter(isPublicShop));
   const favoriteShops = sortShopsByPriority(allShops.filter((shop) => user.favorites.includes(shop.id)));
 
-  if (isLoading) {
+  if (!isResetView && isLoading) {
     return (
       <div className="min-h-screen bg-white">
         <div className="fixed top-0 left-0 right-0 z-50 border-b border-gray-100 bg-white/95 px-6 py-3 shadow-sm">
