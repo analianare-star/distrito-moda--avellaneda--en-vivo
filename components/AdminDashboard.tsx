@@ -26,12 +26,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   const [reports, setReports] = useState<any[]>([]);
   const [purchaseRequests, setPurchaseRequests] = useState<any[]>([]);
   const [adminNotifications, setAdminNotifications] = useState<any[]>([]);
+  const [reelsLoading, setReelsLoading] = useState(false);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [purchasesLoading, setPurchasesLoading] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [notificationFilter, setNotificationFilter] = useState<'ALL' | 'UNREAD'>('UNREAD');
   const [notificationType, setNotificationType] = useState<'ALL' | 'SYSTEM' | 'REMINDER' | 'PURCHASE'>('ALL');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [agendaQuery, setAgendaQuery] = useState('');
   const [agendaStatus, setAgendaStatus] = useState<'ALL' | StreamStatus>('ALL');
-  const [shopFilter, setShopFilter] = useState<'ALL' | 'PENDING'>('ALL');
+  const [shopFilter, setShopFilter] = useState<'ALL' | 'PENDING_VERIFICATION' | 'ACTIVE' | 'AGENDA_SUSPENDED' | 'HIDDEN' | 'BANNED'>('ALL');
+  const [shopQuery, setShopQuery] = useState('');
+  const [streamQuery, setStreamQuery] = useState('');
+  const [streamStatusFilter, setStreamStatusFilter] = useState<'ALL' | StreamStatus>('ALL');
+  const [reportStatusFilter, setReportStatusFilter] = useState<'ALL' | 'OPEN' | 'RESOLVED' | 'DISMISSED'>('ALL');
+  const [reportQuery, setReportQuery] = useState('');
+  const [purchaseStatusFilter, setPurchaseStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
+  const [purchaseQuery, setPurchaseQuery] = useState('');
   const [quotaShopId, setQuotaShopId] = useState('');
   const [quotaType, setQuotaType] = useState<'STREAM' | 'REEL'>('STREAM');
   const [quotaAmount, setQuotaAmount] = useState(1);
@@ -87,20 +98,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
       const needsAdmin = activeTab === 'ADMIN' || activeTab === 'DASHBOARD';
 
       if (needsReels) {
-          api.fetchAllReelsAdmin().then(setReels);
+          setReelsLoading(true);
+          api.fetchAllReelsAdmin().then(setReels).finally(() => setReelsLoading(false));
       }
       if (needsReports) {
-          api.fetchReportsAdmin().then(setReports);
+          setReportsLoading(true);
+          api.fetchReportsAdmin().then(setReports).finally(() => setReportsLoading(false));
       }
       if (needsAdmin) {
-          api.fetchPurchaseRequests('PENDING').then(setPurchaseRequests);
+          setPurchasesLoading(true);
+          api.fetchPurchaseRequests(purchaseStatusFilter === 'ALL' ? undefined : purchaseStatusFilter)
+            .then(setPurchaseRequests)
+            .finally(() => setPurchasesLoading(false));
+
+          setNotificationsLoading(true);
           api.fetchNotificationsAdmin({
               limit: 50,
               unreadOnly: notificationFilter === 'UNREAD',
               type: notificationType,
-          }).then(setAdminNotifications);
+          }).then(setAdminNotifications).finally(() => setNotificationsLoading(false));
       }
-  }, [activeTab, notificationFilter, notificationType]);
+  }, [activeTab, notificationFilter, notificationType, purchaseStatusFilter]);
   
   const liveCount = streams.filter(s => s.status === StreamStatus.LIVE).length;
   const missedCount = streams.filter(s => s.status === StreamStatus.MISSED).length;
@@ -543,11 +561,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
       setInputValues(['']);
   };
 
-  const filteredShops = shopFilter === 'PENDING' ? pendingShops : shops;
+  const filteredShops = shops
+      .filter((shop) => (shopFilter === 'ALL' ? true : (shop.status || 'ACTIVE') === shopFilter))
+      .filter((shop) => shop.name.toLowerCase().includes(shopQuery.toLowerCase()));
   const filteredAgendaStreams = streams
       .filter(stream => stream.shop?.name?.toLowerCase().includes(agendaQuery.toLowerCase()))
       .filter(stream => agendaStatus === 'ALL' ? true : stream.status === agendaStatus)
       .sort((a, b) => new Date(a.fullDateISO).getTime() - new Date(b.fullDateISO).getTime());
+
+  const filteredStreams = streams
+      .filter((stream) => (streamStatusFilter === 'ALL' ? true : stream.status === streamStatusFilter))
+      .filter((stream) => {
+          const query = streamQuery.toLowerCase();
+          return (
+              stream.title.toLowerCase().includes(query) ||
+              stream.shop?.name?.toLowerCase().includes(query)
+          );
+      });
+
+  const filteredReports = reports
+      .filter((report) => (reportStatusFilter === 'ALL' ? true : (report.status || 'OPEN') === reportStatusFilter))
+      .filter((report) => {
+          const query = reportQuery.toLowerCase();
+          const title = report?.stream?.title || '';
+          const shopName = report?.stream?.shop?.name || '';
+          return title.toLowerCase().includes(query) || shopName.toLowerCase().includes(query);
+      });
+
+  const filteredPurchases = purchaseRequests.filter((purchase) => {
+      const query = purchaseQuery.toLowerCase();
+      const shopName = purchase?.shop?.name || '';
+      return shopName.toLowerCase().includes(query);
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col h-screen overflow-hidden">
@@ -628,7 +673,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                         size="sm"
                                         variant="outline"
                                         onClick={() => {
-                                            setShopFilter('PENDING');
+                                            setShopFilter('PENDING_VERIFICATION');
                                             onTabChange('SHOPS');
                                         }}
                                     >
@@ -640,7 +685,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                         <button
                                             key={shop.id}
                                             onClick={() => {
-                                                setShopFilter('PENDING');
+                                                setShopFilter('PENDING_VERIFICATION');
                                                 onTabChange('SHOPS');
                                             }}
                                             className="w-full rounded-lg border border-gray-100 px-3 py-2 text-left transition hover:bg-gray-50"
@@ -804,9 +849,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
             {activeTab === 'STREAMS' && (
                  <div className="space-y-6 animate-in fade-in">
                     <h2 className="font-serif text-2xl text-dm-dark">Gestión de Vivos</h2>
+                    <div className="flex flex-col md:flex-row gap-3">
+                        <input
+                            type="text"
+                            placeholder="Buscar vivo o tienda..."
+                            value={streamQuery}
+                            onChange={(e) => setStreamQuery(e.target.value)}
+                            className="flex-1 p-3 border border-gray-200 rounded-lg text-sm"
+                        />
+                        <select
+                            value={streamStatusFilter}
+                            onChange={(e) => setStreamStatusFilter(e.target.value as any)}
+                            className="p-3 border border-gray-200 rounded-lg text-sm bg-white"
+                        >
+                            <option value="ALL">Todos los estados</option>
+                            <option value={StreamStatus.LIVE}>LIVE</option>
+                            <option value={StreamStatus.UPCOMING}>UPCOMING</option>
+                            <option value={StreamStatus.FINISHED}>FINISHED</option>
+                            <option value={StreamStatus.MISSED}>MISSED</option>
+                            <option value={StreamStatus.CANCELLED}>CANCELLED</option>
+                            <option value={StreamStatus.BANNED}>BANNED</option>
+                            <option value={StreamStatus.PENDING_REPROGRAMMATION}>REPROGRAMMATION</option>
+                        </select>
+                    </div>
                     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
                         <div className="md:hidden divide-y">
-                            {streams.map((stream) => (
+                            {filteredStreams.length > 0 ? (
+                              filteredStreams.map((stream) => (
                                 <div key={stream.id} className="p-3 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -898,7 +967,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                         )}
                                     </div>
                                 </div>
-                            ))}
+                              ))
+                            ) : (
+                              <div className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados.</div>
+                            )}
                         </div>
                         <div className="hidden md:block">
                             <table className="w-full text-left">
@@ -910,7 +982,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y">
-                                    {streams.map(stream => (
+                                    {filteredStreams.length > 0 ? (
+                                        filteredStreams.map(stream => (
                                         <tr key={stream.id}>
                                             <td className="px-6 py-4">
                                                 <p className="font-bold text-sm">{stream.title}</p>
@@ -1003,7 +1076,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))}
+                                    ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={3} className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados.</td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -1014,10 +1092,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
             {activeTab === 'REPORTS' && (
                 <div className="space-y-6 animate-in fade-in">
                     <h2 className="font-serif text-2xl text-dm-dark">Reportes</h2>
+                    <div className="flex flex-col md:flex-row gap-3">
+                        <input
+                            type="text"
+                            placeholder="Buscar vivo o tienda..."
+                            value={reportQuery}
+                            onChange={(e) => setReportQuery(e.target.value)}
+                            className="flex-1 p-3 border border-gray-200 rounded-lg text-sm"
+                        />
+                        <select
+                            value={reportStatusFilter}
+                            onChange={(e) => setReportStatusFilter(e.target.value as any)}
+                            className="p-3 border border-gray-200 rounded-lg text-sm bg-white"
+                        >
+                            <option value="ALL">Todos</option>
+                            <option value="OPEN">Abiertos</option>
+                            <option value="RESOLVED">Resueltos</option>
+                            <option value="DISMISSED">Rechazados</option>
+                        </select>
+                    </div>
                     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
                         <div className="md:hidden divide-y">
-                            {reports.length > 0 ? (
-                                reports.map((report) => (
+                            {reportsLoading ? (
+                                Array.from({ length: 4 }).map((_, index) => (
+                                    <div key={index} className="p-3 space-y-2 animate-pulse">
+                                        <div className="h-4 w-40 bg-gray-200 rounded" />
+                                        <div className="h-3 w-28 bg-gray-100 rounded" />
+                                        <div className="h-3 w-full bg-gray-100 rounded" />
+                                    </div>
+                                ))
+                            ) : filteredReports.length > 0 ? (
+                                filteredReports.map((report) => (
                                     <div key={report.id} className="p-3 space-y-2">
                                         <div>
                                             <p className="text-sm font-bold text-dm-dark">{report?.stream?.title || report.streamId}</p>
@@ -1091,8 +1196,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y">
-                                    {reports.length > 0 ? (
-                                        reports.map((report) => (
+                                    {reportsLoading ? (
+                                        Array.from({ length: 6 }).map((_, index) => (
+                                            <tr key={index} className="animate-pulse">
+                                                <td className="px-6 py-4">
+                                                    <div className="h-3 w-40 bg-gray-200 rounded" />
+                                                    <div className="mt-2 h-2 w-24 bg-gray-100 rounded" />
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="h-3 w-12 bg-gray-200 rounded" />
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="h-3 w-32 bg-gray-100 rounded" />
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="h-7 w-24 bg-gray-100 rounded inline-block" />
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : filteredReports.length > 0 ? (
+                                        filteredReports.map((report) => (
                                             <tr key={report.id}>
                                                 <td className="px-6 py-4">
                                                     <p className="text-xs font-bold">{report?.stream?.title || report.streamId}</p>
@@ -1167,12 +1290,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
 
             {activeTab === 'SHOPS' && (
                  <div className="space-y-6 animate-in fade-in">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                         <h2 className="font-serif text-2xl text-dm-dark">Tiendas</h2>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                             <button
-                                onClick={() => setShopFilter(shopFilter === 'PENDING' ? 'ALL' : 'PENDING')}
-                                className={`text-xs font-bold px-3 py-2 rounded-full border ${shopFilter === 'PENDING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-white text-gray-500 border-gray-200'}`}
+                                onClick={() => setShopFilter(shopFilter === 'PENDING_VERIFICATION' ? 'ALL' : 'PENDING_VERIFICATION')}
+                                className={`text-xs font-bold px-3 py-2 rounded-full border ${shopFilter === 'PENDING_VERIFICATION' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-white text-gray-500 border-gray-200'}`}
                             >
                                 Pendientes ({pendingShops.length})
                             </button>
@@ -1181,9 +1304,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                             </Button>
                         </div>
                     </div>
+                    <div className="flex flex-col md:flex-row gap-3">
+                        <input
+                            type="text"
+                            placeholder="Buscar tienda..."
+                            value={shopQuery}
+                            onChange={(e) => setShopQuery(e.target.value)}
+                            className="flex-1 p-3 border border-gray-200 rounded-lg text-sm"
+                        />
+                        <select
+                            value={shopFilter}
+                            onChange={(e) => setShopFilter(e.target.value as any)}
+                            className="p-3 border border-gray-200 rounded-lg text-sm bg-white"
+                        >
+                            <option value="ALL">Todos los estados</option>
+                            <option value="PENDING_VERIFICATION">Pendientes</option>
+                            <option value="ACTIVE">Activas</option>
+                            <option value="AGENDA_SUSPENDED">Suspendidas</option>
+                            <option value="HIDDEN">Ocultas</option>
+                            <option value="BANNED">Bloqueadas</option>
+                        </select>
+                    </div>
                     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
                         <div className="md:hidden divide-y">
-                            {filteredShops.map((shop) => {
+                            {filteredShops.length > 0 ? (
+                              filteredShops.map((shop) => {
                                 const status = shop.status || 'ACTIVE';
                                 return (
                                     <div key={shop.id} className="p-3 space-y-2">
@@ -1245,7 +1390,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                         </div>
                                     </div>
                                 );
-                            })}
+                              })
+                            ) : (
+                              <div className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados.</div>
+                            )}
                         </div>
                         <div className="hidden md:block">
                             <table className="w-full text-left">
@@ -1260,7 +1408,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y">
-                                    {filteredShops.map(shop => {
+                                    {filteredShops.length > 0 ? (
+                                      filteredShops.map(shop => {
                                         const status = shop.status || 'ACTIVE';
                                         return (
                                         <tr key={shop.id}>
@@ -1319,7 +1468,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                 </div>
                                             </td>
                                         </tr>
-                                    )})}
+                                      )})
+                                    ) : (
+                                      <tr>
+                                          <td colSpan={6} className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados.</td>
+                                      </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -1431,13 +1585,42 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                 <h3 className="font-bold text-dm-dark">Solicitudes de Compra</h3>
                             </div>
                             <p className="text-xs text-gray-500">Bandeja de solicitudes pendientes (PENDING).</p>
-                            {purchaseRequests.length === 0 ? (
+                            <div className="flex flex-col gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Buscar tienda..."
+                                    value={purchaseQuery}
+                                    onChange={(e) => setPurchaseQuery(e.target.value)}
+                                    className="w-full p-2 border border-gray-200 rounded text-xs"
+                                />
+                                <select
+                                    value={purchaseStatusFilter}
+                                    onChange={(e) => setPurchaseStatusFilter(e.target.value as any)}
+                                    className="w-full p-2 border border-gray-200 rounded text-xs bg-white"
+                                >
+                                    <option value="PENDING">Pendientes</option>
+                                    <option value="APPROVED">Aprobadas</option>
+                                    <option value="REJECTED">Rechazadas</option>
+                                    <option value="ALL">Todas</option>
+                                </select>
+                            </div>
+                            {purchasesLoading ? (
+                                <div className="space-y-3">
+                                    {Array.from({ length: 3 }).map((_, index) => (
+                                        <div key={index} className="border border-gray-100 rounded-lg p-3 text-xs animate-pulse">
+                                            <div className="h-3 w-32 bg-gray-200 rounded" />
+                                            <div className="mt-2 h-2 w-24 bg-gray-100 rounded" />
+                                            <div className="mt-3 h-7 w-24 bg-gray-100 rounded" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : filteredPurchases.length === 0 ? (
                                 <div className="text-xs text-gray-400 border border-dashed border-gray-200 rounded-lg p-4">
                                     Sin solicitudes registradas.
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {purchaseRequests.map((req) => (
+                                    {filteredPurchases.map((req) => (
                                         <div key={req.purchaseId} className="border border-gray-100 rounded-lg p-3 text-xs">
                                             <div className="flex items-center justify-between">
                                                 <div>
@@ -1446,8 +1629,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                         {req.type === 'LIVE_PACK' ? 'Cupos Vivos' : req.type === 'REEL_PACK' ? 'Cupos Reels' : req.type}
                                                     </p>
                                                 </div>
-                                                <span className="text-[10px] font-bold bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full px-2 py-0.5">
-                                                    PENDING
+                                                <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 border ${
+                                                    req.status === 'APPROVED'
+                                                      ? 'bg-green-50 text-green-700 border-green-200'
+                                                      : req.status === 'REJECTED'
+                                                      ? 'bg-red-50 text-red-600 border-red-200'
+                                                      : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                                }`}>
+                                                    {req.status || 'PENDING'}
                                                 </span>
                                             </div>
                                             <div className="mt-2 flex items-center justify-between">
@@ -1603,7 +1792,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                           </button>
                         </div>
                         <div className="mt-4 max-h-44 space-y-3 overflow-y-auto pr-1">
-                          {adminNotifications.length === 0 ? (
+                          {notificationsLoading ? (
+                            Array.from({ length: 4 }).map((_, index) => (
+                              <div key={index} className="rounded-lg border border-gray-100 p-3 text-[11px] animate-pulse">
+                                <div className="h-2 w-20 bg-gray-200 rounded" />
+                                <div className="mt-2 h-3 w-40 bg-gray-100 rounded" />
+                                <div className="mt-2 h-2 w-24 bg-gray-100 rounded" />
+                              </div>
+                            ))
+                          ) : adminNotifications.length === 0 ? (
                             <p className="text-xs text-gray-400">No hay notificaciones para mostrar.</p>
                           ) : (
                             adminNotifications.map((note) => (

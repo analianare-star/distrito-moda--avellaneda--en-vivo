@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shop, UserContext, Stream, StreamStatus } from '../types';
 import { Button } from './Button';
 import { ShareableCard } from './ShareableCard';
@@ -9,14 +9,21 @@ interface ShopDetailModalProps {
   shopStreams?: Stream[]; 
   user: UserContext;
   canClientInteract: boolean;
+  initialTab?: 'INFO' | 'CARD';
   onClose: () => void;
   onToggleFavorite: (shopId: string) => void;
   onRequireLogin: () => void;
   onNotify?: (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => void;
 }
 
-export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStreams = [], user, canClientInteract, onClose, onToggleFavorite, onRequireLogin, onNotify }) => {
-  const [activeTab, setActiveTab] = useState<'INFO' | 'CARD'>('INFO');
+export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStreams = [], user, canClientInteract, initialTab, onClose, onToggleFavorite, onRequireLogin, onNotify }) => {
+  const [activeTab, setActiveTab] = useState<'INFO' | 'CARD'>(initialTab ?? 'INFO');
+
+  useEffect(() => {
+      if (initialTab) {
+          setActiveTab(initialTab);
+      }
+  }, [initialTab]);
   
   const isFollowing = user.favorites.includes(shop.id);
   const canDownloadCard = shop.dataIntegrity === 'MINIMAL' || shop.dataIntegrity === 'COMPLETE';

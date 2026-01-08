@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-// AsegÃºrate de que la ruta a 'types' sea correcta (a veces es './types' o '../types')
+// Asegurate de que la ruta a 'types' sea correcta (a veces es './types' o '../types')
 import { ViewMode, Shop, Stream, StreamStatus, UserContext, Reel, NotificationItem } from './types';
 import { HeroSection } from './components/HeroSection';
 import { StreamCard } from './components/StreamCard';
@@ -25,7 +25,7 @@ type AuthProfile = {
 
 type MerchantTab = 'RESUMEN' | 'VIVOS' | 'REELS' | 'REDES' | 'PERFIL';
 
-// --- TIENDA DE SEGURIDAD (Para evitar crasheos cuando la DB estÃ¡ vacÃ­a) ---
+// --- TIENDA DE SEGURIDAD (para evitar crasheos cuando la DB esta vacia) ---
 const EMPTY_SHOP: Shop = {
   id: 'empty',
   name: 'Sin Tienda Seleccionada',
@@ -78,6 +78,7 @@ const App: React.FC = () => {
 
   // UI States
   const [selectedShopForModal, setSelectedShopForModal] = useState<Shop | null>(null);
+  const [shopModalTab, setShopModalTab] = useState<'INFO' | 'CARD'>('INFO');
   const [selectedReel, setSelectedReel] = useState<Reel | null>(null);
   const [reportTarget, setReportTarget] = useState<Stream | null>(null);
   const [activeFilter, setActiveFilter] = useState('Todos');
@@ -123,8 +124,8 @@ const App: React.FC = () => {
       setNotifications(Array.isArray(data) ? data : []);
   };
 
-  // --- Derived States (CON PROTECCIÃ“N ANTI-CRASH) ---
-  // Si no encuentra la tienda o la lista estÃ¡ vacÃ­a, usa la EMPTY_SHOP para no romper la pantalla.
+  // --- Derived States (CON PROTECCION ANTI-CRASH) ---
+  // Si no encuentra la tienda o la lista esta vacia, usa la EMPTY_SHOP para no romper la pantalla.
   const currentShop = allShops.find(s => s.id === currentShopId) || allShops[0] || EMPTY_SHOP;
   const reminderStreams = allStreams
       .filter((stream) => user.reminders.includes(stream.id))
@@ -564,6 +565,19 @@ const App: React.FC = () => {
       })();
   };
 
+  const handleNotificationAction = (note: NotificationItem) => {
+      if (!note.refId) return;
+      const stream = allStreams.find((item) => item.id === note.refId);
+      if (!stream) return;
+      setActiveBottomNav('home');
+      setActiveFilter('Próximos');
+      setShopModalTab('INFO');
+      setSelectedShopForModal(stream.shop);
+      if (!note.read) {
+          handleMarkNotificationRead(note.id);
+      }
+  };
+
   const handleLoginRequest = async () => {
       try {
           await signInWithPopup(auth, googleProvider);
@@ -657,10 +671,12 @@ const App: React.FC = () => {
 
   const handleDownloadCard = (stream: Stream) => {
       if (!requireClient()) return;
+      setShopModalTab('CARD');
       setSelectedShopForModal(stream.shop);
   };
 
   const handleOpenShop = (shop: Shop) => {
+      setShopModalTab('INFO');
       setSelectedShopForModal(shop);
       if (user.isLoggedIn && authProfile?.userType === 'CLIENT') {
           pushHistory(`Visitaste: ${shop.name}`);
@@ -683,7 +699,7 @@ const App: React.FC = () => {
       filtered = filtered.filter(s => s.shop?.status === 'ACTIVE');
       filtered = filtered.filter(s => s.status !== StreamStatus.CANCELLED && s.status !== StreamStatus.BANNED);
       if (activeFilter === 'En Vivo') filtered = filtered.filter(s => s.status === StreamStatus.LIVE);
-      if (activeFilter === 'PrÃ³ximos') filtered = filtered.filter(s => s.status === StreamStatus.UPCOMING);
+      if (activeFilter === 'Próximos') filtered = filtered.filter(s => s.status === StreamStatus.UPCOMING);
       if (activeFilter === 'Finalizados') filtered = filtered.filter(s => s.status === StreamStatus.FINISHED || s.status === StreamStatus.MISSED);
 
       if (activeFilter === 'En Vivo') {
@@ -1116,7 +1132,7 @@ const App: React.FC = () => {
                  <>
                    <div className="flex items-center justify-between mb-8">
                       <div>
-                        <h2 className="font-serif text-3xl text-dm-dark">Guardados</h2>
+                        <h2 className="font-serif text-3xl text-dm-dark">{savedTab === 'FAVORITES' ? 'Favoritos' : 'Recordatorios'}</h2>
                         <p className="text-sm font-sans text-gray-500">
                           {savedTab === 'FAVORITES' ? `${favoriteShops.length} tiendas guardadas` : `${reminderStreams.length} recordatorios activos`}
                         </p>
@@ -1255,7 +1271,11 @@ const App: React.FC = () => {
                     shopStreams={allStreams.filter(s => s.shop.id === selectedShopForModal.id)}
                     user={user}
                     canClientInteract={canClientInteract}
-                    onClose={() => setSelectedShopForModal(null)} 
+                    initialTab={shopModalTab}
+                    onClose={() => {
+                      setSelectedShopForModal(null);
+                      setShopModalTab('INFO');
+                    }} 
                     onToggleFavorite={handleToggleFavorite}
                     onRequireLogin={requireLogin}
                     onNotify={notify}
@@ -1322,11 +1342,11 @@ const App: React.FC = () => {
       {viewMode === 'CLIENT' && (
         <div className={`fixed inset-0 z-[130] ${isAccountDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
           <div
-            className={`absolute inset-0 bg-black/40 transition-opacity ${isAccountDrawerOpen ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity ${isAccountDrawerOpen ? 'opacity-100' : 'opacity-0'}`}
             onClick={() => setIsAccountDrawerOpen(false)}
           />
           <aside
-            className={`absolute right-0 top-0 h-full w-[85vw] max-w-sm bg-white shadow-2xl border-l border-gray-100 transition-transform duration-300 md:w-[30vw] ${
+            className={`absolute right-0 top-0 h-full w-[88vw] max-w-sm bg-white/95 backdrop-blur-xl shadow-2xl border-l border-gray-200/70 transition-transform duration-300 md:w-[30vw] md:max-w-md rounded-l-3xl flex flex-col ${
               isAccountDrawerOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
           >
@@ -1376,7 +1396,7 @@ const App: React.FC = () => {
               );
             })}
             </div>
-            <div className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5">
+            <div className="flex-1 overflow-y-auto p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5">
               {user.isLoggedIn ? (
                 accountTab === 'RESUMEN' ? (
                   <>
@@ -1468,14 +1488,24 @@ const App: React.FC = () => {
                               </p>
                               <p className="text-[10px] text-gray-400">{formatNotificationDate(note.createdAt)}</p>
                             </div>
-                            {!note.read && (
-                              <button
-                                className="text-[10px] font-bold text-gray-400 hover:text-dm-dark"
-                                onClick={() => handleMarkNotificationRead(note.id)}
-                              >
-                                Leído
-                              </button>
-                            )}
+                            <div className="flex flex-col items-end gap-1 text-[10px]">
+                              {note.type === 'REMINDER' && note.refId && (
+                                <button
+                                  className="font-bold text-dm-crimson hover:text-dm-dark"
+                                  onClick={() => handleNotificationAction(note)}
+                                >
+                                  Ver vivo
+                                </button>
+                              )}
+                              {!note.read && (
+                                <button
+                                  className="font-bold text-gray-400 hover:text-dm-dark"
+                                  onClick={() => handleMarkNotificationRead(note.id)}
+                                >
+                                  Leído
+                                </button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
