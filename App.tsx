@@ -869,6 +869,12 @@ const App: React.FC = () => {
   const isMerchantUser = authProfile?.userType === 'SHOP';
   const accountBadgeCount = unreadNotifications.length;
   const reminderBadgeCount = reminderStreams.length;
+  const userTypeLabels: Record<string, string> = {
+      ADMIN: 'Administrador',
+      SHOP: 'Tienda',
+      CLIENT: 'Cliente',
+  };
+  const formatUserType = (value?: string) => userTypeLabels[value || ''] || 'Cliente';
   const accountTabs = [
       { id: 'RESUMEN', label: 'Resumen', icon: UserCircle, badge: 0 },
       { id: 'NOTIFICATIONS', label: 'Notificaciones', icon: Bell, badge: accountBadgeCount },
@@ -1361,7 +1367,7 @@ const App: React.FC = () => {
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-gray-400">Cuenta</p>
                   <h3 className="font-serif text-xl text-dm-dark">Perfil y estado</h3>
-                  <p className="text-[10px] text-gray-400">{authProfile?.userType || 'CLIENT'}</p>
+                  <p className="text-[10px] text-gray-400">{formatUserType(authProfile?.userType)}</p>
                 </div>
               </div>
               <button
@@ -1423,7 +1429,7 @@ const App: React.FC = () => {
                       </div>
                       <div className="rounded-lg border border-gray-100 p-3 text-center">
                         <p className="text-gray-400 uppercase tracking-widest">Rol</p>
-                        <p className="mt-1 text-sm font-bold text-dm-dark">{authProfile?.userType || 'CLIENT'}</p>
+                        <p className="mt-1 text-sm font-bold text-dm-dark">{formatUserType(authProfile?.userType)}</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3 text-xs">
