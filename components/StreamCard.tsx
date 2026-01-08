@@ -40,7 +40,7 @@ export const StreamCard: React.FC<StreamCardProps> = ({
   const canReport = stream.status === StreamStatus.FINISHED;
   
   const reminderSet = user.reminders.includes(stream.id);
-  const isLiked = false; // Implement Logic in App level or passed prop if persistent
+  const isLiked = user.likes.includes(stream.id);
   const reminderBlockedLabel = user.isLoggedIn ? 'Solo clientes' : 'Inicia sesion';
   
   // Shop Rating Display
@@ -209,12 +209,19 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                  <div className="flex gap-1">
                     <button 
                         onClick={() => canClientInteract && onLike && onLike(stream.id)} 
-                        className={`p-2 rounded-full transition-colors ${canClientInteract ? 'text-gray-500 hover:text-dm-crimson hover:bg-red-50' : 'text-gray-300 cursor-not-allowed'}`}
+                        className={`p-2 rounded-full transition-colors ${
+                          canClientInteract
+                            ? isLiked
+                              ? 'text-dm-crimson bg-red-50'
+                              : 'text-gray-500 hover:text-dm-crimson hover:bg-red-50'
+                            : 'text-gray-300 cursor-not-allowed'
+                        }`}
                         title="Me gusta"
                         disabled={!canClientInteract}
                         aria-label="Me gusta"
+                        aria-pressed={isLiked}
                     >
-                        <Heart size={18} />
+                        <Heart size={18} className={isLiked ? 'fill-dm-crimson text-dm-crimson' : ''} />
                     </button>
                     <button 
                         onClick={handleShare}

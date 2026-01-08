@@ -208,7 +208,7 @@ export const api = {
     if (!res.ok) return null;
     return res.json();
   },
-  fetchClientState: async (): Promise<{ favorites: string[]; reminders: string[]; viewedReels?: string[] } | null> => {
+  fetchClientState: async (): Promise<{ favorites: string[]; reminders: string[]; viewedReels?: string[]; likes?: string[] } | null> => {
     try {
       const res = await fetchWithAuth('/clients/me');
       if (!res.ok) return null;
@@ -548,6 +548,20 @@ export const api = {
     return data;
   },
 
+  toggleLikeStream: async (streamId: string): Promise<{ liked: boolean; likes: number } | null> => {
+    try {
+      const res = await fetchWithAuth(`/streams/${streamId}/like`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.message || 'No se pudo guardar el like');
+      }
+      return { liked: Boolean(data?.liked), likes: Number(data?.likes ?? 0) };
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      return null;
+    }
+  },
+
   fetchReels: async (): Promise<Reel[]> => {
     try {
       const res = await fetchWithAuth('/reels');
@@ -657,6 +671,14 @@ export const api = {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       throw new Error(data?.message || 'Error al ejecutar motor');
+    }
+    return data;
+  },
+  runStreamsLifecycle: async () => {
+    const res = await fetchWithAuth('/streams/run-lifecycle', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || 'Error al ejecutar ciclo de vivos');
     }
     return data;
   },
@@ -784,6 +806,7 @@ export const api = {
     reminders: [],
     history: [],
     viewedReels: [],
+    likes: [],
     reports: [],
     preferences: { theme: 'light', notifications: true },
   }),

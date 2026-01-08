@@ -69,6 +69,7 @@ const App: React.FC = () => {
       reminders: [],
       history: [],
       viewedReels: [],
+      likes: [],
       reports: [],
       preferences: { theme: 'light', notifications: false }
   });
@@ -190,6 +191,7 @@ const App: React.FC = () => {
                   favorites: clientState.favorites || [],
                   reminders: clientState.reminders || [],
                   viewedReels: clientState.viewedReels || [],
+                  likes: clientState.likes || [],
                 }));
               }
               await refreshNotifications(profile);
@@ -209,6 +211,7 @@ const App: React.FC = () => {
           favorites: [],
           reminders: [],
           viewedReels: [],
+          likes: [],
           reports: []
         }));
         setNotifications([]);
@@ -244,39 +247,7 @@ const App: React.FC = () => {
     }
   }, [authProfile, viewMode]);
 
-  // --- AUTOMATIC TIME MANAGEMENT ---
-  useEffect(() => {
-    const checkStreamStatus = () => {
-        const now = Date.now();
-        const LIMIT_30_MIN = 30 * 60 * 1000;
-        let needsUpdate = false;
-
-        allStreams.forEach(stream => {
-            const scheduledTime = new Date(stream.fullDateISO).getTime();
-
-            // 1. AUTO-START LOGIC:
-            if (stream.status === StreamStatus.UPCOMING && now >= scheduledTime) {
-                api.updateStream({ ...stream, status: StreamStatus.LIVE, startedAt: scheduledTime });
-                needsUpdate = true;
-            }
-
-            // 2. AUTO-FINISH LOGIC (30 Min base + extensions):
-            if (stream.status === StreamStatus.LIVE && stream.startedAt) {
-                const elapsed = now - stream.startedAt;
-                const cappedExtensions = Math.min(stream.extensionCount || 0, 3);
-                const limitMs = LIMIT_30_MIN * (1 + cappedExtensions);
-                if (elapsed > limitMs) {
-                    api.updateStream({ ...stream, status: StreamStatus.FINISHED });
-                    needsUpdate = true;
-                }
-            }
-        });
-        if (needsUpdate) refreshData();
-    };
-
-    const interval = setInterval(checkStreamStatus, 10000);
-    return () => clearInterval(interval);
-  }, [allStreams]);
+  // --- AUTO LIFECYCLE SE MANEJA EN BACKEND ---
 
   // --- BUSINESS LOGIC ACTIONS ---
 
@@ -609,12 +580,30 @@ const App: React.FC = () => {
 
   const handleLikeStream = (streamId: string) => {
       if (!requireClient()) return;
-      const s = allStreams.find(s => s.id === streamId);
-      if(s) {
-          // Ideally call API
-          s.likes += 1;
-          setAllStreams([...allStreams]);
-      }
+      void (async () => {
+          try {
+              const result = await api.toggleLikeStream(streamId);
+              if (!result) return;
+              setAllStreams((prev) =>
+                  prev.map((stream) =>
+                      stream.id === streamId ? { ...stream, likes: result.likes } : stream
+                  )
+              );
+              setUser((prev) => {
+                  const hasLike = prev.likes.includes(streamId);
+                  const nextLikes = result.liked
+                      ? hasLike ? prev.likes : [...prev.likes, streamId]
+                      : prev.likes.filter((id) => id !== streamId);
+                  return { ...prev, likes: nextLikes };
+              });
+          } catch (error: any) {
+              setNotice({
+                  title: 'No se pudo guardar el like',
+                  message: error?.message || 'Intentá nuevamente.',
+                  tone: 'error',
+              });
+          }
+      })();
   };
 
   const handleRateStream = (streamId: string, rating: number) => {

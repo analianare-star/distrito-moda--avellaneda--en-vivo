@@ -30,6 +30,44 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
   // Extract Primary WhatsApp
   const primaryWa = shop.whatsappLines && shop.whatsappLines.length > 0 ? shop.whatsappLines[0] : null;
 
+  const buildFallbackPdf = () => {
+    const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: [360, 640] });
+    doc.setFillColor(20, 20, 20);
+    doc.rect(0, 0, 360, 640, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text(shop.name || 'Tienda', 24, 60);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(mode === 'MERCHANT' ? 'PROXIMO LIVE' : 'TE ESPERAMOS', 24, 80);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${timeStr} hs`, 24, 120);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(dateStr, 24, 140);
+    doc.setFontSize(10);
+    doc.text(`Minimo de compra: $${shop.minimumPurchase?.toLocaleString() || '-'}`, 24, 180);
+    doc.text(`Pagos: ${(shop.paymentMethods || []).slice(0, 3).join(', ') || '-'}`, 24, 200);
+    if (primaryWa) {
+      doc.text(`WhatsApp: ${primaryWa.number}`, 24, 230);
+    }
+    if (shop.socialHandles?.instagram) {
+      doc.text(`Instagram: @${shop.socialHandles.instagram}`, 24, 250);
+    }
+    if (shop.website) {
+      doc.text(`Web: ${shop.website.replace('https://', '')}`, 24, 270);
+    }
+    if (shop.address) {
+      doc.text(`Direccion: ${shop.address}`, 24, 300, { maxWidth: 312 });
+    }
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 180);
+    doc.text('Distrito Moda - Avellaneda en Vivo', 24, 600);
+    return doc;
+  };
+
   const handleDownload = async () => {
     if (!cardRef.current) return;
     if (isDownloading) return;
@@ -57,12 +95,18 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
         pdf.addImage(dataUrl, 'PNG', 0, 0, rect.width, rect.height);
         pdf.save(`tarjeta-${safeName || 'tienda'}.pdf`);
         onNotify?.('Tarjeta descargada', 'El PDF se guardó en tu dispositivo.', 'success');
-      } catch (pdfError) {
+      } catch (_pdfError) {
         downloadPng(dataUrl);
         onNotify?.('Tarjeta descargada', 'Se guardó la imagen PNG de la tarjeta.', 'success');
       }
-    } catch (error) {
-      onNotify?.('No se pudo descargar', 'Intenta nuevamente en unos segundos.', 'error');
+    } catch (_error) {
+      try {
+        const fallback = buildFallbackPdf();
+        fallback.save(`tarjeta-${safeName || 'tienda'}.pdf`);
+        onNotify?.('Tarjeta descargada', 'Se generó un PDF simplificado.', 'success');
+      } catch (_fallbackError) {
+        onNotify?.('No se pudo descargar', 'Intenta nuevamente en unos segundos.', 'error');
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -83,7 +127,15 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
         {/* --- HEADER --- */}
         <div className="relative z-10 pt-8 pb-4 flex flex-col items-center bg-gradient-to-b from-black/40 to-transparent">
             <div className="w-20 h-20 rounded-full border-2 border-white/20 overflow-hidden mb-3 bg-white shadow-lg">
-                <img src={shop.logoUrl} alt={shop.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
+                <img
+                  src={shop.logoUrl}
+                  alt={shop.name}
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                  crossOrigin="anonymous"
+                />
             </div>
             <h2 className="font-serif text-3xl text-white leading-tight text-center px-4">
                 {shop.name}

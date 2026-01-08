@@ -165,6 +165,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const canManageAgenda = shopStatus === 'ACTIVE' && !isPenalized;
   const canSchedule = canManageAgenda && availableQuota > 0;
   const canAcceptShop = shopStatus === 'PENDING_VERIFICATION' && !currentShop.ownerAcceptedAt;
+  const pendingReprogramCount = myStreams.filter(s => s.status === StreamStatus.PENDING_REPROGRAMMATION).length;
+  const liveCount = myStreams.filter(s => s.status === StreamStatus.LIVE).length;
+  const upcomingCount = myStreams.filter(s => s.status === StreamStatus.UPCOMING).length;
+  const finishedCount = myStreams.filter(s => s.status === StreamStatus.FINISHED).length;
+  const missedCount = myStreams.filter(s => s.status === StreamStatus.MISSED).length;
+  const publicWhatsappCount = currentShop.whatsappLines?.length || 0;
+  const mapsUrl = currentShop.addressDetails?.mapsUrl || '';
 
   const getRestrictionMessage = () => {
       if (shopStatus === 'PENDING_VERIFICATION') return "Tu cuenta esta en verificacion. Podras agendar cuando sea activada.";
@@ -179,6 +186,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
           return "Has consumido todos tus cupos (Plan + Extras). Compra más para seguir agendando.";
       }
       return "";
+  };
+  const getStatusMessage = () => {
+      if (shopStatus === 'PENDING_VERIFICATION') {
+          return currentShop.ownerAcceptedAt
+              ? 'Tus datos ya fueron confirmados. Espera la aprobación del administrador.'
+              : 'Confirma tus datos para iniciar el proceso de aprobación.';
+      }
+      if (shopStatus === 'AGENDA_SUSPENDED') {
+          const until = currentShop.agendaSuspendedUntil ? new Date(currentShop.agendaSuspendedUntil).toLocaleDateString() : 'sin fecha';
+          return `Tu agenda está suspendida hasta ${until}. Podés seguir actualizando perfil y redes.`;
+      }
+      if (shopStatus === 'BANNED' || shopStatus === 'HIDDEN') {
+          return 'Tu cuenta está bloqueada. Contactá soporte para revisar el caso.';
+      }
+      if (isPenalized) return 'Tu agenda está restringida por penalización.';
+      return 'Tu cuenta está activa. Podés agendar vivos y publicar historias.';
   };
 
   const statusLabels: Record<string, string> = {
@@ -544,6 +567,38 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <p className="text-gray-500 text-sm mt-1">Visión general de tu rendimiento y disponibilidad.</p>
                   </header>
 
+                  <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div>
+                              <p className="text-xs text-gray-400 uppercase tracking-widest">Estado de cuenta</p>
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  <span className={`text-[11px] font-bold uppercase px-2 py-1 rounded-full border ${statusTone}`}>
+                                      {statusLabel}
+                                  </span>
+                                  {currentShop.ownerAcceptedAt && (
+                                      <span className="text-[10px] font-bold uppercase text-gray-400">
+                                          Datos confirmados {new Date(currentShop.ownerAcceptedAt).toLocaleDateString('es-AR')}
+                                      </span>
+                                  )}
+                              </div>
+                              <p className="mt-2 text-xs text-gray-500 max-w-xl">{getStatusMessage()}</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                              {canAcceptShop && (
+                                  <Button size="sm" onClick={handleAcceptShop} className="bg-dm-crimson text-white">
+                                      Confirmar datos
+                                  </Button>
+                              )}
+                              <Button size="sm" variant="outline" onClick={() => setTab('PERFIL')}>
+                                  Editar perfil
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => setTab('VIVOS')}>
+                                  Ver agenda
+                              </Button>
+                          </div>
+                      </div>
+                  </div>
+
                   {/* PENALTY ALERT */}
                   {(isPenalized || shopStatus !== 'ACTIVE') && (
                       <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm flex items-start gap-4">
@@ -657,6 +712,55 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                    Mejorar mi Plan
                                </Button>
                            )}
+                      </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                          <h3 className="font-bold text-dm-dark text-sm uppercase tracking-wide mb-3">Acciones rápidas</h3>
+                          <div className="space-y-2">
+                              <Button size="sm" className="w-full" onClick={handleCreateClick} disabled={!canSchedule}>
+                                  <Plus size={14} className="mr-2"/> Agendar vivo
+                              </Button>
+                              <Button size="sm" variant="outline" className="w-full" onClick={() => setShowBuyModal(true)} disabled={isAgendaSuspended}>
+                                  <ShoppingCart size={14} className="mr-2"/> Comprar cupo
+                              </Button>
+                              <Button size="sm" variant="outline" className="w-full" onClick={() => setTab('REELS')}>
+                                  <Film size={14} className="mr-2"/> Subir historia
+                              </Button>
+                              <Button size="sm" variant="outline" className="w-full" onClick={() => setTab('PERFIL')}>
+                                  <Store size={14} className="mr-2"/> Editar perfil
+                              </Button>
+                          </div>
+                          {!canSchedule && (
+                              <p className="mt-3 text-[11px] text-red-500">{getRestrictionMessage()}</p>
+                          )}
+                      </div>
+                      <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                          <h3 className="font-bold text-dm-dark text-sm uppercase tracking-wide mb-3">Agenda actual</h3>
+                          <div className="space-y-2 text-xs text-gray-500">
+                              <div className="flex justify-between"><span>En vivo</span><span className="font-bold text-dm-dark">{liveCount}</span></div>
+                              <div className="flex justify-between"><span>Programados</span><span className="font-bold text-dm-dark">{upcomingCount}</span></div>
+                              <div className="flex justify-between"><span>Finalizados</span><span className="font-bold text-dm-dark">{finishedCount}</span></div>
+                              <div className="flex justify-between"><span>No realizados</span><span className="font-bold text-dm-dark">{missedCount}</span></div>
+                              <div className="flex justify-between"><span>Reprogramar</span><span className="font-bold text-dm-dark">{pendingReprogramCount}</span></div>
+                          </div>
+                          {pendingReprogramCount > 0 && (
+                              <p className="mt-3 text-[11px] text-yellow-600">
+                                  Tenés {pendingReprogramCount} vivos pendientes de reprogramación.
+                              </p>
+                          )}
+                      </div>
+                      <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                          <h3 className="font-bold text-dm-dark text-sm uppercase tracking-wide mb-3">Historias hoy</h3>
+                          <div className="space-y-2 text-xs text-gray-500">
+                              <div className="flex justify-between"><span>Plan disponible</span><span className="font-bold text-dm-dark">{availableReelPlan}</span></div>
+                              <div className="flex justify-between"><span>Extras comprados</span><span className="font-bold text-green-600">{reelsExtra}</span></div>
+                              <div className="flex justify-between"><span>Publicadas hoy</span><span className="font-bold text-dm-dark">{reelsToday}</span></div>
+                          </div>
+                          <button onClick={() => setShowBuyReelModal(true)} className="mt-3 text-[11px] font-bold text-dm-crimson underline">
+                              Comprar extras
+                          </button>
                       </div>
                   </div>
                   <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
@@ -915,6 +1019,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </div>
                   </header>
 
+                  <div className="rounded-xl border border-gray-100 bg-white p-4 text-xs text-gray-500">
+                      <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-bold text-dm-dark">Reglas clave:</span>
+                          <span>Máximo 1 vivo por día.</span>
+                          <span>Máximo 7 vivos por semana.</span>
+                          <span>Requiere cupo disponible.</span>
+                          {pendingReprogramCount > 0 && (
+                              <span className="font-bold text-yellow-600">Tenés {pendingReprogramCount} vivos para reprogramar.</span>
+                          )}
+                      </div>
+                  </div>
+
                   <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                       <div className="md:hidden divide-y">
                           {myStreams.length > 0 ? myStreams.map(stream => (
@@ -1119,6 +1235,38 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <h1 className="font-serif text-3xl text-dm-dark">Datos de Tienda</h1>
                       <p className="text-gray-500 text-sm mt-1">Información legal, ubicación y condiciones de venta.</p>
                   </header>
+                  <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                      <p className="text-xs text-gray-400 uppercase tracking-widest">Vista pública</p>
+                      <div className="mt-3 flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-full bg-gray-100 overflow-hidden border border-white shadow-sm">
+                              <img src={currentShop.logoUrl} alt={currentShop.name} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1">
+                              <p className="font-serif text-lg text-dm-dark">{currentShop.name}</p>
+                              <p className="text-xs text-gray-500">{currentShop.address || 'Dirección sin definir'}</p>
+                              <p className="text-[11px] text-gray-400">WhatsApp visibles: {publicWhatsappCount}</p>
+                          </div>
+                          <div className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full border ${statusTone}`}>
+                              {statusLabel}
+                          </div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-gray-500">
+                          <span className="rounded-full border border-gray-200 px-2 py-1">Mínimo: ${currentShop.minimumPurchase || 0}</span>
+                          <span className="rounded-full border border-gray-200 px-2 py-1">{currentShop.plan}</span>
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                          {mapsUrl && (
+                              <a
+                                  href={mapsUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-[11px] font-bold text-gray-600 hover:bg-gray-50"
+                              >
+                                  Ver en Maps <ExternalLink size={12} />
+                              </a>
+                          )}
+                      </div>
+                  </div>
                   <form onSubmit={saveShopProfile} className="space-y-8">
                       <section className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
                           <h3 className="font-bold text-dm-dark flex items-center gap-2 border-b pb-2"><Store size={18}/> Identidad & Legal</h3>

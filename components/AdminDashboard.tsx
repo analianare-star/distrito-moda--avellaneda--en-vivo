@@ -38,8 +38,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   const [officialMode, setOfficialMode] = useState(false);
   const [sanctionsRunning, setSanctionsRunning] = useState(false);
   const [notificationsRunning, setNotificationsRunning] = useState(false);
+  const [streamsLifecycleRunning, setStreamsLifecycleRunning] = useState(false);
   const [sanctionsSummary, setSanctionsSummary] = useState<any | null>(null);
   const [notificationsSummary, setNotificationsSummary] = useState<any | null>(null);
+  const [streamsLifecycleSummary, setStreamsLifecycleSummary] = useState<any | null>(null);
   const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
@@ -80,13 +82,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   });
 
   useEffect(() => {
-      if (activeTab === 'REELS') {
+      const needsReels = activeTab === 'REELS' || activeTab === 'DASHBOARD';
+      const needsReports = activeTab === 'REPORTS' || activeTab === 'DASHBOARD';
+      const needsAdmin = activeTab === 'ADMIN' || activeTab === 'DASHBOARD';
+
+      if (needsReels) {
           api.fetchAllReelsAdmin().then(setReels);
       }
-      if (activeTab === 'REPORTS') {
+      if (needsReports) {
           api.fetchReportsAdmin().then(setReports);
       }
-      if (activeTab === 'ADMIN') {
+      if (needsAdmin) {
           api.fetchPurchaseRequests('PENDING').then(setPurchaseRequests);
           api.fetchNotificationsAdmin({
               limit: 50,
@@ -100,6 +106,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
   const missedCount = streams.filter(s => s.status === StreamStatus.MISSED).length;
   const penalizedShops = shops.filter(s => s.isPenalized).length;
   const pendingShops = shops.filter(s => (s.status || 'ACTIVE') === 'PENDING_VERIFICATION');
+  const openReports = reports.filter((report) => (report.status || 'OPEN') === 'OPEN');
+  const pendingPurchases = purchaseRequests.filter((purchase) => (purchase.status || 'PENDING') === 'PENDING');
 
   const handleStatusChange = async (streamId: string, newStatus: StreamStatus) => {
       const stream = streams.find(s => s.id === streamId);
@@ -162,6 +170,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
           });
       } finally {
           setNotificationsRunning(false);
+      }
+  };
+
+  const runStreamsLifecycle = async () => {
+      if (streamsLifecycleRunning) return;
+      setStreamsLifecycleRunning(true);
+      try {
+          const result = await api.runStreamsLifecycle();
+          setStreamsLifecycleSummary(result);
+          setNotice({
+              title: 'Ciclo de vivos ejecutado',
+              message: `Iniciados: ${result?.started ?? 0}. Finalizados: ${result?.finished ?? 0}.`,
+              tone: 'success',
+          });
+          onRefreshData();
+      } catch (error: any) {
+          setNotice({
+              title: 'Error en ciclo de vivos',
+              message: error?.message || 'No se pudo ejecutar el ciclo.',
+              tone: 'error',
+          });
+      } finally {
+          setStreamsLifecycleRunning(false);
       }
   };
 
@@ -576,6 +607,115 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                         <div className="bg-white p-4 md:p-6 rounded-xl border flex justify-between">
                             <div><p className="text-xs font-bold text-gray-400">REELS ACTIVOS</p><p className="text-3xl font-serif">{reels.filter(r => r.status === 'ACTIVE').length}</p></div>
                             <Film className="text-dm-crimson" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold tracking-widest text-gray-400">INBOX OPERATIVO</p>
+                                <p className="text-sm font-semibold text-dm-dark">Pendientes que requieren accion inmediata</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="bg-white p-4 md:p-5 rounded-xl border">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-gray-400">TIENDAS PENDIENTES</p>
+                                        <p className="text-lg font-bold text-dm-dark">{pendingShops.length}</p>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setShopFilter('PENDING');
+                                            onTabChange('SHOPS');
+                                        }}
+                                    >
+                                        Ver
+                                    </Button>
+                                </div>
+                                <div className="mt-3 space-y-2">
+                                    {pendingShops.slice(0, 3).map((shop) => (
+                                        <button
+                                            key={shop.id}
+                                            onClick={() => {
+                                                setShopFilter('PENDING');
+                                                onTabChange('SHOPS');
+                                            }}
+                                            className="w-full rounded-lg border border-gray-100 px-3 py-2 text-left transition hover:bg-gray-50"
+                                        >
+                                            <p className="text-xs font-bold text-dm-dark">{shop.name}</p>
+                                            <p className="text-[10px] text-gray-500">{shop.email || 'Sin email'}</p>
+                                        </button>
+                                    ))}
+                                    {pendingShops.length === 0 && (
+                                        <p className="text-xs text-gray-400">Sin pendientes por aprobar.</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="bg-white p-4 md:p-5 rounded-xl border">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-gray-400">REPORTES ABIERTOS</p>
+                                        <p className="text-lg font-bold text-dm-dark">{openReports.length}</p>
+                                    </div>
+                                    <Button size="sm" variant="outline" onClick={() => onTabChange('REPORTS')}>
+                                        Ver
+                                    </Button>
+                                </div>
+                                <div className="mt-3 space-y-2">
+                                    {openReports.slice(0, 3).map((report) => (
+                                        <button
+                                            key={report.id}
+                                            onClick={() => onTabChange('REPORTS')}
+                                            className="w-full rounded-lg border border-gray-100 px-3 py-2 text-left transition hover:bg-gray-50"
+                                        >
+                                            <p className="text-xs font-bold text-dm-dark">
+                                                {report?.stream?.title || 'Vivo sin titulo'}
+                                            </p>
+                                            <p className="text-[10px] text-gray-500">
+                                                {report?.stream?.shop?.name || 'Sin tienda'}
+                                            </p>
+                                        </button>
+                                    ))}
+                                    {openReports.length === 0 && (
+                                        <p className="text-xs text-gray-400">Sin reportes abiertos.</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="bg-white p-4 md:p-5 rounded-xl border">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-gray-400">COMPRAS PENDIENTES</p>
+                                        <p className="text-lg font-bold text-dm-dark">{pendingPurchases.length}</p>
+                                    </div>
+                                    <Button size="sm" variant="outline" onClick={() => onTabChange('ADMIN')}>
+                                        Ver
+                                    </Button>
+                                </div>
+                                <div className="mt-3 space-y-2">
+                                    {pendingPurchases.slice(0, 3).map((purchase) => (
+                                        <button
+                                            key={purchase.purchaseId || purchase.id}
+                                            onClick={() => onTabChange('ADMIN')}
+                                            className="w-full rounded-lg border border-gray-100 px-3 py-2 text-left transition hover:bg-gray-50"
+                                        >
+                                            <p className="text-xs font-bold text-dm-dark">
+                                                {purchase?.shop?.name || 'Tienda sin nombre'}
+                                            </p>
+                                            <p className="text-[10px] text-gray-500">
+                                                {purchase.type || 'PACK'} · {purchase.quantity || 0} cupos
+                                            </p>
+                                        </button>
+                                    ))}
+                                    {pendingPurchases.length === 0 && (
+                                        <p className="text-xs text-gray-400">Sin compras pendientes.</p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1379,6 +1519,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                             />
                             Modo Oficial
                         </label>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm border p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="font-bold text-dm-dark">Ciclo de vivos</h3>
+                                <p className="text-xs text-gray-500">Arranca y finaliza vivos segun agenda.</p>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">
+                                Activo
+                            </span>
+                        </div>
+                        <Button className="mt-4 w-full" onClick={runStreamsLifecycle} disabled={streamsLifecycleRunning}>
+                            {streamsLifecycleRunning ? 'Procesando...' : 'Ejecutar ciclo'}
+                        </Button>
+                        {streamsLifecycleSummary && (
+                          <p className="mt-3 text-xs text-gray-500">
+                            Ultima corrida: {streamsLifecycleSummary.started ?? 0} iniciados · {streamsLifecycleSummary.finished ?? 0} finalizados.
+                          </p>
+                        )}
                     </div>
                     <div className="bg-white rounded-xl shadow-sm border p-6">
                         <div className="flex items-center justify-between">

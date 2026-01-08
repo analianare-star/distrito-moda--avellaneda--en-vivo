@@ -182,6 +182,7 @@ export interface UserContext {
   reminders: string[]; 
   history: string[]; // Historial de visitas
   viewedReels: string[]; // IDs de reels vistos - NEW
+  likes: string[]; // IDs de vivos con like
   notifications?: NotificationItem[];
   
   reports: { streamId: string; timestamp: number }[]; 

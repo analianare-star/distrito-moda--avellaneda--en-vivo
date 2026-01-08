@@ -28,10 +28,15 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
         if (!selectedUserId) {
             // Anonymous
             onUserLogin({
+                id: `anon-${Date.now()}`,
                 isLoggedIn: false,
                 favorites: [],
                 reminders: [],
-                reports: []
+                history: [],
+                viewedReels: [],
+                likes: [],
+                reports: [],
+                preferences: { theme: 'light', notifications: false }
             });
             notify('Identidad aplicada', 'Modo: Cliente anónimo', 'info');
             return;
