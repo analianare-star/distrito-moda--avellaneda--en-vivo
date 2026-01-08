@@ -14,7 +14,7 @@ import { ReportModal } from './components/ReportModal';
 import { api } from './services/api';
 import { X, User, UserCircle, Bell, Clock, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown, Globe, Film, Mail, Key } from 'lucide-react';
 import { auth, googleProvider } from './firebase';
-import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth';
+import { confirmPasswordReset, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, verifyPasswordResetCode } from 'firebase/auth';
 
 type AuthProfile = {
   userType: 'ADMIN' | 'SHOP' | 'CLIENT';
@@ -62,6 +62,15 @@ const App: React.FC = () => {
   const [loginBusy, setLoginBusy] = useState(false);
   const [resetBusy, setResetBusy] = useState(false);
   const [loginAudience, setLoginAudience] = useState<'SHOP' | null>(null);
+  const [resetViewStatus, setResetViewStatus] = useState<'idle' | 'loading' | 'ready' | 'success' | 'error'>('idle');
+  const [resetViewEmail, setResetViewEmail] = useState('');
+  const [resetViewCode, setResetViewCode] = useState('');
+  const [resetViewPassword, setResetViewPassword] = useState('');
+  const [resetViewConfirm, setResetViewConfirm] = useState('');
+  const [resetViewError, setResetViewError] = useState('');
+  const [resetViewBusy, setResetViewBusy] = useState(false);
+
+  const isResetView = typeof window !== 'undefined' && window.location.pathname.startsWith('/reset');
 
   // --- CENTRALIZED STATE ---
   const [allShops, setAllShops] = useState<Shop[]>([]);
@@ -165,10 +174,12 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    if (isResetView) return;
     refreshData();
-  }, []);
+  }, [isResetView]);
 
   useEffect(() => {
+    if (isResetView) return;
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
       if (fbUser) {
         setUser(prev => ({
@@ -241,7 +252,30 @@ const App: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isResetView]);
+
+  useEffect(() => {
+    if (!isResetView) return;
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');
+    const oobCode = params.get('oobCode') || '';
+    if (mode !== 'resetPassword' || !oobCode) {
+      setResetViewStatus('error');
+      setResetViewError('El enlace de restablecimiento no es válido.');
+      return;
+    }
+    setResetViewStatus('loading');
+    setResetViewCode(oobCode);
+    verifyPasswordResetCode(auth, oobCode)
+      .then((email) => {
+        setResetViewEmail(email);
+        setResetViewStatus('ready');
+      })
+      .catch(() => {
+        setResetViewStatus('error');
+        setResetViewError('El enlace está vencido o es incorrecto.');
+      });
+  }, [isResetView]);
 
   useEffect(() => {
     if (!authProfile) {
@@ -679,6 +713,36 @@ const App: React.FC = () => {
       }
   };
 
+  const handleResetViewSubmit = async () => {
+      setResetViewError('');
+      if (!resetViewCode) {
+          setResetViewError('El enlace no es válido.');
+          return;
+      }
+      if (resetViewPassword.length < 6) {
+          setResetViewError('La contraseña debe tener al menos 6 caracteres.');
+          return;
+      }
+      if (resetViewPassword !== resetViewConfirm) {
+          setResetViewError('Las contraseñas no coinciden.');
+          return;
+      }
+      setResetViewBusy(true);
+      try {
+          await confirmPasswordReset(auth, resetViewCode, resetViewPassword);
+          setResetViewStatus('success');
+      } catch (error: any) {
+          const code = error?.code || '';
+          const message = code === 'auth/expired-action-code'
+              ? 'El enlace venció. Pedí un nuevo restablecimiento.'
+              : 'No se pudo restablecer la clave.';
+          setResetViewError(message);
+          setResetViewStatus('error');
+      } finally {
+          setResetViewBusy(false);
+      }
+  };
+
   const handleContinueAsGuest = () => {
       setLoginPromptDismissed(true);
       setLoginError('');
@@ -993,6 +1057,104 @@ const App: React.FC = () => {
         ];
 
   const canClientInteract = user.isLoggedIn && authProfile?.userType === 'CLIENT';
+
+  if (isResetView) {
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-white via-dm-light/30 to-white px-5 py-10 text-dm-dark">
+          <div className="mx-auto w-full max-w-sm rounded-2xl border border-dm-crimson/10 bg-white p-5 shadow-[0_18px_48px_rgba(0,0,0,0.12)]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Shield size={18} className="text-dm-crimson" />
+                <p className="font-serif text-lg">Restablecer clave</p>
+              </div>
+              <button
+                onClick={() => window.location.assign('/')}
+                className="rounded-full border border-gray-200 p-1 text-gray-400 hover:text-gray-600"
+                aria-label="Volver al inicio"
+              >
+                <X size={12} />
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] text-gray-500">
+              {resetViewEmail ? `Cuenta: ${resetViewEmail}` : 'Validando enlace...'}
+            </p>
+
+            {resetViewStatus === 'loading' && (
+              <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 px-3 py-3 text-[11px] text-gray-500">
+                Verificando enlace...
+              </div>
+            )}
+
+            {resetViewStatus === 'error' && (
+              <div className="mt-5 rounded-xl border border-dm-alert/20 bg-dm-alert/10 px-3 py-3 text-[11px] text-dm-alert">
+                {resetViewError || 'No se pudo validar el enlace.'}
+              </div>
+            )}
+
+            {resetViewStatus === 'success' && (
+              <div className="mt-5 rounded-xl border border-dm-crimson/20 bg-dm-crimson/10 px-3 py-3 text-[11px] text-gray-700">
+                Tu contraseña se actualizó correctamente. Ya podés iniciar sesión.
+                <button
+                  onClick={() => window.location.assign('/')}
+                  className="mt-3 w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm"
+                >
+                  Ir a iniciar sesión
+                </button>
+              </div>
+            )}
+
+            {resetViewStatus === 'ready' && (
+              <form
+                className="mt-5 space-y-3"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleResetViewSubmit();
+                }}
+              >
+                <label className="block text-[11px] font-bold text-gray-500">
+                  Nueva contraseña
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                    <Key size={14} className="text-gray-400" />
+                    <input
+                      type="password"
+                      value={resetViewPassword}
+                      onChange={(event) => setResetViewPassword(event.target.value)}
+                      className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                      placeholder="Mínimo 6 caracteres"
+                      required
+                    />
+                  </div>
+                </label>
+                <label className="block text-[11px] font-bold text-gray-500">
+                  Repetí la contraseña
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                    <Key size={14} className="text-gray-400" />
+                    <input
+                      type="password"
+                      value={resetViewConfirm}
+                      onChange={(event) => setResetViewConfirm(event.target.value)}
+                      className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                      placeholder="Confirmá la clave"
+                      required
+                    />
+                  </div>
+                </label>
+                {resetViewError && (
+                  <p className="text-[11px] font-semibold text-dm-alert">{resetViewError}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={resetViewBusy}
+                  className="w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {resetViewBusy ? 'Guardando...' : 'Guardar contraseña'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      );
+  }
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
