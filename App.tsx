@@ -12,7 +12,7 @@ import { StoryModal } from './components/StoryModal';
 import { NoticeModal } from './components/NoticeModal';
 import { ReportModal } from './components/ReportModal';
 import { api } from './services/api';
-import { X, User, UserCircle, Bell, Clock, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown, Globe, Film } from 'lucide-react';
+import { X, User, UserCircle, Bell, Clock, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown, Globe, Film, Mail, Key } from 'lucide-react';
 import { auth, googleProvider } from './firebase';
 import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth';
 
@@ -1068,23 +1068,23 @@ const App: React.FC = () => {
 
       {viewMode === 'CLIENT' && !user.isLoggedIn && !loginPromptDismissed && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-          <div className="w-[92%] max-w-sm rounded-2xl border border-gray-100 bg-white p-6 shadow-xl">
-            <div className="flex items-start justify-between gap-4">
+          <div className="w-[92%] max-w-xs rounded-2xl border border-dm-crimson/10 bg-gradient-to-b from-white via-white to-dm-light/50 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)]">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-serif text-2xl text-dm-dark">Ingreso</p>
-                <p className="mt-1 text-xs font-sans text-gray-500">
+                <p className="font-serif text-xl text-dm-dark">Ingreso</p>
+                <p className="mt-1 text-[11px] font-sans text-gray-500">
                   Accede a recordatorios, favoritos y reportes.
                 </p>
               </div>
               <button
                 onClick={handleContinueAsGuest}
-                className="rounded-full border border-gray-200 p-1 text-gray-400 hover:text-gray-600"
+                className="rounded-full border border-gray-200 p-0.5 text-gray-400 hover:text-gray-600"
                 aria-label="Cerrar"
               >
-                <X size={14} />
+                <X size={12} />
               </button>
             </div>
-            <div className="mt-5 flex items-center rounded-full bg-gray-100 p-1 text-[11px] font-semibold">
+            <div className="mt-4 flex items-center rounded-full bg-white/80 p-1 text-[11px] font-semibold shadow-sm">
               <button
                 onClick={() => {
                   setLoginMode('GOOGLE');
@@ -1094,7 +1094,9 @@ const App: React.FC = () => {
                 }}
                 className={`flex-1 rounded-full px-3 py-1 ${loginMode === 'GOOGLE' ? 'bg-white text-dm-dark shadow-sm' : 'text-gray-500'}`}
               >
-                Google
+                <span className="inline-flex items-center justify-center gap-1">
+                  <Globe size={12} /> Google
+                </span>
               </button>
               <button
                 onClick={() => {
@@ -1104,12 +1106,15 @@ const App: React.FC = () => {
                 }}
                 className={`flex-1 rounded-full px-3 py-1 ${loginMode === 'EMAIL' ? 'bg-white text-dm-dark shadow-sm' : 'text-gray-500'}`}
               >
-                Correo y clave
+                <span className="inline-flex items-center justify-center gap-1">
+                  <Mail size={12} /> Correo
+                </span>
               </button>
             </div>
-
-            <div className="mt-3 flex items-center justify-between rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] text-gray-500">
-              <span>¿Tenés tienda?</span>
+            <div className="mt-3 flex items-center justify-between rounded-full border border-gray-200 bg-white px-3 py-1 text-[10px] text-gray-500">
+              <span className="inline-flex items-center gap-1">
+                <Store size={12} /> ¿Tenés tienda?
+              </span>
               <button
                 type="button"
                 onClick={() => {
@@ -1117,7 +1122,7 @@ const App: React.FC = () => {
                   setLoginError('');
                   setLoginAudience('SHOP');
                 }}
-                className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
+                className={`rounded-full px-3 py-1 text-[10px] font-semibold ${
                   loginAudience === 'SHOP'
                     ? 'bg-dm-crimson text-white shadow-sm'
                     : 'bg-dm-crimson/10 text-dm-crimson hover:text-dm-dark'
@@ -1127,7 +1132,7 @@ const App: React.FC = () => {
               </button>
             </div>
             {loginAudience === 'SHOP' && (
-              <p className="mt-2 text-[10px] font-medium text-gray-500">
+              <p className="mt-1 text-[10px] font-medium text-gray-500">
                 Usá el correo registrado de tu tienda. Si no tenés clave, pedí el enlace de acceso.
               </p>
             )}
@@ -1137,20 +1142,20 @@ const App: React.FC = () => {
                 <button
                   onClick={handleGoogleLogin}
                   disabled={loginBusy}
-                  className="mt-4 w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-3 w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loginBusy ? 'Conectando...' : 'Continuar con Google'}
                 </button>
                 {loginError && (
                   <p className="mt-2 text-[11px] font-semibold text-dm-alert">{loginError}</p>
                 )}
-                <p className="mt-3 text-[11px] font-sans text-gray-400">
+                <p className="mt-2 text-[10px] font-sans text-gray-400">
                   Recomendado para clientes.
                 </p>
               </>
             ) : (
               <form
-                className="mt-4 space-y-3"
+                className="mt-3 space-y-2.5"
                 onSubmit={(event) => {
                   event.preventDefault();
                   handleEmailLogin();
@@ -1158,27 +1163,33 @@ const App: React.FC = () => {
               >
                 <label className="block text-[11px] font-bold text-gray-500">
                   Correo electrónico
-                  <input
-                    type="email"
-                    value={loginEmail}
-                    onChange={(event) => setLoginEmail(event.target.value)}
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-dm-dark outline-none focus:border-dm-crimson"
-                    placeholder={loginAudience === 'SHOP' ? 'correo de la tienda' : 'tu@email.com'}
-                    autoComplete="email"
-                    required
-                  />
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                    <Mail size={14} className="text-gray-400" />
+                    <input
+                      type="email"
+                      value={loginEmail}
+                      onChange={(event) => setLoginEmail(event.target.value)}
+                      className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                      placeholder={loginAudience === 'SHOP' ? 'correo de la tienda' : 'tu@email.com'}
+                      autoComplete="email"
+                      required
+                    />
+                  </div>
                 </label>
                 <label className="block text-[11px] font-bold text-gray-500">
                   Contraseña
-                  <input
-                    type="password"
-                    value={loginPassword}
-                    onChange={(event) => setLoginPassword(event.target.value)}
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-dm-dark outline-none focus:border-dm-crimson"
-                    placeholder="Tu contraseña"
-                    autoComplete="current-password"
-                    required
-                  />
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                    <Key size={14} className="text-gray-400" />
+                    <input
+                      type="password"
+                      value={loginPassword}
+                      onChange={(event) => setLoginPassword(event.target.value)}
+                      className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                      placeholder="Tu contraseña"
+                      autoComplete="current-password"
+                      required
+                    />
+                  </div>
                 </label>
                 {loginError && (
                   <p className="text-[11px] font-semibold text-dm-alert">{loginError}</p>
@@ -1194,7 +1205,7 @@ const App: React.FC = () => {
                   type="button"
                   disabled={resetBusy}
                   onClick={handlePasswordReset}
-                  className="w-full text-center text-[11px] font-semibold text-gray-500 hover:text-dm-crimson disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-crimson disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {resetBusy ? 'Enviando enlace...' : 'Olvidé mi contraseña'}
                 </button>
@@ -1203,7 +1214,7 @@ const App: React.FC = () => {
 
             <button
               onClick={handleContinueAsGuest}
-              className="mt-4 w-full text-center text-[11px] font-semibold text-gray-500 hover:text-dm-dark"
+              className="mt-3 w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
             >
               Continuar como visitante
             </button>
