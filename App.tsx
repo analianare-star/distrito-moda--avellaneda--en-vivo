@@ -1015,8 +1015,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white/95 backdrop-blur-sm md:hidden overflow-x-hidden">
-        <div className="mx-auto flex w-full max-w-md items-end justify-between px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white/95 backdrop-blur-sm md:hidden overflow-visible">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between px-4 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-4">
           {bottomNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeBottomNav === item.id;
@@ -1025,9 +1025,9 @@ const App: React.FC = () => {
               <button
                 key={item.id}
                 onClick={item.onSelect}
-                className={`flex min-h-[44px] flex-col items-center gap-1 text-[11px] font-semibold ${item.isCenter ? '-translate-y-3' : ''} ${isActive ? 'text-dm-crimson' : 'text-gray-500'}`}
+                className={`flex min-h-[44px] flex-col items-center gap-1 text-[11px] font-semibold ${item.isCenter ? '-translate-y-4' : ''} ${isActive ? 'text-dm-crimson' : 'text-gray-500'}`}
               >
-                <span className={`relative flex h-11 w-11 items-center justify-center rounded-full ${item.isCenter ? 'bg-dm-crimson text-white shadow-lg shadow-dm-crimson/30' : 'bg-white'}`}>
+                <span className={`relative flex h-12 w-12 items-center justify-center rounded-full ${item.isCenter ? 'bg-dm-crimson text-white shadow-lg shadow-dm-crimson/30 ring-4 ring-white' : 'bg-white'}`}>
                   <Icon size={20} className={item.isCenter ? 'text-white' : (isActive ? 'text-dm-crimson' : 'text-gray-400')} />
                   {badgeCount > 0 && !item.isCenter && (
                     <span className="absolute -right-0.5 -top-0.5 rounded-full bg-dm-crimson px-1.5 py-0.5 text-[9px] font-bold text-white">
