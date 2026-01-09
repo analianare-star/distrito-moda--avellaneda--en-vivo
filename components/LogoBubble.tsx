@@ -9,14 +9,14 @@ type LogoBubbleProps = {
 };
 
 const GRADIENTS = [
-  'linear-gradient(135deg, #F4A9B8, #F6BCD6)',
-  'linear-gradient(135deg, #9FD0E6, #B2C7F2)',
-  'linear-gradient(135deg, #F5B08B, #F7C7A3)',
-  'linear-gradient(135deg, #E6A7C3, #F0B6DA)',
-  'linear-gradient(135deg, #B6D7A8, #CBE6B6)',
-  'linear-gradient(135deg, #A9C8D4, #C4D7DA)',
-  'linear-gradient(135deg, #E7B49D, #D9C1B3)',
-  'linear-gradient(135deg, #B4C2F2, #D1C7F2)',
+  'linear-gradient(135deg, #E97B8E, #F09BBE)',
+  'linear-gradient(135deg, #6EBCE1, #86A9EE)',
+  'linear-gradient(135deg, #EFA066, #F2B97A)',
+  'linear-gradient(135deg, #D98ABA, #ECA1D4)',
+  'linear-gradient(135deg, #8FCF8A, #A9DE93)',
+  'linear-gradient(135deg, #7FB4C6, #9FC3C8)',
+  'linear-gradient(135deg, #D79D7E, #C6A594)',
+  'linear-gradient(135deg, #9AAEF0, #BDA9EC)',
 ];
 
 const hashSeed = (value: string) => {
@@ -38,7 +38,7 @@ export const LogoBubble: React.FC<LogoBubbleProps> = ({
   const seedValue = seed || alt || src || 'logo';
   const hash = useMemo(() => hashSeed(seedValue), [seedValue]);
   const gradient = GRADIENTS[hash % GRADIENTS.length];
-  const duration = (6 + (hash % 6)) * 0.85;
+  const duration = (6 + (hash % 6)) * 0.8;
   const delay = (hash % 10) * 0.3;
   const initial = alt?.trim()?.charAt(0)?.toUpperCase() || '·';
   const showFallback = !src || hasError;
@@ -65,7 +65,7 @@ export const LogoBubble: React.FC<LogoBubbleProps> = ({
             loading="lazy"
             decoding="async"
             onError={() => setHasError(true)}
-            className="logo-bubble-img relative z-10 h-full w-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.38)]"
+            className="logo-bubble-img relative z-10 h-full w-full object-contain"
           />
         )}
       </div>

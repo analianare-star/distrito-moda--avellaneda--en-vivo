@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Shop, Stream } from '../types';
-import { Instagram, Globe, Download, Phone, MapPin, ShoppingBag, Video, CreditCard, Banknote } from 'lucide-react';
+import { Shop, Stream, StreamStatus } from '../types';
+import { Instagram, Globe, Download, Phone, MapPin, ShoppingBag, Video, CreditCard, Banknote, CalendarDays } from 'lucide-react';
 import { Button } from './Button';
 import { LogoBubble } from './LogoBubble';
 import { toPng } from 'html-to-image';
@@ -26,7 +26,8 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
   const month = dateObj.toLocaleDateString('es-ES', { month: 'short' }).toUpperCase().replace('.', '');
   const dateStr = `${day} ${month}`;
   
-  const isLive = stream?.status === 'LIVE';
+  const isLive = stream?.status === StreamStatus.LIVE;
+  const canAddCalendar = Boolean(stream && stream.status === StreamStatus.UPCOMING);
 
   // Extract Primary WhatsApp
   const primaryWa = shop.whatsappLines && shop.whatsappLines.length > 0 ? shop.whatsappLines[0] : null;
@@ -111,6 +112,49 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const formatIcsDate = (date: Date) => {
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+  };
+
+  const handleAddCalendar = () => {
+    if (!stream) return;
+    if (!canAddCalendar) {
+      onNotify?.('Recordatorio no disponible', 'Solo podes agendar vivos programados.', 'warning');
+      return;
+    }
+    const start = new Date(stream.fullDateISO);
+    if (stream.scheduledTime) {
+      const [hours, minutes] = stream.scheduledTime.split(':').map(Number);
+      start.setHours(hours || 0, minutes || 0, 0, 0);
+    }
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const safeName = shop.name.toLowerCase().replace(/[^a-z0-9]+/gi, '-');
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Avellaneda en Vivo//ES',
+      'BEGIN:VEVENT',
+      `UID:${stream.id || safeName}@avellaneda-en-vivo`,
+      `DTSTAMP:${formatIcsDate(new Date())}`,
+      `DTSTART:${formatIcsDate(start)}`,
+      `DTEND:${formatIcsDate(end)}`,
+      `SUMMARY:Vivo ${shop.name}`,
+      `DESCRIPTION:${stream.title || 'Vivo en Avellaneda en Vivo'}`,
+      `LOCATION:${shop.address || ''}`,
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `recordatorio-${safeName || 'tienda'}.ics`;
+    link.click();
+    URL.revokeObjectURL(url);
+    onNotify?.('Recordatorio listo', 'Se descargó un archivo para agregarlo a tu calendario.', 'success');
   };
 
   return (
@@ -234,15 +278,28 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
         </div>
       </div>
 
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={handleDownload}
-        disabled={isDownloading}
-      >
-        <Download size={16} className="mr-2" />
-        {isDownloading ? 'Generando...' : mode === 'CLIENT' ? 'Guardar Tarjeta (PDF)' : 'Descargar PDF'}
-      </Button>
+      <div className="flex w-full items-center gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          className="flex-1"
+          onClick={handleDownload}
+          disabled={isDownloading}
+        >
+          <Download size={16} className="mr-2" />
+          {isDownloading ? 'Generando...' : mode === 'CLIENT' ? 'Guardar Tarjeta (PDF)' : 'Descargar PDF'}
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleAddCalendar}
+          disabled={!stream}
+          aria-label="Guardar recordatorio"
+          title={canAddCalendar ? 'Guardar recordatorio' : 'Solo disponibles para vivos programados'}
+        >
+          <CalendarDays size={16} />
+        </Button>
+      </div>
     </div>
   );
 };

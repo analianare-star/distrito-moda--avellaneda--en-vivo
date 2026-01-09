@@ -78,7 +78,6 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                   alt={shop.name}
                   size={92}
                   seed={shop.id || shop.name}
-                  className="shadow-lg"
                 />
                 
                 <button 

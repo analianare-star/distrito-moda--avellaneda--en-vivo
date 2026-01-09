@@ -154,7 +154,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                                 alt={activeStream.shop.name}
                                 size={56}
                                 seed={activeStream.shop.id || activeStream.shop.name}
-                                className="shadow-lg"
                               />
                               <div>
                                   <h3 className="font-serif text-xl font-bold leading-none text-white">{activeStream.shop.name}</h3>
