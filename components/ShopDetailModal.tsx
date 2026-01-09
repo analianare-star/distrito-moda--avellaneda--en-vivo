@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shop, UserContext, Stream, StreamStatus } from '../types';
 import { Button } from './Button';
 import { ShareableCard } from './ShareableCard';
+import { LogoBubble } from './LogoBubble';
 import { X, MapPin, Globe, Instagram, Phone, UserPlus, Check, AlertOctagon, Clock } from 'lucide-react';
 
 interface ShopDetailModalProps {
@@ -72,9 +73,13 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                 <X size={20} />
             </button>
             <div className="absolute -bottom-10 left-6 flex items-end justify-between w-[calc(100%-48px)]">
-                <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-white shadow-md relative z-10">
-                    <img src={shop.logoUrl} alt={shop.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                </div>
+                <LogoBubble
+                  src={shop.logoUrl}
+                  alt={shop.name}
+                  size={92}
+                  seed={shop.id || shop.name}
+                  className="shadow-lg"
+                />
                 
                 <button 
                     onClick={() => canClientInteract && onToggleFavorite(shop.id)}

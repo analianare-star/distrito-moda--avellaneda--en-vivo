@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Stream, StreamStatus, Reel } from '../types';
 import { FILTERS } from '../constants';
 import { Button } from './Button';
+import { LogoBubble } from './LogoBubble';
 import { PlayCircle, Users, ChevronLeft, ChevronRight, Plus, Sparkles } from 'lucide-react';
 
 interface HeroSectionProps {
@@ -148,9 +149,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       {/* Info Container */}
                       <div className="w-full md:w-1/2 text-left space-y-4 relative">
                           <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-white shadow-md">
-                                  <img src={activeStream.shop.logoUrl} alt={activeStream.shop.name} loading="lazy" decoding="async" className="w-full h-full object-cover"/>
-                              </div>
+                              <LogoBubble
+                                src={activeStream.shop.logoUrl}
+                                alt={activeStream.shop.name}
+                                size={56}
+                                seed={activeStream.shop.id || activeStream.shop.name}
+                                className="shadow-lg"
+                              />
                               <div>
                                   <h3 className="font-serif text-xl font-bold leading-none text-white">{activeStream.shop.name}</h3>
                                   <p className="text-xs text-dm-light uppercase tracking-wider mt-1">Avellaneda en Vivo</p>

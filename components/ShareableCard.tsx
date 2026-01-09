@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Shop, Stream } from '../types';
 import { Instagram, Globe, Download, Phone, MapPin, ShoppingBag, Video, CreditCard, Banknote } from 'lucide-react';
 import { Button } from './Button';
+import { LogoBubble } from './LogoBubble';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
@@ -126,17 +127,13 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
 
         {/* --- HEADER --- */}
         <div className="relative z-10 pt-8 pb-4 flex flex-col items-center bg-gradient-to-b from-black/40 to-transparent">
-            <div className="w-20 h-20 rounded-full border-2 border-white/20 overflow-hidden mb-3 bg-white shadow-lg">
-                <img
-                  src={shop.logoUrl}
-                  alt={shop.name}
-                  loading="lazy"
-                  decoding="async"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                  crossOrigin="anonymous"
-                />
-            </div>
+            <LogoBubble
+              src={shop.logoUrl}
+              alt={shop.name}
+              size={88}
+              seed={shop.id || shop.name}
+              className="mb-3"
+            />
             <h2 className="font-serif text-3xl text-white leading-tight text-center px-4">
                 {shop.name}
             </h2>

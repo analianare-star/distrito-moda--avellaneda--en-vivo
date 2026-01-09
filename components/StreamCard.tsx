@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Stream, StreamStatus, UserContext } from '../types';
 import { Button } from './Button';
+import { LogoBubble } from './LogoBubble';
 import { Instagram, Video, Flag, Clock, Heart, Share2, Check, Download, Star, MoreHorizontal, MessageCircle, UserPlus } from 'lucide-react';
 
 interface StreamCardProps {
@@ -113,7 +114,13 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                 className="flex items-center gap-2 bg-white/90 backdrop-blur-sm pr-3 pl-1 py-1 rounded-full cursor-pointer hover:bg-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); onOpenShop(); }}
             >
-                 <img src={stream.shop.logoUrl} className="w-6 h-6 rounded-full object-cover border border-gray-200" alt={stream.shop.name} loading="lazy" decoding="async" />
+                 <LogoBubble
+                   src={stream.shop.logoUrl}
+                   alt={stream.shop.name}
+                   size={28}
+                   seed={stream.shop.id || stream.shop.name}
+                   className="shrink-0"
+                 />
                  <span className="text-[11px] font-bold text-dm-dark uppercase tracking-wide truncate max-w-[110px]">{stream.shop.name}</span>
              </div>
 

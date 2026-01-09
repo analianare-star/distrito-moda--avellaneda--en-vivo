@@ -5,6 +5,7 @@ import { HeroSection } from './components/HeroSection';
 import { StreamCard } from './components/StreamCard';
 import { Dashboard } from './components/Dashboard';
 import { AdminDashboard } from './components/AdminDashboard';
+import { LogoBubble } from './components/LogoBubble';
 import { Button } from './components/Button';
 import { EmptyState } from './components/EmptyState';
 import { ShopDetailModal } from './components/ShopDetailModal';
@@ -1483,7 +1484,7 @@ const App: React.FC = () => {
                          className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm transition hover:shadow-md"
                        >
                          <div className="flex items-center gap-3">
-                           <img src={shop.logoUrl} alt={shop.name} loading="lazy" decoding="async" className="h-12 w-12 rounded-full object-cover border border-gray-200" />
+                           <LogoBubble src={shop.logoUrl} alt={shop.name} size={48} seed={shop.id || shop.name} />
                            <div>
                              <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
                           <p className="text-[11px] text-gray-500 uppercase">{shop.plan}</p>
@@ -1542,7 +1543,7 @@ const App: React.FC = () => {
                            className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm transition hover:shadow-md"
                          >
                            <div className="flex items-center gap-3">
-                             <img src={shop.logoUrl} alt={shop.name} loading="lazy" decoding="async" className="h-12 w-12 rounded-full object-cover border border-gray-200" />
+                             <LogoBubble src={shop.logoUrl} alt={shop.name} size={48} seed={shop.id || shop.name} />
                              <div>
                                <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
                                <p className="text-[11px] text-gray-500 uppercase">{shop.plan}</p>

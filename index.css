@@ -2,6 +2,128 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --halo-gradient: linear-gradient(135deg, #f5c6ea, #b8f0ff);
+  --halo-duration: 8s;
+  --halo-delay: 0s;
+}
+
+.logo-halo {
+  position: relative;
+  border-radius: 9999px;
+  padding: 3px;
+  background-image: var(--halo-gradient);
+  background-size: 180% 180%;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(31, 26, 28, 0.12);
+  animation: haloShift 14s ease-in-out infinite;
+}
+
+.logo-halo::after {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
+  opacity: 0;
+  filter: blur(12px);
+  animation: haloPulse var(--halo-duration) ease-in-out infinite;
+  animation-delay: var(--halo-delay);
+}
+
+.logo-glass {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  overflow: hidden;
+  background-image: var(--halo-gradient);
+  background-size: 140% 140%;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.35));
+  opacity: 0.75;
+}
+
+.logo-glass::after {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0));
+  filter: blur(10px);
+  opacity: 0;
+  animation: innerPulse calc(var(--halo-duration) + 2s) ease-in-out infinite;
+  animation-delay: var(--halo-delay);
+}
+
+@keyframes haloPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  35% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+  70% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes haloShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes innerPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  40% {
+    opacity: 0.55;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-halo::after {
+    animation: none;
+    opacity: 0.2;
+  }
+  .logo-halo {
+    animation: none;
+  }
+  .logo-glass::after {
+    animation: none;
+    opacity: 0.25;
+  }
+}
 @layer base {
   html {
     font-size: 16px;

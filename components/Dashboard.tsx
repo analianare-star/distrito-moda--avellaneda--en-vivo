@@ -6,6 +6,7 @@ import { PLANES_URL } from '../constants';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { api } from '../services/api';
 import { NoticeModal } from './NoticeModal';
+import { LogoBubble } from './LogoBubble';
 
 interface DashboardProps {
     currentShop: Shop;
@@ -516,8 +517,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* SIDEBAR */}
       <aside className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-shrink-0 z-10 flex-col">
           <div className="p-6 border-b border-gray-100 text-center">
-              <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full mb-3 overflow-hidden border-4 border-white shadow-sm">
-                  <img src={currentShop.logoUrl} alt={currentShop.name} className="w-full h-full object-cover" />
+              <div className="mx-auto mb-3 flex justify-center">
+                  <LogoBubble
+                    src={currentShop.logoUrl}
+                    alt={currentShop.name}
+                    size={76}
+                    seed={currentShop.id || currentShop.name}
+                  />
               </div>
               <h2 className="font-serif text-lg font-bold text-dm-dark leading-tight">{currentShop.name}</h2>
               <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider">{currentShop.plan}</p>
@@ -548,9 +554,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <main className="flex-1 p-5 md:p-8 overflow-y-auto">
           <div className="md:hidden mb-6">
               <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-4 shadow-sm">
-                  <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden border border-white shadow-sm">
-                      <img src={currentShop.logoUrl} alt={currentShop.name} className="w-full h-full object-cover" />
-                  </div>
+                  <LogoBubble
+                    src={currentShop.logoUrl}
+                    alt={currentShop.name}
+                    size={56}
+                    seed={currentShop.id || currentShop.name}
+                  />
                   <div className="flex-1">
                       <p className="text-xs text-gray-400 uppercase tracking-widest">Tienda</p>
                       <h2 className="font-serif text-xl text-dm-dark">{currentShop.name}</h2>
@@ -1297,9 +1306,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                       <p className="text-xs text-gray-400 uppercase tracking-widest">Vista pública</p>
                       <div className="mt-3 flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-full bg-gray-100 overflow-hidden border border-white shadow-sm">
-                              <img src={currentShop.logoUrl} alt={currentShop.name} className="w-full h-full object-cover" />
-                          </div>
+                          <LogoBubble
+                            src={currentShop.logoUrl}
+                            alt={currentShop.name}
+                            size={64}
+                            seed={currentShop.id || currentShop.name}
+                          />
                           <div className="flex-1">
                               <p className="font-serif text-lg text-dm-dark">{currentShop.name}</p>
                               <p className="text-xs text-gray-500">{currentShop.address || 'Dirección sin definir'}</p>
