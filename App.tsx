@@ -15,7 +15,7 @@ import { ReportModal } from './components/ReportModal';
 import { api } from './services/api';
 import { X, User, UserCircle, Bell, Clock, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown, Globe, Film, Mail, Key } from 'lucide-react';
 import { auth, googleProvider } from './firebase';
-import { confirmPasswordReset, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, verifyPasswordResetCode } from 'firebase/auth';
+import { confirmPasswordReset, createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, verifyPasswordResetCode } from 'firebase/auth';
 
 type AuthProfile = {
   userType: 'ADMIN' | 'SHOP' | 'CLIENT';
@@ -57,6 +57,8 @@ const App: React.FC = () => {
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
   const [authProfile, setAuthProfile] = useState<AuthProfile | null>(null);
   const [loginMode, setLoginMode] = useState<'GOOGLE' | 'EMAIL'>('GOOGLE');
+  const [loginStep, setLoginStep] = useState<'ENTRY' | 'AUDIENCE' | 'SHOP' | 'CLIENT' | 'CLIENT_EMAIL'>('ENTRY');
+  const [clientEmailMode, setClientEmailMode] = useState<'REGISTER' | 'LOGIN'>('REGISTER');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -95,6 +97,8 @@ const App: React.FC = () => {
       preferences: { theme: 'light', notifications: false }
   });
   const [loginPromptDismissed, setLoginPromptDismissed] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [hasBottomNavInteraction, setHasBottomNavInteraction] = useState(false);
 
   // UI States
   const [selectedShopForModal, setSelectedShopForModal] = useState<Shop | null>(null);
@@ -235,6 +239,7 @@ const App: React.FC = () => {
           }
         })();
         setLoginPromptDismissed(true);
+        setShowLoginPrompt(false);
       } else {
         setUser(prev => ({
           ...prev,
@@ -252,11 +257,27 @@ const App: React.FC = () => {
         setViewMode('CLIENT');
         setActiveBottomNav('home');
         setLoginPromptDismissed(false);
+        setShowLoginPrompt(false);
+        setHasBottomNavInteraction(false);
       }
     });
 
     return () => unsubscribe();
   }, [isResetView]);
+
+  useEffect(() => {
+    if (isResetView) return;
+    if (viewMode !== 'CLIENT' || user.isLoggedIn) {
+      setShowLoginPrompt(false);
+      return;
+    }
+    if (loginPromptDismissed || hasBottomNavInteraction) return;
+    const timer = setTimeout(() => {
+      setLoginStep('ENTRY');
+      setShowLoginPrompt(true);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [isResetView, viewMode, user.isLoggedIn, loginPromptDismissed, hasBottomNavInteraction]);
 
   useEffect(() => {
     if (!isResetView) return;
@@ -624,15 +645,40 @@ const App: React.FC = () => {
   };
 
   const handleLoginRequest = async () => {
-      openLoginModal();
+      openLoginModal('ENTRY');
   };
 
-  const openLoginModal = (mode?: 'GOOGLE' | 'EMAIL') => {
-      setLoginMode(mode || 'GOOGLE');
+  const openLoginModal = (step: 'ENTRY' | 'AUDIENCE' | 'SHOP' | 'CLIENT' | 'CLIENT_EMAIL' = 'ENTRY') => {
+      setLoginMode('GOOGLE');
+      setLoginStep(step);
+      setClientEmailMode('REGISTER');
       setLoginError('');
       setLoginPassword('');
       setLoginAudience(null);
       setLoginPromptDismissed(false);
+      setShowLoginPrompt(true);
+  };
+
+  const openAudienceSelection = () => {
+      setLoginMode('GOOGLE');
+      setLoginStep('AUDIENCE');
+      setClientEmailMode('REGISTER');
+      setLoginError('');
+      setLoginPassword('');
+      setLoginAudience(null);
+      setLoginPromptDismissed(false);
+      setShowLoginPrompt(true);
+  };
+
+  const openClientRegister = () => {
+      setLoginMode('EMAIL');
+      setLoginStep('CLIENT_EMAIL');
+      setClientEmailMode('REGISTER');
+      setLoginError('');
+      setLoginPassword('');
+      setLoginAudience(null);
+      setLoginPromptDismissed(false);
+      setShowLoginPrompt(true);
   };
 
   const handleGoogleLogin = async () => {
@@ -661,7 +707,18 @@ const App: React.FC = () => {
       setLoginBusy(true);
       setLoginError('');
       try {
-          await signInWithEmailAndPassword(auth, email, loginPassword);
+          const credential = await signInWithEmailAndPassword(auth, email, loginPassword);
+          if (loginAudience !== 'SHOP' && !credential.user.emailVerified) {
+              await signOut(auth);
+              const message = 'Verificá tu correo para completar el ingreso.';
+              setLoginError(message);
+              setNotice({
+                  title: 'Verificación pendiente',
+                  message,
+                  tone: 'warning',
+              });
+              return;
+          }
       } catch (error: any) {
           const code = error?.code || '';
           const message = code === 'auth/user-not-found'
@@ -676,6 +733,63 @@ const App: React.FC = () => {
           setLoginError(message);
           setNotice({
               title: 'No se pudo iniciar sesión',
+              message,
+              tone: 'error',
+          });
+      } finally {
+          setLoginBusy(false);
+      }
+  };
+
+  const handleEmailRegister = async () => {
+      const email = loginEmail.trim().toLowerCase();
+      if (!email || !loginPassword) {
+          setLoginError('Ingresá tu correo y una contraseña.');
+          return;
+      }
+      if (loginPassword.length < 6) {
+          setLoginError('La contraseña debe tener al menos 6 caracteres.');
+          return;
+      }
+      setLoginBusy(true);
+      setLoginError('');
+      try {
+          const isShopEmail = await api.checkShopEmail(email);
+          if (isShopEmail) {
+              const message = 'Ese correo ya está registrado como tienda.';
+              setLoginError(message);
+              setNotice({
+                  title: 'Correo no disponible',
+                  message,
+                  tone: 'warning',
+              });
+              return;
+          }
+          const credential = await createUserWithEmailAndPassword(auth, email, loginPassword);
+          await sendEmailVerification(credential.user);
+          await signOut(auth);
+          setLoginEmail('');
+          setLoginPassword('');
+          setLoginStep('ENTRY');
+          setLoginMode('GOOGLE');
+          setClientEmailMode('REGISTER');
+          setNotice({
+              title: 'Revisá tu correo',
+              message: 'Te enviamos un enlace para verificar tu cuenta. Mirá también Spam/Promociones.',
+              tone: 'success',
+          });
+      } catch (error: any) {
+          const code = error?.code || '';
+          const message = code === 'auth/email-already-in-use'
+              ? 'Ese correo ya tiene una cuenta.'
+              : code === 'auth/invalid-email'
+              ? 'El correo no es válido.'
+              : code === 'auth/weak-password'
+              ? 'La contraseña es muy débil.'
+              : 'No se pudo crear la cuenta.';
+          setLoginError(message);
+          setNotice({
+              title: 'No se pudo crear la cuenta',
               message,
               tone: 'error',
           });
@@ -750,6 +864,8 @@ const App: React.FC = () => {
   const handleContinueAsGuest = () => {
       setLoginPromptDismissed(true);
       setLoginError('');
+      setShowLoginPrompt(false);
+      setLoginStep('ENTRY');
   };
 
   const handleToggleClientLogin = async () => {
@@ -970,6 +1086,8 @@ const App: React.FC = () => {
   }
 
   const handleClientNav = (id: string) => {
+      setHasBottomNavInteraction(true);
+      setShowLoginPrompt(false);
       setViewMode('CLIENT');
       if (id === 'favorites') {
           setSavedTab('FAVORITES');
@@ -1232,9 +1350,9 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      {viewMode === 'CLIENT' && !user.isLoggedIn && !loginPromptDismissed && (
+      {viewMode === 'CLIENT' && !user.isLoggedIn && showLoginPrompt && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-          <div className="w-[92%] max-w-xs rounded-2xl border border-dm-crimson/10 bg-gradient-to-b from-white via-white to-dm-light/50 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)]">
+          <div className="w-[92%] max-w-sm rounded-2xl border border-dm-crimson/10 bg-gradient-to-b from-white via-white to-dm-light/40 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)]">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-serif text-xl text-dm-dark">Ingreso</p>
@@ -1250,83 +1368,68 @@ const App: React.FC = () => {
                 <X size={12} />
               </button>
             </div>
-            <div className="mt-4 flex items-center rounded-full bg-white/80 p-1 text-[11px] font-semibold shadow-sm">
-              <button
-                onClick={() => {
-                  setLoginMode('GOOGLE');
-                  setLoginError('');
-                  setLoginPassword('');
-                  setLoginAudience(null);
-                }}
-                className={`flex-1 rounded-full px-3 py-1 ${loginMode === 'GOOGLE' ? 'bg-white text-dm-dark shadow-sm' : 'text-gray-500'}`}
-              >
-                <span className="inline-flex items-center justify-center gap-1">
-                  <Globe size={12} /> Google
-                </span>
-              </button>
-              <button
-                onClick={() => {
-                  setLoginMode('EMAIL');
-                  setLoginError('');
-                  setLoginAudience(null);
-                }}
-                className={`flex-1 rounded-full px-3 py-1 ${loginMode === 'EMAIL' ? 'bg-white text-dm-dark shadow-sm' : 'text-gray-500'}`}
-              >
-                <span className="inline-flex items-center justify-center gap-1">
-                  <Mail size={12} /> Correo
-                </span>
-              </button>
-            </div>
-            <div className="mt-3 flex items-center justify-between rounded-full border border-gray-200 bg-white px-3 py-1 text-[10px] text-gray-500">
-              <span className="inline-flex items-center gap-1">
-                <Store size={12} /> ¿Tenés tienda?
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginMode('EMAIL');
-                  setLoginError('');
-                  setLoginAudience('SHOP');
-                }}
-                className={`rounded-full px-3 py-1 text-[10px] font-semibold ${
-                  loginAudience === 'SHOP'
-                    ? 'bg-dm-crimson text-white shadow-sm'
-                    : 'bg-dm-crimson/10 text-dm-crimson hover:text-dm-dark'
-                }`}
-              >
-                Soy tienda
-              </button>
-            </div>
-            {loginAudience === 'SHOP' && (
-              <p className="mt-1 text-[10px] font-medium text-gray-500">
-                Usá el correo registrado de tu tienda. Si no tenés clave, pedí el enlace de acceso.
-              </p>
+
+            {loginStep === 'ENTRY' && (
+              <div className="mt-5 space-y-3">
+                <button
+                  onClick={() => setLoginStep('AUDIENCE')}
+                  className="w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90"
+                >
+                  Ingresar
+                </button>
+                <button
+                  onClick={() => {
+                    setLoginMode('EMAIL');
+                    setLoginAudience(null);
+                    setClientEmailMode('REGISTER');
+                    setLoginStep('CLIENT_EMAIL');
+                  }}
+                  className="w-full text-center text-[11px] font-semibold text-gray-500 hover:text-dm-crimson"
+                >
+                  Registrarme
+                </button>
+              </div>
             )}
 
-            {loginMode === 'GOOGLE' ? (
-              <>
+            {loginStep === 'AUDIENCE' && (
+              <div className="mt-5 space-y-3">
                 <button
-                  onClick={handleGoogleLogin}
-                  disabled={loginBusy}
-                  className="mt-3 w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90 disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={() => {
+                    setLoginMode('EMAIL');
+                    setLoginAudience('SHOP');
+                    setClientEmailMode('LOGIN');
+                    setLoginError('');
+                    setLoginStep('SHOP');
+                  }}
+                  className="w-full rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
                 >
-                  {loginBusy ? 'Conectando...' : 'Continuar con Google'}
+                  Soy tienda
                 </button>
-                {loginError && (
-                  <p className="mt-2 text-[11px] font-semibold text-dm-alert">{loginError}</p>
-                )}
-                <p className="mt-2 text-[10px] font-sans text-gray-400">
-                  Recomendado para clientes.
-                </p>
-              </>
-            ) : (
+                <button
+                  onClick={() => {
+                    setLoginMode('GOOGLE');
+                    setLoginAudience(null);
+                    setLoginError('');
+                    setLoginStep('CLIENT');
+                  }}
+                  className="w-full rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
+                >
+                  Soy cliente
+                </button>
+              </div>
+            )}
+
+            {loginStep === 'SHOP' && (
               <form
-                className="mt-3 space-y-2.5"
+                className="mt-4 space-y-2.5"
                 onSubmit={(event) => {
                   event.preventDefault();
                   handleEmailLogin();
                 }}
               >
+                <p className="text-[10px] font-medium text-gray-500">
+                  Usá el correo registrado por el administrador.
+                </p>
                 <label className="block text-[11px] font-bold text-gray-500">
                   Correo electrónico
                   <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
@@ -1336,7 +1439,7 @@ const App: React.FC = () => {
                       value={loginEmail}
                       onChange={(event) => setLoginEmail(event.target.value)}
                       className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
-                      placeholder={loginAudience === 'SHOP' ? 'correo de la tienda' : 'tu@email.com'}
+                      placeholder="correo de la tienda"
                       autoComplete="email"
                       required
                     />
@@ -1375,12 +1478,140 @@ const App: React.FC = () => {
                 >
                   {resetBusy ? 'Enviando enlace...' : 'Olvidé mi contraseña'}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginStep('AUDIENCE')}
+                  className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
+                >
+                  Volver
+                </button>
+              </form>
+            )}
+
+            {loginStep === 'CLIENT' && (
+              <div className="mt-5 space-y-3">
+                <button
+                  onClick={handleGoogleLogin}
+                  disabled={loginBusy}
+                  className="w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loginBusy ? 'Conectando...' : 'Continuar con Google'}
+                </button>
+                <button
+                  onClick={() => {
+                    setLoginMode('EMAIL');
+                    setLoginAudience(null);
+                    setClientEmailMode('REGISTER');
+                    setLoginError('');
+                    setLoginStep('CLIENT_EMAIL');
+                  }}
+                  className="w-full rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
+                >
+                  Registrarme con correo
+                </button>
+                {loginError && (
+                  <p className="text-[11px] font-semibold text-dm-alert">{loginError}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setLoginStep('AUDIENCE')}
+                  className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
+                >
+                  Volver
+                </button>
+              </div>
+            )}
+
+            {loginStep === 'CLIENT_EMAIL' && (
+              <form
+                className="mt-4 space-y-2.5"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (clientEmailMode === 'REGISTER') {
+                    handleEmailRegister();
+                  } else {
+                    handleEmailLogin();
+                  }
+                }}
+              >
+                <label className="block text-[11px] font-bold text-gray-500">
+                  Correo electrónico
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                    <Mail size={14} className="text-gray-400" />
+                    <input
+                      type="email"
+                      value={loginEmail}
+                      onChange={(event) => setLoginEmail(event.target.value)}
+                      className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                      placeholder="tu@email.com"
+                      autoComplete="email"
+                      required
+                    />
+                  </div>
+                </label>
+                <label className="block text-[11px] font-bold text-gray-500">
+                  Contraseña
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                    <Key size={14} className="text-gray-400" />
+                    <input
+                      type="password"
+                      value={loginPassword}
+                      onChange={(event) => setLoginPassword(event.target.value)}
+                      className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                      placeholder="Tu contraseña"
+                      autoComplete={clientEmailMode === 'REGISTER' ? 'new-password' : 'current-password'}
+                      required
+                    />
+                  </div>
+                </label>
+                {loginError && (
+                  <p className="text-[11px] font-semibold text-dm-alert">{loginError}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={loginBusy}
+                  className="w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loginBusy
+                    ? clientEmailMode === 'REGISTER'
+                      ? 'Creando cuenta...'
+                      : 'Ingresando...'
+                    : clientEmailMode === 'REGISTER'
+                    ? 'Registrarme'
+                    : 'Ingresar'}
+                </button>
+                {clientEmailMode === 'LOGIN' && (
+                  <button
+                    type="button"
+                    disabled={resetBusy}
+                    onClick={handlePasswordReset}
+                    className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-crimson disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {resetBusy ? 'Enviando enlace...' : 'Olvidé mi contraseña'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setClientEmailMode((prev) => (prev === 'REGISTER' ? 'LOGIN' : 'REGISTER'))
+                  }
+                  className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
+                >
+                  {clientEmailMode === 'REGISTER' ? 'Ya tengo cuenta' : 'Quiero registrarme'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginStep('CLIENT')}
+                  className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
+                >
+                  Volver
+                </button>
               </form>
             )}
 
             <button
               onClick={handleContinueAsGuest}
-              className="mt-3 w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
+              className="mt-4 w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
             >
               Continuar como visitante
             </button>
@@ -1638,9 +1869,15 @@ const App: React.FC = () => {
                    ) : (
                      <>
                        <p className="mt-2 text-sm text-gray-500">Inicia sesión para interactuar con tiendas.</p>
-                       <Button className="mt-5" onClick={handleLoginRequest}>
+                       <Button className="mt-5" onClick={openAudienceSelection}>
                          Ingresar
                        </Button>
+                       <button
+                         onClick={openClientRegister}
+                         className="mt-2 text-[11px] font-semibold text-gray-500 hover:text-dm-crimson"
+                       >
+                         Registrarme
+                       </button>
                      </>
                    )}
                  </div>
@@ -1933,9 +2170,15 @@ const App: React.FC = () => {
               ) : (
                 <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center">
                   <p className="text-sm text-gray-500">Inicia sesión para interactuar con tiendas.</p>
-                  <Button className="mt-4 w-full" onClick={handleLoginRequest}>
+                  <Button className="mt-4 w-full" onClick={openAudienceSelection}>
                     Ingresar
                   </Button>
+                  <button
+                    onClick={openClientRegister}
+                    className="mt-2 text-[11px] font-semibold text-gray-500 hover:text-dm-crimson"
+                  >
+                    Registrarme
+                  </button>
                 </div>
               )}
             </div>

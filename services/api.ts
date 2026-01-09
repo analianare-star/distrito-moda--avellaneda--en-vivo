@@ -332,6 +332,19 @@ export const api = {
       return [];
     }
   },
+  checkShopEmail: async (email: string): Promise<boolean> => {
+    try {
+      const trimmed = email.trim();
+      if (!trimmed) return false;
+      const res = await fetch(`${API_URL}/shops/check-email?email=${encodeURIComponent(trimmed)}`);
+      if (!res.ok) return false;
+      const data = await res.json();
+      return Boolean(data?.exists);
+    } catch (error) {
+      console.error('Error checking shop email:', error);
+      return false;
+    }
+  },
 
   createShop: async (payload: any): Promise<{ success: boolean; message: string; shop?: Shop }> => {
     try {
