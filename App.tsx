@@ -14,6 +14,7 @@ import { NoticeModal } from './components/NoticeModal';
 import { ReportModal } from './components/ReportModal';
 import { api } from './services/api';
 import { X, User, UserCircle, Bell, Clock, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown, Globe, Film, Mail, Key } from 'lucide-react';
+import { FaStore, FaUser, FaEnvelope } from 'react-icons/fa';
 import { auth, googleProvider } from './firebase';
 import { confirmPasswordReset, createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, verifyPasswordResetCode } from 'firebase/auth';
 
@@ -23,6 +24,15 @@ type AuthProfile = {
   shopId?: string;
   adminRole?: string;
 };
+
+const GoogleMark = () => (
+  <svg viewBox="0 0 48 48" className="h-7 w-7" aria-hidden>
+    <path fill="#EA4335" d="M24 9.5c3.3 0 6.3 1.2 8.7 3.5l6.5-6.5C35.3 2.7 30 0.5 24 0.5 14.6 0.5 6.4 5.9 2.5 13.7l7.6 5.9C12 13.2 17.5 9.5 24 9.5z"/>
+    <path fill="#4285F4" d="M46.5 24.5c0-1.8-0.2-3.1-0.5-4.5H24v8.5h12.6c-0.3 2.1-1.8 5.3-5.2 7.5l8 6.2c4.7-4.4 7.1-10.8 7.1-17.7z"/>
+    <path fill="#FBBC05" d="M10.1 28.7c-0.5-1.4-0.8-2.9-0.8-4.5s0.3-3.1 0.7-4.5l-7.6-5.9C0.9 17.1 0 20.5 0 24c0 3.5 0.9 6.9 2.5 10.2l7.6-5.5z"/>
+    <path fill="#34A853" d="M24 48c6 0 11.3-2 15.1-5.5l-8-6.2c-2.1 1.4-4.9 2.3-7.1 2.3-6.5 0-12-3.8-13.9-9.4l-7.6 5.5C6.4 42.1 14.6 48 24 48z"/>
+  </svg>
+);
 
 type MerchantTab = 'RESUMEN' | 'VIVOS' | 'REELS' | 'REDES' | 'PERFIL';
 
@@ -657,6 +667,7 @@ const App: React.FC = () => {
       setLoginAudience(null);
       setLoginPromptDismissed(false);
       setShowLoginPrompt(true);
+      setIsAccountDrawerOpen(false);
   };
 
   const openAudienceSelection = () => {
@@ -668,6 +679,7 @@ const App: React.FC = () => {
       setLoginAudience(null);
       setLoginPromptDismissed(false);
       setShowLoginPrompt(true);
+      setIsAccountDrawerOpen(false);
   };
 
   const openClientRegister = () => {
@@ -679,6 +691,7 @@ const App: React.FC = () => {
       setLoginAudience(null);
       setLoginPromptDismissed(false);
       setShowLoginPrompt(true);
+      setIsAccountDrawerOpen(false);
   };
 
   const handleGoogleLogin = async () => {
@@ -1370,7 +1383,7 @@ const App: React.FC = () => {
             </div>
 
             {loginStep === 'ENTRY' && (
-              <div className="mt-5 space-y-3">
+              <div className="mt-4 space-y-2">
                 <button
                   onClick={() => setLoginStep('AUDIENCE')}
                   className="w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90"
@@ -1392,7 +1405,7 @@ const App: React.FC = () => {
             )}
 
             {loginStep === 'AUDIENCE' && (
-              <div className="mt-5 space-y-3">
+              <div className="mt-4 grid grid-cols-2 gap-3">
                 <button
                   onClick={() => {
                     setLoginMode('EMAIL');
@@ -1401,9 +1414,13 @@ const App: React.FC = () => {
                     setLoginError('');
                     setLoginStep('SHOP');
                   }}
-                  className="w-full rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
+                  className="flex h-full flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-3 py-3 text-center text-xs font-bold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
                 >
+                  <FaStore size={22} className="mb-2 text-dm-crimson" />
                   Soy tienda
+                  <span className="mt-1 text-[10px] font-medium text-gray-400">
+                    Acceso mayorista
+                  </span>
                 </button>
                 <button
                   onClick={() => {
@@ -1412,16 +1429,20 @@ const App: React.FC = () => {
                     setLoginError('');
                     setLoginStep('CLIENT');
                   }}
-                  className="w-full rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
+                  className="flex h-full flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-3 py-3 text-center text-xs font-bold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
                 >
+                  <FaUser size={22} className="mb-2 text-dm-crimson" />
                   Soy cliente
+                  <span className="mt-1 text-[10px] font-medium text-gray-400">
+                    Comprar y seguir
+                  </span>
                 </button>
               </div>
             )}
 
             {loginStep === 'SHOP' && (
               <form
-                className="mt-4 space-y-2.5"
+                className="mt-3 space-y-2"
                 onSubmit={(event) => {
                   event.preventDefault();
                   handleEmailLogin();
@@ -1430,30 +1451,30 @@ const App: React.FC = () => {
                 <p className="text-[10px] font-medium text-gray-500">
                   Usá el correo registrado por el administrador.
                 </p>
-                <label className="block text-[11px] font-bold text-gray-500">
+                <label className="block text-[10px] font-bold text-gray-500">
                   Correo electrónico
-                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5">
                     <Mail size={14} className="text-gray-400" />
                     <input
                       type="email"
                       value={loginEmail}
                       onChange={(event) => setLoginEmail(event.target.value)}
-                      className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                      className="w-full text-[13px] font-semibold text-dm-dark outline-none placeholder:text-gray-400"
                       placeholder="correo de la tienda"
                       autoComplete="email"
                       required
                     />
                   </div>
                 </label>
-                <label className="block text-[11px] font-bold text-gray-500">
+                <label className="block text-[10px] font-bold text-gray-500">
                   Contraseña
-                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5">
                     <Key size={14} className="text-gray-400" />
                     <input
                       type="password"
                       value={loginPassword}
                       onChange={(event) => setLoginPassword(event.target.value)}
-                      className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                      className="w-full text-[13px] font-semibold text-dm-dark outline-none placeholder:text-gray-400"
                       placeholder="Tu contraseña"
                       autoComplete="current-password"
                       required
@@ -1489,14 +1510,34 @@ const App: React.FC = () => {
             )}
 
             {loginStep === 'CLIENT' && (
-              <div className="mt-5 space-y-3">
-                <button
-                  onClick={handleGoogleLogin}
-                  disabled={loginBusy}
-                  className="w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {loginBusy ? 'Conectando...' : 'Continuar con Google'}
-                </button>
+              <div className="mt-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleGoogleLogin}
+                    disabled={loginBusy}
+                    className="flex h-full flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-3 py-3 text-center text-[10px] font-semibold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+                      <GoogleMark />
+                    </span>
+                    Continuar con tu cuenta de Google
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLoginMode('EMAIL');
+                      setLoginAudience(null);
+                      setClientEmailMode('LOGIN');
+                      setLoginError('');
+                      setLoginStep('CLIENT_EMAIL');
+                    }}
+                    className="flex h-full flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-3 py-3 text-center text-[10px] font-semibold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
+                  >
+                    <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-dm-crimson/10 text-dm-crimson">
+                      <FaEnvelope size={18} />
+                    </span>
+                    Continuá con tu correo
+                  </button>
+                </div>
                 <button
                   onClick={() => {
                     setLoginMode('EMAIL');
@@ -1505,9 +1546,9 @@ const App: React.FC = () => {
                     setLoginError('');
                     setLoginStep('CLIENT_EMAIL');
                   }}
-                  className="w-full rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
+                  className="w-full text-center text-[11px] font-semibold text-gray-500 hover:text-dm-crimson"
                 >
-                  Registrarme con correo
+                  Registrate
                 </button>
                 {loginError && (
                   <p className="text-[11px] font-semibold text-dm-alert">{loginError}</p>
@@ -1524,7 +1565,7 @@ const App: React.FC = () => {
 
             {loginStep === 'CLIENT_EMAIL' && (
               <form
-                className="mt-4 space-y-2.5"
+                className="mt-3 space-y-2"
                 onSubmit={(event) => {
                   event.preventDefault();
                   if (clientEmailMode === 'REGISTER') {
@@ -1534,30 +1575,33 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <label className="block text-[11px] font-bold text-gray-500">
+                <p className="text-[10px] font-medium text-gray-500">
+                  {clientEmailMode === 'REGISTER' ? 'Creando cuenta de cliente.' : 'Ingresá con tu correo.'}
+                </p>
+                <label className="block text-[10px] font-bold text-gray-500">
                   Correo electrónico
-                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5">
                     <Mail size={14} className="text-gray-400" />
                     <input
                       type="email"
                       value={loginEmail}
                       onChange={(event) => setLoginEmail(event.target.value)}
-                      className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                      className="w-full text-[13px] font-semibold text-dm-dark outline-none placeholder:text-gray-400"
                       placeholder="tu@email.com"
                       autoComplete="email"
                       required
                     />
                   </div>
                 </label>
-                <label className="block text-[11px] font-bold text-gray-500">
+                <label className="block text-[10px] font-bold text-gray-500">
                   Contraseña
-                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5">
                     <Key size={14} className="text-gray-400" />
                     <input
                       type="password"
                       value={loginPassword}
                       onChange={(event) => setLoginPassword(event.target.value)}
-                      className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                      className="w-full text-[13px] font-semibold text-dm-dark outline-none placeholder:text-gray-400"
                       placeholder="Tu contraseña"
                       autoComplete={clientEmailMode === 'REGISTER' ? 'new-password' : 'current-password'}
                       required
@@ -1597,7 +1641,7 @@ const App: React.FC = () => {
                   }
                   className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
                 >
-                  {clientEmailMode === 'REGISTER' ? 'Ya tengo cuenta' : 'Quiero registrarme'}
+                  {clientEmailMode === 'REGISTER' ? '¿Ya tenés cuenta? Iniciá sesión' : 'Quiero registrarme'}
                 </button>
                 <button
                   type="button"
