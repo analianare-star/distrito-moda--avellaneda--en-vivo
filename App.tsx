@@ -13,7 +13,7 @@ import { StoryModal } from './components/StoryModal';
 import { NoticeModal } from './components/NoticeModal';
 import { ReportModal } from './components/ReportModal';
 import { api } from './services/api';
-import { X, User, UserCircle, Bell, Clock, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown, Globe, Film, Mail, Key } from 'lucide-react';
+import { X, User, UserCircle, Bell, Clock, AlertTriangle, Home, Radio, Heart, Store, Shield, Receipt, ChevronDown, Globe, Film, Mail, Key, Search, CalendarDays } from 'lucide-react';
 import { FaStore, FaUser, FaEnvelope } from 'react-icons/fa';
 import { auth, googleProvider } from './firebase';
 import { confirmPasswordReset, createUserWithEmailAndPassword, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, verifyPasswordResetCode } from 'firebase/auth';
@@ -121,6 +121,8 @@ const App: React.FC = () => {
   const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [accountTab, setAccountTab] = useState<'RESUMEN' | 'NOTIFICATIONS' | 'REMINDERS'>('RESUMEN');
+  const [shopQuery, setShopQuery] = useState('');
+  const [calendarPromptStream, setCalendarPromptStream] = useState<Stream | null>(null);
   const notify = (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => {
       setNotice({ title, message, tone });
   };
@@ -559,6 +561,9 @@ const App: React.FC = () => {
               const stream = allStreams.find((item) => item.id === streamId);
               if (stream) {
                   pushHistory(`${wasActive ? 'Quitaste' : 'Agendaste'} recordatorio: ${stream.title}`);
+                  if (!wasActive && stream.status === StreamStatus.UPCOMING) {
+                      setCalendarPromptStream(stream);
+                  }
               }
           } catch (error) {
               setNotice({
@@ -585,7 +590,7 @@ const App: React.FC = () => {
   const escapeICSValue = (value: string) =>
       value.replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
 
-  const handleDownloadICS = (stream: Stream) => {
+  const handleOpenCalendarInvite = (stream: Stream) => {
       try {
           const start = new Date(stream.fullDateISO);
           const end = new Date(start.getTime() + 30 * 60 * 1000);
@@ -608,14 +613,16 @@ const App: React.FC = () => {
           ].join('\r\n');
           const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
           const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `recordatorio-${stream.id}.ics`;
-          link.click();
-          window.URL.revokeObjectURL(url);
+          const popup = window.open(url, '_blank', 'noopener');
+          if (!popup) {
+              window.location.href = url;
+          }
+          window.setTimeout(() => {
+              window.URL.revokeObjectURL(url);
+          }, 1000);
       } catch {
           setNotice({
-              title: 'No se pudo descargar',
+              title: 'No se pudo abrir el calendario',
               message: 'Intenta nuevamente.',
               tone: 'error',
           });
@@ -683,8 +690,8 @@ const App: React.FC = () => {
   };
 
   const openClientRegister = () => {
-      setLoginMode('EMAIL');
-      setLoginStep('CLIENT_EMAIL');
+      setLoginMode('GOOGLE');
+      setLoginStep('AUDIENCE');
       setClientEmailMode('REGISTER');
       setLoginError('');
       setLoginPassword('');
@@ -1048,6 +1055,28 @@ const App: React.FC = () => {
 
   const publicShops = sortShopsByPriority(allShops.filter(isPublicShop));
   const favoriteShops = sortShopsByPriority(allShops.filter((shop) => user.favorites.includes(shop.id)));
+  const normalizedShopQuery = shopQuery.trim().toLowerCase();
+  const filterShopsByQuery = (shops: Shop[]) => {
+      if (!normalizedShopQuery) return shops;
+      return shops.filter((shop) => {
+          const address = shop.address || '';
+          const city = shop.addressDetails?.city || '';
+          const province = shop.addressDetails?.province || '';
+          const razon = shop.razonSocial || '';
+          return [
+              shop.name,
+              razon,
+              address,
+              city,
+              province,
+          ]
+              .join(' ')
+              .toLowerCase()
+              .includes(normalizedShopQuery);
+      });
+  };
+  const filteredPublicShops = filterShopsByQuery(publicShops);
+  const filteredFavoriteShops = filterShopsByQuery(favoriteShops);
 
   if (!isResetView && isLoading) {
     return (
@@ -1391,12 +1420,7 @@ const App: React.FC = () => {
                   Ingresar
                 </button>
                 <button
-                  onClick={() => {
-                    setLoginMode('EMAIL');
-                    setLoginAudience(null);
-                    setClientEmailMode('REGISTER');
-                    setLoginStep('CLIENT_EMAIL');
-                  }}
+                  onClick={openAudienceSelection}
                   className="w-full text-center text-[11px] font-semibold text-gray-500 hover:text-dm-crimson"
                 >
                   Registrarme
@@ -1691,8 +1715,28 @@ const App: React.FC = () => {
       </nav>
 
       <div className="pt-16 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12">
-        {viewMode === 'CLIENT' ? (
+      {viewMode === 'CLIENT' ? (
           <>
+            <div className="mx-auto max-w-3xl px-4 pt-4 md:pt-6">
+              <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 shadow-sm">
+                <Search size={16} className="text-gray-400" />
+                <input
+                  type="search"
+                  value={shopQuery}
+                  onChange={(event) => setShopQuery(event.target.value)}
+                  placeholder="Buscar tiendas, zonas o rubros"
+                  className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                />
+                {shopQuery && (
+                  <button
+                    onClick={() => setShopQuery('')}
+                    className="text-[11px] font-semibold text-gray-400 hover:text-dm-crimson"
+                  >
+                    Borrar
+                  </button>
+                )}
+              </div>
+            </div>
             <HeroSection 
                 activeFilter={activeFilter} 
                 onFilterChange={setActiveFilter} 
@@ -1703,7 +1747,7 @@ const App: React.FC = () => {
                   onOpenShop={handleOpenShop}
             />
             
-            <main className="max-w-7xl mx-auto px-4 py-12">
+            <main className="max-w-7xl mx-auto px-4 py-10">
                {(activeBottomNav === 'home' || activeBottomNav === 'live') && (
                  <>
                    <div className="flex items-center justify-between mb-8">
@@ -1745,14 +1789,14 @@ const App: React.FC = () => {
 
                {activeBottomNav === 'shops' && (
                  <>
-                   <div className="flex items-center justify-between mb-8">
+                   <div className="flex items-center justify-between mb-6">
                       <h2 className="font-serif text-3xl text-dm-dark">Tiendas</h2>
                       <div className="text-sm font-sans text-gray-500">
-                          {publicShops.length} registradas
+                          {filteredPublicShops.length} registradas
                       </div>
                    </div>
                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                     {publicShops.map((shop) => (
+                     {filteredPublicShops.map((shop) => (
                        <button
                          key={shop.id}
                          onClick={() => handleOpenShop(shop)}
@@ -1773,7 +1817,7 @@ const App: React.FC = () => {
                          <p className="mt-3 text-xs text-gray-500 line-clamp-2">{shop.address || 'Sin dirección cargada'}</p>
                        </button>
                      ))}
-                     {publicShops.length === 0 && (
+                     {filteredPublicShops.length === 0 && (
                        <EmptyState
                          title="Aún no hay tiendas publicadas"
                          message="Volvé más tarde o refrescá la lista."
@@ -1791,7 +1835,7 @@ const App: React.FC = () => {
                       <div>
                         <h2 className="font-serif text-3xl text-dm-dark">{savedTab === 'FAVORITES' ? 'Favoritos' : 'Recordatorios'}</h2>
                         <p className="text-sm font-sans text-gray-500">
-                          {savedTab === 'FAVORITES' ? `${favoriteShops.length} tiendas guardadas` : `${reminderStreams.length} recordatorios activos`}
+                          {savedTab === 'FAVORITES' ? `${filteredFavoriteShops.length} tiendas guardadas` : `${reminderStreams.length} recordatorios activos`}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 rounded-full border border-gray-100 bg-white p-1 text-[11px] font-bold">
@@ -1811,7 +1855,7 @@ const App: React.FC = () => {
                    </div>
                    {savedTab === 'FAVORITES' ? (
                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                       {favoriteShops.map((shop) => (
+                       {filteredFavoriteShops.map((shop) => (
                          <button
                            key={shop.id}
                            onClick={() => handleOpenShop(shop)}
@@ -1827,7 +1871,7 @@ const App: React.FC = () => {
                            <p className="mt-3 text-xs text-gray-500 line-clamp-2">{shop.address || 'Sin dirección cargada'}</p>
                          </button>
                        ))}
-                      {favoriteShops.length === 0 && (
+                      {filteredFavoriteShops.length === 0 && (
                          <EmptyState
                            title={canClientInteract ? 'Sin favoritos todavía' : 'Ingresá para guardar tiendas'}
                            message={
@@ -1868,10 +1912,10 @@ const App: React.FC = () => {
                              </button>
                              <button
                                className="text-dm-crimson hover:text-dm-dark"
-                               onClick={() => handleDownloadICS(stream)}
-                             >
-                               Descargar .ics
-                             </button>
+                               onClick={() => handleOpenCalendarInvite(stream)}
+                              >
+                                Agregar al calendario
+                              </button>
                            </div>
                          </div>
                        ))}
@@ -2000,6 +2044,37 @@ const App: React.FC = () => {
           onClose={() => setReportTarget(null)}
           onSubmit={handleSubmitReport}
         />
+      )}
+
+      {calendarPromptStream && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+          <div className="w-full max-w-xs rounded-2xl border border-gray-100 bg-white p-4 shadow-xl">
+            <p className="text-sm font-bold text-dm-dark">¿Agendamos en tu calendario?</p>
+            <p className="mt-1 text-[11px] text-gray-500">
+              {calendarPromptStream.title} · {calendarPromptStream.shop?.name || 'Tienda'}
+            </p>
+            <div className="mt-4 flex gap-2">
+              <Button
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  handleOpenCalendarInvite(calendarPromptStream);
+                  setCalendarPromptStream(null);
+                }}
+              >
+                Sí, agendar
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setCalendarPromptStream(null)}
+              >
+                No, gracias
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {viewMode === 'CLIENT' && (
@@ -2199,10 +2274,11 @@ const App: React.FC = () => {
                             </div>
                             <div className="mt-2 flex justify-end">
                               <button
-                                className="text-[10px] font-bold text-dm-crimson hover:text-dm-dark"
-                                onClick={() => handleDownloadICS(stream)}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold text-dm-crimson hover:text-dm-dark"
+                                onClick={() => handleOpenCalendarInvite(stream)}
                               >
-                                Descargar .ics
+                                <CalendarDays size={12} />
+                                Agregar al calendario
                               </button>
                             </div>
                           </div>
