@@ -587,39 +587,56 @@ const App: React.FC = () => {
   const formatICSDate = (date: Date) =>
       date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
 
-  const escapeICSValue = (value: string) =>
-      value.replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
+  const getApiBaseUrl = () => {
+      const raw = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      return raw.replace(/\/+$/, '');
+  };
+
+  const isAppleDevice = () => {
+      const ua = navigator.userAgent || '';
+      const isApple = /iPad|iPhone|iPod|Mac/.test(ua);
+      const isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+      return isApple || isTouchMac;
+  };
+
+  const buildGoogleCalendarUrl = (stream: Stream) => {
+      const start = new Date(stream.fullDateISO);
+      const end = new Date(start.getTime() + 30 * 60 * 1000);
+      const title = stream.title || 'Vivo en Avellaneda en Vivo';
+      const shopName = stream.shop?.name || 'Distrito Moda';
+      const detailsLines = [
+          `Tienda: ${shopName}`,
+          stream.url ? `Enlace: ${stream.url}` : '',
+      ].filter(Boolean);
+      const details = detailsLines.join('\n');
+      const location = stream.shop?.address || 'Avellaneda en Vivo';
+      const dates = `${formatICSDate(start)}/${formatICSDate(end)}`;
+      const params = new URLSearchParams({
+          action: 'TEMPLATE',
+          text: title,
+          dates,
+          details,
+          location,
+          sf: 'true',
+          output: 'xml',
+      });
+      return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  };
 
   const handleOpenCalendarInvite = (stream: Stream) => {
       try {
-          const start = new Date(stream.fullDateISO);
-          const end = new Date(start.getTime() + 30 * 60 * 1000);
-          const icsContent = [
-              'BEGIN:VCALENDAR',
-              'VERSION:2.0',
-              'PRODID:-//Distrito Moda//Avellaneda en Vivo//ES',
-              'CALSCALE:GREGORIAN',
-              'METHOD:PUBLISH',
-              'BEGIN:VEVENT',
-              `UID:${stream.id}@avellaneda-envivo`,
-              `DTSTAMP:${formatICSDate(new Date())}`,
-              `DTSTART:${formatICSDate(start)}`,
-              `DTEND:${formatICSDate(end)}`,
-              `SUMMARY:${escapeICSValue(stream.title || 'Vivo en Avellaneda en Vivo')}`,
-              `DESCRIPTION:${escapeICSValue(`Tienda: ${stream.shop?.name || 'Distrito Moda'}`)}`,
-              `LOCATION:${escapeICSValue(stream.shop?.address || 'Avellaneda en Vivo')}`,
-              'END:VEVENT',
-              'END:VCALENDAR',
-          ].join('\r\n');
-          const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-          const url = window.URL.createObjectURL(blob);
-          const popup = window.open(url, '_blank', 'noopener');
-          if (!popup) {
-              window.location.href = url;
+          const apiBase = getApiBaseUrl();
+          const calendarUrl = `${apiBase}/streams/${stream.id}/calendar.ics`;
+          if (isAppleDevice()) {
+              const webcalUrl = calendarUrl.replace(/^https?:\/\//, 'webcal://');
+              window.location.href = webcalUrl;
+              return;
           }
-          window.setTimeout(() => {
-              window.URL.revokeObjectURL(url);
-          }, 1000);
+          const googleUrl = buildGoogleCalendarUrl(stream);
+          const popup = window.open(googleUrl, '_blank', 'noopener');
+          if (!popup) {
+              window.location.href = googleUrl;
+          }
       } catch {
           setNotice({
               title: 'No se pudo abrir el calendario',
