@@ -12,11 +12,21 @@
   position: relative;
   border-radius: 9999px;
   padding: 3px;
-  background-image: var(--halo-gradient);
-  background-size: 180% 180%;
+  background: transparent;
   overflow: hidden;
   box-shadow: 0 12px 26px rgba(31, 26, 28, 0.18);
-  animation: haloShift 14s ease-in-out infinite;
+}
+
+.logo-halo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--halo-gradient);
+  background-size: 220% 220%;
+  z-index: 0;
+  filter: saturate(1.15) brightness(0.95);
+  animation: haloShift 12s ease-in-out infinite, hueSpin 16s linear infinite;
 }
 
 .logo-halo::after {
@@ -26,7 +36,7 @@
   background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
   opacity: 0;
   filter: blur(12px);
-  animation: haloPulse var(--halo-duration) ease-in-out infinite;
+  animation: haloPulse calc(var(--halo-duration) * 0.85) ease-in-out infinite;
   animation-delay: var(--halo-delay);
 }
 
@@ -39,20 +49,20 @@
   overflow: hidden;
   background-image: var(--halo-gradient);
   background-size: 140% 140%;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 .logo-glass::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
-  opacity: 0.55;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.2));
+  opacity: 0.4;
 }
 
 .logo-glass::after {
@@ -61,8 +71,8 @@
   inset: -20%;
   background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0));
   filter: blur(10px);
-  opacity: 0.05;
-  animation: innerPulse calc(var(--halo-duration) + 2s) ease-in-out infinite;
+  opacity: 0.1;
+  animation: innerPulse calc(var(--halo-duration) * 0.85 + 2s) ease-in-out infinite;
   animation-delay: var(--halo-delay);
 }
 
@@ -72,12 +82,12 @@
     transform: scale(0.9);
   }
   35% {
-    opacity: 0.7;
-    transform: scale(1.05);
+    opacity: 0.85;
+    transform: scale(1.12);
   }
   70% {
-    opacity: 0.1;
-    transform: scale(1);
+    opacity: 0.15;
+    transform: scale(1.02);
   }
   100% {
     opacity: 0;
@@ -97,19 +107,34 @@
   }
 }
 
+@keyframes hueSpin {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
 @keyframes innerPulse {
   0% {
     opacity: 0;
     transform: scale(0.9);
   }
   40% {
-    opacity: 0.55;
-    transform: scale(1.02);
+    opacity: 0.65;
+    transform: scale(1.08);
   }
   100% {
     opacity: 0;
     transform: scale(0.95);
   }
+}
+
+.logo-bubble-img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: auto;
+  filter: saturate(1.08) contrast(1.08);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -118,6 +143,9 @@
     opacity: 0.2;
   }
   .logo-halo {
+    animation: none;
+  }
+  .logo-halo::before {
     animation: none;
   }
   .logo-glass::after {

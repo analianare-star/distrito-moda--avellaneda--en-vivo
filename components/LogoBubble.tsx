@@ -38,7 +38,7 @@ export const LogoBubble: React.FC<LogoBubbleProps> = ({
   const seedValue = seed || alt || src || 'logo';
   const hash = useMemo(() => hashSeed(seedValue), [seedValue]);
   const gradient = GRADIENTS[hash % GRADIENTS.length];
-  const duration = 6 + (hash % 6);
+  const duration = (6 + (hash % 6)) * 0.85;
   const delay = (hash % 10) * 0.3;
   const initial = alt?.trim()?.charAt(0)?.toUpperCase() || '·';
   const showFallback = !src || hasError;
@@ -65,7 +65,7 @@ export const LogoBubble: React.FC<LogoBubbleProps> = ({
             loading="lazy"
             decoding="async"
             onError={() => setHasError(true)}
-            className="relative z-10 h-full w-full object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]"
+            className="logo-bubble-img relative z-10 h-full w-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.38)]"
           />
         )}
       </div>
