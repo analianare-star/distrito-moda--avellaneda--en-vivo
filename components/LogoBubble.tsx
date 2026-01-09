@@ -9,14 +9,14 @@ type LogoBubbleProps = {
 };
 
 const GRADIENTS = [
-  'linear-gradient(135deg, #FAD0C4, #FFD1FF)',
-  'linear-gradient(135deg, #B5EAEA, #C7CEEA)',
-  'linear-gradient(135deg, #FFDAC1, #B5EAD7)',
-  'linear-gradient(135deg, #FDE2E4, #FAD2E1)',
-  'linear-gradient(135deg, #E2F0CB, #B5EAD7)',
-  'linear-gradient(135deg, #CDE7F0, #E2ECE9)',
-  'linear-gradient(135deg, #FFE5D9, #D8E2DC)',
-  'linear-gradient(135deg, #D7E3FC, #EDE7F6)',
+  'linear-gradient(135deg, #F4A9B8, #F6BCD6)',
+  'linear-gradient(135deg, #9FD0E6, #B2C7F2)',
+  'linear-gradient(135deg, #F5B08B, #F7C7A3)',
+  'linear-gradient(135deg, #E6A7C3, #F0B6DA)',
+  'linear-gradient(135deg, #B6D7A8, #CBE6B6)',
+  'linear-gradient(135deg, #A9C8D4, #C4D7DA)',
+  'linear-gradient(135deg, #E7B49D, #D9C1B3)',
+  'linear-gradient(135deg, #B4C2F2, #D1C7F2)',
 ];
 
 const hashSeed = (value: string) => {
