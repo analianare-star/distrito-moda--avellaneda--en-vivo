@@ -345,6 +345,19 @@ export const api = {
       return false;
     }
   },
+  deleteShop: async (shopId: string) => {
+    try {
+      const res = await fetchWithAuth(`/shops/${shopId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.message || 'No se pudo eliminar la tienda.');
+      }
+      return await res.json();
+    } catch (error) {
+      console.error('Error deleting shop:', error);
+      throw error;
+    }
+  },
 
   createShop: async (payload: any): Promise<{ success: boolean; message: string; shop?: Shop }> => {
     try {

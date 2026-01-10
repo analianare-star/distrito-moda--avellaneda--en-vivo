@@ -60,6 +60,7 @@ const EMPTY_SHOP: Shop = {
 
 const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('CLIENT');
+  const [adminPreview, setAdminPreview] = useState<{ mode: ViewMode; shopId?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeBottomNav, setActiveBottomNav] = useState('home');
   const [adminTab, setAdminTab] = useState<'DASHBOARD' | 'AGENDA' | 'STREAMS' | 'SHOPS' | 'REELS' | 'ADMIN'>('DASHBOARD');
@@ -123,6 +124,14 @@ const App: React.FC = () => {
   const [accountTab, setAccountTab] = useState<'RESUMEN' | 'NOTIFICATIONS' | 'REMINDERS'>('RESUMEN');
   const [shopQuery, setShopQuery] = useState('');
   const [calendarPromptStream, setCalendarPromptStream] = useState<Stream | null>(null);
+  const effectiveViewMode = adminPreview?.mode ?? viewMode;
+  const effectiveUserType = adminPreview
+    ? adminPreview.mode === 'MERCHANT'
+      ? 'SHOP'
+      : adminPreview.mode === 'CLIENT'
+      ? 'CLIENT'
+      : authProfile?.userType
+    : authProfile?.userType;
   const notify = (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => {
       setNotice({ title, message, tone });
   };
@@ -163,6 +172,9 @@ const App: React.FC = () => {
   // --- Derived States (CON PROTECCION ANTI-CRASH) ---
   // Si no encuentra la tienda o la lista esta vacia, usa la EMPTY_SHOP para no romper la pantalla.
   const currentShop = allShops.find(s => s.id === currentShopId) || allShops[0] || EMPTY_SHOP;
+  const previewShop = adminPreview?.shopId
+    ? allShops.find((shop) => shop.id === adminPreview.shopId)
+    : null;
   const reminderStreams = allStreams
       .filter((stream) => user.reminders.includes(stream.id))
       .sort((a, b) => new Date(a.fullDateISO).getTime() - new Date(b.fullDateISO).getTime());
@@ -265,6 +277,7 @@ const App: React.FC = () => {
           reports: []
         }));
         setNotifications([]);
+        setAdminPreview(null);
         setAuthProfile(null);
         setViewMode('CLIENT');
         setActiveBottomNav('home');
@@ -279,7 +292,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (isResetView) return;
-    if (viewMode !== 'CLIENT' || user.isLoggedIn) {
+    if (effectiveViewMode !== 'CLIENT' || user.isLoggedIn) {
       setShowLoginPrompt(false);
       return;
     }
@@ -289,7 +302,7 @@ const App: React.FC = () => {
       setShowLoginPrompt(true);
     }, 10000);
     return () => clearTimeout(timer);
-  }, [isResetView, viewMode, user.isLoggedIn, loginPromptDismissed, hasBottomNavInteraction]);
+  }, [isResetView, effectiveViewMode, user.isLoggedIn, loginPromptDismissed, hasBottomNavInteraction]);
 
   useEffect(() => {
     if (!isResetView) return;
@@ -315,6 +328,7 @@ const App: React.FC = () => {
   }, [isResetView]);
 
   useEffect(() => {
+    if (adminPreview) return;
     if (!authProfile) {
       if (viewMode !== 'CLIENT') setViewMode('CLIENT');
       return;
@@ -334,7 +348,7 @@ const App: React.FC = () => {
       setViewMode('CLIENT');
       setActiveBottomNav('home');
     }
-  }, [authProfile, viewMode]);
+  }, [adminPreview, authProfile, viewMode]);
 
   // --- AUTO LIFECYCLE SE MANEJA EN BACKEND ---
 
@@ -716,6 +730,29 @@ const App: React.FC = () => {
       setLoginPromptDismissed(false);
       setShowLoginPrompt(true);
       setIsAccountDrawerOpen(false);
+  };
+
+  const startAdminPreviewClient = () => {
+      setAdminPreview({ mode: 'CLIENT' });
+      setViewMode('CLIENT');
+      setActiveBottomNav('home');
+      setLoginPromptDismissed(true);
+      setShowLoginPrompt(false);
+  };
+
+  const startAdminPreviewShop = (shopId: string) => {
+      setAdminPreview({ mode: 'MERCHANT', shopId });
+      setViewMode('MERCHANT');
+      setCurrentShopId(shopId);
+      setMerchantTab('RESUMEN');
+      setActiveBottomNav('resumen');
+  };
+
+  const stopAdminPreview = () => {
+      setAdminPreview(null);
+      setViewMode('ADMIN');
+      setActiveBottomNav('panel');
+      setAdminTab('DASHBOARD');
   };
 
   const handleGoogleLogin = async () => {
@@ -1119,10 +1156,10 @@ const App: React.FC = () => {
     );
   }
 
-  const isAdminUser = authProfile?.userType === 'ADMIN';
   const isShopUser = authProfile?.userType === 'SHOP';
-  const isAdminViewBlocked = viewMode === 'ADMIN' && !isAdminUser;
-  const isMerchantViewBlocked = viewMode === 'MERCHANT' && !isShopUser;
+  const isAdminViewBlocked = effectiveViewMode === 'ADMIN' && authProfile?.userType !== 'ADMIN';
+  const isMerchantViewBlocked =
+    effectiveViewMode === 'MERCHANT' && authProfile?.userType !== 'SHOP' && !adminPreview;
 
   if (isAdminViewBlocked || isMerchantViewBlocked) {
     return (
@@ -1199,7 +1236,8 @@ const App: React.FC = () => {
       setActiveBottomNav(navId);
   };
 
-  const isMerchantUser = authProfile?.userType === 'SHOP';
+  const isAdminUser = effectiveUserType === 'ADMIN';
+  const isMerchantUser = effectiveUserType === 'SHOP';
   const accountBadgeCount = unreadNotifications.length;
   const reminderBadgeCount = reminderStreams.length;
   const userTypeLabels: Record<string, string> = {
@@ -1409,7 +1447,7 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      {viewMode === 'CLIENT' && !user.isLoggedIn && showLoginPrompt && (
+      {effectiveViewMode === 'CLIENT' && !user.isLoggedIn && showLoginPrompt && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur-sm">
           <div className="w-[92%] max-w-sm rounded-2xl border border-dm-crimson/10 bg-gradient-to-b from-white via-white to-dm-light/40 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)]">
             <div className="flex items-start justify-between gap-3">
@@ -1731,8 +1769,26 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      <div className="pt-16 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12">
-      {viewMode === 'CLIENT' ? (
+      {adminPreview && (
+        <div className="fixed top-14 left-0 right-0 z-[60] flex items-center justify-between bg-dm-dark/95 px-4 py-2 text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-2 w-2 rounded-full bg-dm-crimson" />
+            <span>
+              Vista admin: {adminPreview.mode === 'CLIENT' ? 'Cliente' : 'Tienda'}
+              {adminPreview.mode === 'MERCHANT' && previewShop?.name ? ` · ${previewShop.name}` : ''}
+            </span>
+          </div>
+          <button
+            onClick={stopAdminPreview}
+            className="rounded-full border border-white/20 px-3 py-1 text-[10px] font-bold text-white hover:border-white/60"
+          >
+            Volver al admin
+          </button>
+        </div>
+      )}
+
+      <div className={`${adminPreview ? 'pt-24' : 'pt-16'} pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12`}>
+      {effectiveViewMode === 'CLIENT' ? (
           <>
             <div className="mx-auto max-w-3xl px-4 pt-4 md:pt-6">
               <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 shadow-sm">
@@ -2015,7 +2071,7 @@ const App: React.FC = () => {
                 />
             )}
           </>
-        ) : viewMode === 'MERCHANT' ? (
+        ) : effectiveViewMode === 'MERCHANT' ? (
             <Dashboard
               currentShop={currentShop}
               streams={allStreams}
@@ -2042,6 +2098,8 @@ const App: React.FC = () => {
             onRefreshData={refreshData}
             activeTab={adminTab}
             onTabChange={setAdminTab}
+            onPreviewClient={startAdminPreviewClient}
+            onPreviewShop={startAdminPreviewShop}
           />
         )}
       </div>
@@ -2094,7 +2152,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {viewMode === 'CLIENT' && (
+      {effectiveViewMode === 'CLIENT' && (
         <div className={`fixed inset-0 z-[130] ${isAccountDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
           <div
             className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity ${isAccountDrawerOpen ? 'opacity-100' : 'opacity-0'}`}

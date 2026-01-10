@@ -17,11 +17,23 @@ interface AdminDashboardProps {
     onRefreshData: () => void;
     activeTab: AdminTab;
     onTabChange: (tab: AdminTab) => void;
+    onPreviewClient: () => void;
+    onPreviewShop: (shopId: string) => void;
 }
 
 const PAYMENT_OPTIONS = ['Efectivo', 'Transferencia', 'Depósito', 'USDT', 'Cheque', 'Mercado Pago'];
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStreams, shops, setShops, onRefreshData, activeTab, onTabChange }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({
+  streams,
+  setStreams,
+  shops,
+  setShops,
+  onRefreshData,
+  activeTab,
+  onTabChange,
+  onPreviewClient,
+  onPreviewShop,
+}) => {
   const [reels, setReels] = useState<Reel[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [purchaseRequests, setPurchaseRequests] = useState<any[]>([]);
@@ -463,6 +475,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
           },
       });
       setInputValues(['']);
+  };
+
+  const deleteShop = async (shop: Shop) => {
+      setConfirmDialog({
+          title: 'Eliminar tienda',
+          message: `Esta acción elimina la tienda "${shop.name}" y todos sus datos asociados. No se puede deshacer.`,
+          confirmLabel: 'Eliminar definitivamente',
+          onConfirm: async () => {
+              try {
+                  await api.deleteShop(shop.id);
+                  setShops((prev) => prev.filter((item) => item.id !== shop.id));
+                  setNotice({
+                      title: 'Tienda eliminada',
+                      message: 'La tienda fue eliminada correctamente.',
+                      tone: 'success',
+                  });
+                  onRefreshData();
+              } catch (error: any) {
+                  setNotice({
+                      title: 'No se pudo eliminar',
+                      message: error?.message || 'Error al eliminar la tienda.',
+                      tone: 'error',
+                  });
+              }
+          },
+      });
   };
 
   const toggleReelHide = async (reel: Reel) => {
@@ -1367,6 +1405,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                             <Button onClick={() => setIsCreateModalOpen(true)} className="bg-dm-crimson hover:bg-red-700 border-none text-white shadow-lg shadow-dm-crimson/20">
                                 <Plus size={18} className="mr-2" /> Nueva Tienda
                             </Button>
+                            <Button
+                                variant="outline"
+                                onClick={onPreviewClient}
+                                className="border-gray-200 text-gray-600"
+                            >
+                                <Eye size={16} className="mr-2" /> Ver como cliente
+                            </Button>
                         </div>
                     </div>
                     <div className="flex flex-col md:flex-row gap-3">
@@ -1452,6 +1497,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                             <button onClick={() => assignOwner(shop.id)} className="text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200">
                                                 Asignar dueño
                                             </button>
+                                            <button
+                                                onClick={() => onPreviewShop(shop.id)}
+                                                className="text-xs border px-2 py-1 rounded bg-white text-gray-600 border-gray-200"
+                                            >
+                                                Ver como tienda
+                                            </button>
+                                            <button
+                                                onClick={() => deleteShop(shop)}
+                                                className="text-xs border px-2 py-1 rounded bg-red-50 text-red-600 border-red-200"
+                                            >
+                                                Eliminar
+                                            </button>
                                         </div>
                                     </div>
                                 );
@@ -1529,6 +1586,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ streams, setStre
                                                     )}
                                                     <button onClick={() => assignOwner(shop.id)} className="text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200">
                                                         Asignar dueño
+                                                    </button>
+                                                    <button
+                                                        onClick={() => onPreviewShop(shop.id)}
+                                                        className="text-xs border px-2 py-1 rounded bg-white text-gray-600 border-gray-200"
+                                                    >
+                                                        Ver como tienda
+                                                    </button>
+                                                    <button
+                                                        onClick={() => deleteShop(shop)}
+                                                        className="text-xs border px-2 py-1 rounded bg-red-50 text-red-600 border-red-200"
+                                                    >
+                                                        Eliminar
                                                     </button>
                                                 </div>
                                             </td>
