@@ -1,26 +1,37 @@
 # Distrito Moda - Avellaneda en Vivo (Frontend)
 
-SPA para el ecosistema de live shopping mayorista. Incluye vistas para cliente, tienda y admin.
+SPA de live shopping mayorista. Tres roles con flujos distintos: cliente, tienda y admin.
+
+## Que es / como funciona
+- **Cliente**: navega vivos/tiendas/reels, interactua si esta logueado.
+- **Tienda**: panel privado para agenda, reels, identidad, cupos y redes.
+- **Admin**: panel de control para alta de tiendas, moderacion y operaciones.
+
+La vista que ve cada usuario se decide por `GET /auth/me` (backend) y el token de Firebase.
 
 ## Stack
-- React 19 + Vite 6
+- React 19 + Vite 5
 - TypeScript
-- Lucide React (iconos)
+- Firebase Auth (Google + Email/Clave)
+- Tailwind CSS + Lucide
 
 ## Requisitos
 - Node.js LTS
 
-## Inicio rapido
-1) Instalar dependencias:
-   `npm install`
-2) Levantar el entorno:
-   `npm run dev`
-3) Abrir en el navegador:
-   `http://localhost:5173`
+## Configuracion
+Crear `.env.local` (o `.env.production`) con:
+```
+VITE_API_URL=http://localhost:3000
+```
+En produccion:
+```
+VITE_API_URL=https://avellaneda-backend.onrender.com
+```
 
-## Backend / API
-La app consume la API en `http://localhost:3000` (configurado en `services/api.ts`).
-Si cambias el backend, actualiza esa constante.
+## Inicio rapido
+1) `npm install`
+2) `npm run dev`
+3) Abrir `http://localhost:5173`
 
 ## Scripts utiles
 - `npm run dev` - entorno local
@@ -28,16 +39,21 @@ Si cambias el backend, actualiza esa constante.
 - `npm run preview` - preview del build
 
 ## Estructura del repo
-- `App.tsx` - orquestador principal de UI y estado
-- `components/` - componentes de interfaz
-- `services/api.ts` - cliente HTTP y adaptadores de datos
-- `types.ts` / `constants.ts` - tipos y constantes de negocio
-- `planes.html` - landing informativa de planes
+- `App.tsx` - orquestador de UI y roles
+- `components/` - UI (modales, dashboards, tarjetas)
+- `services/api.ts` - cliente HTTP y mapeos
+- `firebase.ts` - auth (Google/email)
+- `types.ts` / `constants.ts` - tipos y reglas UI
+
+## Deploy (Firebase Hosting)
+```
+npm run build
+npx firebase deploy --only hosting
+```
 
 ## Documentacion funcional
 - `MODELO_FINAL_CONGELADO.md`
 - `PASO_4_CUPOS_COMPRAS.md`
-
-## Notas de configuracion
-- `.env.local` mantiene `GEMINI_API_KEY` por compatibilidad de plantilla.
-  No se usa en la UI actual.
+- `PASO_5_AGENDA_NOTIFICACIONES.md`
+- `PASO_6_RATINGS_REPORTS.md`
+- `PASO_7_MOTOR_SANCIONES_AUDITORIA.md`
