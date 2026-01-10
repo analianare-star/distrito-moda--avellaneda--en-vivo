@@ -24,6 +24,7 @@ interface DashboardProps {
     notifications?: NotificationItem[];
     onMarkNotificationRead?: (id: string) => void;
     onMarkAllNotificationsRead?: () => void;
+    isPreview?: boolean;
 }
 
 type Tab = 'RESUMEN' | 'REDES' | 'VIVOS' | 'REELS' | 'PERFIL';
@@ -47,7 +48,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
     onTabChange,
     notifications = [],
     onMarkNotificationRead,
-    onMarkAllNotificationsRead
+    onMarkAllNotificationsRead,
+    isPreview = false
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('RESUMEN');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -66,6 +68,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [shopReels, setShopReels] = useState<Reel[]>([]); 
   const [purchaseHistory, setPurchaseHistory] = useState<any[]>([]);
   const [isPurchaseLoading, setIsPurchaseLoading] = useState(false);
+
+  const blockPreviewAction = (message = 'Acción bloqueada en modo vista técnica.') => {
+      if (!isPreview) return false;
+      setNotice({
+          title: 'Modo vista',
+          message,
+          tone: 'warning',
+      });
+      return true;
+  };
   
   // Local states
   const [shopForm, setShopForm] = useState<Partial<Shop>>({});
@@ -266,6 +278,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   }, [shopStatus]);
 
   const handleAcceptShop = async () => {
+      if (blockPreviewAction()) return;
       try {
           await api.acceptShop(currentShop.id);
           setNotice({
@@ -324,6 +337,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
   const saveShopProfile = async (e: React.FormEvent) => {
       e.preventDefault();
+      if (blockPreviewAction()) return;
       const newAddress = shopForm.addressDetails 
         ? `${shopForm.addressDetails.street} ${shopForm.addressDetails.number}, ${shopForm.addressDetails.city}`
         : currentShop.address;
@@ -338,6 +352,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   // --- REELS HANDLERS ---
   const handleUploadReel = async () => {
+      if (blockPreviewAction()) return;
       if (!reelUrl || !reelPlatform) {
           setNotice({
               title: 'Datos incompletos',
@@ -368,6 +383,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleBuyReelConfirm = async () => {
+      if (blockPreviewAction()) return;
       const result = await api.buyReelQuota(currentShop.id, 5, { method: 'SIMULATED' });
       if (onReelChange) onReelChange();
       onRefreshData();
@@ -384,6 +400,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   // --- STREAM FORM HANDLERS ---
   const handleBuyConfirm = () => {
+      if (blockPreviewAction()) return;
       if (isAgendaSuspended) {
           setNotice({
               title: 'Agenda suspendida',
@@ -404,11 +421,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
       });
   };
   const handleCreateClick = () => {
+      if (blockPreviewAction()) return;
       if (!canSchedule) return;
       setFormTitle(''); setFormDate(''); setFormTime(''); setFormPlatform(''); setEditingStream(null);
       setShowCreateModal(true);
   };
   const handleConfirmStream = async () => { 
+      if (blockPreviewAction()) return;
       if(!formTitle || !formTime || !formPlatform || !formDate) {
           setNotice({
               title: 'Campos obligatorios',
@@ -461,6 +480,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
   const saveSocials = async (e: React.FormEvent) => {
       e.preventDefault();
+      if (blockPreviewAction()) return;
       const validWaLines: WhatsappLine[] = [];
       for (const line of waLines.slice(0, whatsappLimit)) {
           if (line.number.trim()) {
@@ -484,6 +504,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       });
   };
   const openEditModal = (stream: Stream) => {
+      if (blockPreviewAction()) return;
       if (!canManageAgenda) {
           setNotice({
               title: 'Agenda no disponible',
@@ -650,7 +671,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                   <h3 className="font-bold text-dm-dark text-lg">Cupos para Vivos</h3>
                                   <p className="text-xs text-gray-500">Disponibilidad semanal</p>
                               </div>
-                              <Button size="sm" onClick={() => setShowBuyModal(true)} disabled={isAgendaSuspended} className="bg-green-600 hover:bg-green-700 border-none text-white shadow-green-200">
+                              <Button
+                                  size="sm"
+                                  onClick={() => {
+                                      if (blockPreviewAction()) return;
+                                      if (blockPreviewAction()) return;
+                                      setShowBuyModal(true);
+                                  }}
+                                  disabled={isAgendaSuspended || isPreview}
+                                  className="bg-green-600 hover:bg-green-700 border-none text-white shadow-green-200"
+                              >
                                   <ShoppingCart size={16} className="mr-2"/> Comprar Extras
                               </Button>
                           </div>
@@ -745,10 +775,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                           <h3 className="font-bold text-dm-dark text-sm uppercase tracking-wide mb-3">Acciones rápidas</h3>
                           <div className="space-y-2">
-                              <Button size="sm" className="w-full" onClick={handleCreateClick} disabled={!canSchedule}>
+                              <Button size="sm" className="w-full" onClick={handleCreateClick} disabled={!canSchedule || isPreview}>
                                   <Plus size={14} className="mr-2"/> Agendar vivo
                               </Button>
-                              <Button size="sm" variant="outline" className="w-full" onClick={() => setShowBuyModal(true)} disabled={isAgendaSuspended}>
+                              <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full"
+                                  onClick={() => {
+                                      if (blockPreviewAction()) return;
+                                      if (blockPreviewAction()) return;
+                                      setShowBuyModal(true);
+                                  }}
+                                  disabled={isAgendaSuspended || isPreview}
+                              >
                                   <ShoppingCart size={14} className="mr-2"/> Comprar cupo
                               </Button>
                               <Button size="sm" variant="outline" className="w-full" onClick={() => setTab('REELS')}>
@@ -784,7 +824,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               <div className="flex justify-between"><span>Extras comprados</span><span className="font-bold text-green-600">{reelsExtra}</span></div>
                               <div className="flex justify-between"><span>Publicadas hoy</span><span className="font-bold text-dm-dark">{reelsToday}</span></div>
                           </div>
-                          <button onClick={() => setShowBuyReelModal(true)} className="mt-3 text-[11px] font-bold text-dm-crimson underline">
+                          <button
+                              onClick={() => {
+                                  if (blockPreviewAction()) return;
+                                  if (blockPreviewAction()) return;
+                                  setShowBuyReelModal(true);
+                              }}
+                              className={`mt-3 text-[11px] font-bold ${isPreview ? 'text-gray-300' : 'text-dm-crimson underline'}`}
+                          >
                               Comprar extras
                           </button>
                       </div>
@@ -884,7 +931,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <div className="text-right">
                           <p className="text-xs text-gray-500">Disponibles hoy (Plan): <span className="font-bold">{availableReelPlan}</span></p>
                           <p className="text-xs text-gray-500">Extras comprados: <span className="font-bold text-green-600">{reelsExtra}</span></p>
-                          <button onClick={() => setShowBuyReelModal(true)} className="text-[10px] text-dm-crimson underline font-bold mt-1">Comprar Extras</button>
+                          <button
+                              onClick={() => {
+                                  if (blockPreviewAction()) return;
+                                  setShowBuyReelModal(true);
+                              }}
+                              className={`text-[10px] font-bold mt-1 ${isPreview ? 'text-gray-300' : 'text-dm-crimson underline'}`}
+                          >
+                              Comprar Extras
+                          </button>
                           {(availableReelPlan === 0 && reelsExtra === 0) && (
                               <p className="text-[10px] text-red-500 mt-2">Sin cupos disponibles hoy.</p>
                           )}

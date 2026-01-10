@@ -355,6 +355,7 @@ const App: React.FC = () => {
   // --- BUSINESS LOGIC ACTIONS ---
 
   const handleStreamCreate = async (newStream: Stream) => {
+    if (blockPreviewAction()) return false;
     try {
       const result = await api.createStream(newStream);
       if (!result.success) {
@@ -379,6 +380,7 @@ const App: React.FC = () => {
   };
 
   const handleStreamUpdate = async (updatedStream: Stream) => {
+    if (blockPreviewAction()) return false;
     try {
       await api.updateStream(updatedStream);
       await refreshData();
@@ -395,6 +397,7 @@ const App: React.FC = () => {
   };
 
   const handleStreamDelete = async (streamId: string) => {
+    if (blockPreviewAction()) return;
     try {
       await api.cancelStream(streamId, 'Cancelado por tienda');
       await refreshData();
@@ -409,6 +412,7 @@ const App: React.FC = () => {
   };
 
   const handleShopUpdate = async (updatedShop: Shop) => {
+      if (blockPreviewAction()) return false;
       try {
         await api.updateShop(updatedShop.id, updatedShop); // Ajustado para pasar ID y data
         await refreshData();
@@ -425,6 +429,7 @@ const App: React.FC = () => {
   };
 
   const handleExtendStream = async (streamId: string) => {
+      if (blockPreviewAction()) return;
       const stream = allStreams.find(s => s.id === streamId);
       if (stream && stream.extensionCount < 3) {
           await api.updateStream({ 
@@ -441,6 +446,7 @@ const App: React.FC = () => {
   };
 
   const handleBuyQuota = async (amount: number) => {
+      if (blockPreviewAction()) return;
       if (!currentShopId) {
           setNotice({
               title: 'Sin tienda',
@@ -753,6 +759,16 @@ const App: React.FC = () => {
       setViewMode('ADMIN');
       setActiveBottomNav('panel');
       setAdminTab('DASHBOARD');
+  };
+
+  const blockPreviewAction = (message = 'Acción bloqueada en modo vista técnica.') => {
+      if (!adminPreview) return false;
+      setNotice({
+          title: 'Modo vista',
+          message,
+          tone: 'warning',
+      });
+      return true;
   };
 
   const handleGoogleLogin = async () => {
@@ -2088,6 +2104,7 @@ const App: React.FC = () => {
               notifications={notifications}
               onMarkNotificationRead={handleMarkNotificationRead}
               onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+              isPreview={Boolean(adminPreview)}
             />
         ) : (
           <AdminDashboard 
