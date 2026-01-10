@@ -2117,6 +2117,7 @@ const App: React.FC = () => {
             onTabChange={setAdminTab}
             onPreviewClient={startAdminPreviewClient}
             onPreviewShop={startAdminPreviewShop}
+            onShopUpdate={handleShopUpdate}
           />
         )}
       </div>

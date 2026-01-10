@@ -19,6 +19,7 @@ interface AdminDashboardProps {
     onTabChange: (tab: AdminTab) => void;
     onPreviewClient: () => void;
     onPreviewShop: (shopId: string) => void;
+    onShopUpdate: (shop: Shop) => Promise<boolean>;
 }
 
 const PAYMENT_OPTIONS = ['Efectivo', 'Transferencia', 'Depósito', 'USDT', 'Cheque', 'Mercado Pago'];
@@ -33,6 +34,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onTabChange,
   onPreviewClient,
   onPreviewShop,
+  onShopUpdate,
 }) => {
   const [reels, setReels] = useState<Reel[]>([]);
   const [reports, setReports] = useState<any[]>([]);
@@ -83,6 +85,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     onConfirm: (values: string[]) => void;
   } | null>(null);
   const [inputValues, setInputValues] = useState<string[]>([]);
+  const [editShop, setEditShop] = useState<Shop | null>(null);
+  const [editForm, setEditForm] = useState({
+      name: '',
+      razonSocial: '',
+      cuit: '',
+      email: '',
+      website: '',
+      logoUrl: '',
+      minimumPurchase: 0,
+      street: '',
+      number: '',
+      city: '',
+      province: '',
+      zip: '',
+      whatsapp: '',
+      instagram: '',
+      tiktok: '',
+      facebook: '',
+      youtube: '',
+  });
 
   // Expanded Form State for Create Shop
   const [formData, setFormData] = useState({
@@ -581,6 +603,74 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               plan: 'BASIC', logoUrl: '', streamQuota: 0, reelQuota: 0
           });
           onRefreshData();
+      }
+  };
+
+  const openEditShop = (shop: Shop) => {
+      const details = shop.addressDetails || ({} as any);
+      const firstWhatsapp = shop.whatsappLines?.[0]?.number || '';
+      setEditShop(shop);
+      setEditForm({
+          name: shop.name || '',
+          razonSocial: shop.razonSocial || '',
+          cuit: shop.cuit || '',
+          email: shop.email || '',
+          website: shop.website || '',
+          logoUrl: shop.logoUrl || '',
+          minimumPurchase: Number(shop.minimumPurchase || 0),
+          street: details.street || '',
+          number: details.number || '',
+          city: details.city || '',
+          province: details.province || '',
+          zip: details.zip || '',
+          whatsapp: firstWhatsapp,
+          instagram: shop.socialHandles?.instagram || '',
+          tiktok: shop.socialHandles?.tiktok || '',
+          facebook: shop.socialHandles?.facebook || '',
+          youtube: shop.socialHandles?.youtube || '',
+      });
+  };
+
+  const handleEditShopSave = async () => {
+      if (!editShop) return;
+      const addressLine = [editForm.street, editForm.number].filter(Boolean).join(' ');
+      const fullAddress = [addressLine, editForm.city, editForm.province, editForm.zip].filter(Boolean).join(', ');
+      const updated: Shop = {
+          ...editShop,
+          name: editForm.name,
+          razonSocial: editForm.razonSocial,
+          cuit: editForm.cuit,
+          email: editForm.email,
+          website: editForm.website || undefined,
+          logoUrl: editForm.logoUrl || '',
+          minimumPurchase: Number(editForm.minimumPurchase || 0),
+          address: fullAddress || undefined,
+          addressDetails: {
+              street: editForm.street,
+              number: editForm.number,
+              city: editForm.city,
+              province: editForm.province,
+              zip: editForm.zip,
+          },
+          whatsappLines: editForm.whatsapp
+              ? [{ label: 'Principal', number: editForm.whatsapp }]
+              : [],
+          socialHandles: {
+              instagram: editForm.instagram,
+              tiktok: editForm.tiktok,
+              facebook: editForm.facebook,
+              youtube: editForm.youtube,
+          },
+      };
+
+      const ok = await onShopUpdate(updated);
+      if (ok) {
+          setNotice({
+              title: 'Tienda actualizada',
+              message: 'Los datos de la tienda se guardaron correctamente.',
+              tone: 'success',
+          });
+          setEditShop(null);
       }
   };
 
@@ -1498,6 +1588,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 Asignar dueño
                                             </button>
                                             <button
+                                                onClick={() => openEditShop(shop)}
+                                                className="text-xs border px-2 py-1 rounded bg-white text-gray-600 border-gray-200"
+                                            >
+                                                Editar datos
+                                            </button>
+                                            <button
                                                 onClick={() => onPreviewShop(shop.id)}
                                                 className="text-xs border px-2 py-1 rounded bg-white text-gray-600 border-gray-200"
                                             >
@@ -1586,6 +1682,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     )}
                                                     <button onClick={() => assignOwner(shop.id)} className="text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200">
                                                         Asignar dueño
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openEditShop(shop)}
+                                                        className="text-xs border px-2 py-1 rounded bg-white text-gray-600 border-gray-200"
+                                                    >
+                                                        Editar datos
                                                     </button>
                                                     <button
                                                         onClick={() => onPreviewShop(shop.id)}
@@ -2198,6 +2300,208 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </Button>
                       </div>
                   </form>
+              </div>
+          </div>
+      )}
+
+      {editShop && (
+          <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto p-6 relative">
+                  <button onClick={() => setEditShop(null)} className="absolute top-3 right-3 text-gray-400 hover:text-dm-dark">
+                      <X size={18} />
+                  </button>
+                  <div className="mb-4">
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">Editar tienda</p>
+                      <h2 className="font-serif text-xl text-dm-dark font-bold">Datos y redes</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nombre</label>
+                          <input
+                              type="text"
+                              value={editForm.name}
+                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Razón social</label>
+                          <input
+                              type="text"
+                              value={editForm.razonSocial}
+                              onChange={(e) => setEditForm({ ...editForm, razonSocial: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Email</label>
+                          <input
+                              type="email"
+                              value={editForm.email}
+                              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">CUIT</label>
+                          <input
+                              type="text"
+                              value={editForm.cuit}
+                              onChange={(e) => setEditForm({ ...editForm, cuit: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                          />
+                      </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Instagram</label>
+                          <input
+                              type="text"
+                              value={editForm.instagram}
+                              onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              placeholder="usuario (sin @)"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">TikTok</label>
+                          <input
+                              type="text"
+                              value={editForm.tiktok}
+                              onChange={(e) => setEditForm({ ...editForm, tiktok: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              placeholder="usuario (sin @)"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Facebook</label>
+                          <input
+                              type="text"
+                              value={editForm.facebook}
+                              onChange={(e) => setEditForm({ ...editForm, facebook: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              placeholder="página"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">YouTube</label>
+                          <input
+                              type="text"
+                              value={editForm.youtube}
+                              onChange={(e) => setEditForm({ ...editForm, youtube: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              placeholder="canal"
+                          />
+                      </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">WhatsApp principal</label>
+                          <input
+                              type="text"
+                              value={editForm.whatsapp}
+                              onChange={(e) => setEditForm({ ...editForm, whatsapp: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              placeholder="+54..."
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Sitio web</label>
+                          <input
+                              type="text"
+                              value={editForm.website}
+                              onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              placeholder="https://..."
+                          />
+                      </div>
+                      <div className="md:col-span-2">
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Logo URL</label>
+                          <input
+                              type="text"
+                              value={editForm.logoUrl}
+                              onChange={(e) => setEditForm({ ...editForm, logoUrl: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              placeholder="https://..."
+                          />
+                      </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Calle</label>
+                          <input
+                              type="text"
+                              value={editForm.street}
+                              onChange={(e) => setEditForm({ ...editForm, street: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Número</label>
+                          <input
+                              type="text"
+                              value={editForm.number}
+                              onChange={(e) => setEditForm({ ...editForm, number: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Ciudad</label>
+                          <input
+                              type="text"
+                              value={editForm.city}
+                              onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Provincia</label>
+                          <input
+                              type="text"
+                              value={editForm.province}
+                              onChange={(e) => setEditForm({ ...editForm, province: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">CP</label>
+                          <input
+                              type="text"
+                              value={editForm.zip}
+                              onChange={(e) => setEditForm({ ...editForm, zip: e.target.value })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Mínimo de compra</label>
+                          <input
+                              type="number"
+                              value={editForm.minimumPurchase}
+                              onChange={(e) => setEditForm({ ...editForm, minimumPurchase: parseInt(e.target.value) || 0 })}
+                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                          />
+                      </div>
+                  </div>
+
+                  <div className="flex gap-3 mt-5">
+                      <Button
+                          variant="outline"
+                          className="flex-1 h-11 rounded-xl border-gray-200 text-gray-500 hover:bg-gray-50"
+                          onClick={() => setEditShop(null)}
+                      >
+                          Cancelar
+                      </Button>
+                      <Button
+                          className="flex-[2] h-11 bg-dm-crimson hover:bg-red-700 text-white border-none rounded-xl shadow-xl shadow-dm-crimson/20"
+                          onClick={handleEditShopSave}
+                      >
+                          <Save size={18} className="mr-2" /> Guardar cambios
+                      </Button>
+                  </div>
               </div>
           </div>
       )}
