@@ -67,6 +67,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [sanctionsSummary, setSanctionsSummary] = useState<any | null>(null);
   const [notificationsSummary, setNotificationsSummary] = useState<any | null>(null);
   const [streamsLifecycleSummary, setStreamsLifecycleSummary] = useState<any | null>(null);
+  const [systemStatus, setSystemStatus] = useState<any | null>(null);
+  const [systemStatusLoading, setSystemStatusLoading] = useState(false);
   const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
@@ -151,6 +153,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               unreadOnly: notificationFilter === 'UNREAD',
               type: notificationType,
           }).then(setAdminNotifications).finally(() => setNotificationsLoading(false));
+
+          setSystemStatusLoading(true);
+          api.fetchSystemStatus()
+              .then(setSystemStatus)
+              .catch(() => setSystemStatus(null))
+              .finally(() => setSystemStatusLoading(false));
       }
   }, [activeTab, notificationFilter, notificationType, purchaseStatusFilter]);
   
@@ -703,6 +711,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           tone: 'success',
       });
       onRefreshData();
+  };
+
+  const refreshSystemStatus = async () => {
+      setSystemStatusLoading(true);
+      try {
+          const data = await api.fetchSystemStatus();
+          setSystemStatus(data);
+      } catch (error) {
+          setSystemStatus(null);
+      } finally {
+          setSystemStatusLoading(false);
+      }
   };
 
   const handleApprovePurchase = async (purchaseId: string) => {
@@ -1944,6 +1964,63 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             />
                             Modo Oficial
                         </label>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm border p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="font-bold text-dm-dark">Estado del sistema</h3>
+                                <p className="text-xs text-gray-500">Cron de notificaciones, sanciones y vivos.</p>
+                            </div>
+                            <button
+                                className="text-[10px] font-bold text-dm-crimson"
+                                onClick={refreshSystemStatus}
+                                disabled={systemStatusLoading}
+                            >
+                                {systemStatusLoading ? 'Actualizando...' : 'Actualizar'}
+                            </button>
+                        </div>
+                        {systemStatusLoading ? (
+                            <div className="mt-4 space-y-2">
+                                <div className="h-3 w-32 rounded bg-gray-100 animate-pulse" />
+                                <div className="h-3 w-48 rounded bg-gray-100 animate-pulse" />
+                                <div className="h-3 w-40 rounded bg-gray-100 animate-pulse" />
+                            </div>
+                        ) : systemStatus ? (
+                            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                                <div className="rounded-lg border border-gray-100 p-3">
+                                    <p className="text-[10px] uppercase tracking-widest text-gray-400">Notificaciones</p>
+                                    <p className={`mt-1 font-bold ${systemStatus.notifications?.enabled ? 'text-green-700' : 'text-gray-500'}`}>
+                                        {systemStatus.notifications?.enabled ? 'Activo' : 'Inactivo'}
+                                    </p>
+                                    <p className="text-[10px] text-gray-400">
+                                        Intervalo {systemStatus.notifications?.intervalMinutes ?? '-'} min · Ventana {systemStatus.notifications?.windowMinutes ?? '-'} min
+                                    </p>
+                                </div>
+                                <div className="rounded-lg border border-gray-100 p-3">
+                                    <p className="text-[10px] uppercase tracking-widest text-gray-400">Sanciones</p>
+                                    <p className={`mt-1 font-bold ${systemStatus.sanctions?.enabled ? 'text-green-700' : 'text-gray-500'}`}>
+                                        {systemStatus.sanctions?.enabled ? 'Activo' : 'Inactivo'}
+                                    </p>
+                                    <p className="text-[10px] text-gray-400">
+                                        Intervalo {systemStatus.sanctions?.intervalMinutes ?? '-'} min
+                                    </p>
+                                </div>
+                                <div className="rounded-lg border border-gray-100 p-3">
+                                    <p className="text-[10px] uppercase tracking-widest text-gray-400">Ciclo de vivos</p>
+                                    <p className={`mt-1 font-bold ${systemStatus.streams?.enabled ? 'text-green-700' : 'text-gray-500'}`}>
+                                        {systemStatus.streams?.enabled ? 'Activo' : 'Inactivo'}
+                                    </p>
+                                    <p className="text-[10px] text-gray-400">
+                                        Intervalo {systemStatus.streams?.intervalMinutes ?? '-'} min
+                                    </p>
+                                </div>
+                                <div className="md:col-span-3 text-[10px] text-gray-400">
+                                    Entorno: {systemStatus.nodeEnv || '-'} · {systemStatus.serverTime ? new Date(systemStatus.serverTime).toLocaleString('es-AR') : ''}
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="mt-4 text-xs text-gray-400">Sin datos de sistema.</p>
+                        )}
                     </div>
                     <div className="bg-white rounded-xl shadow-sm border p-6">
                         <div className="flex items-center justify-between">
