@@ -2,6 +2,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { Button } from './Button';
 
+// NoticeModal shows lightweight feedback for success, warning, or errors.
 type NoticeTone = 'info' | 'success' | 'warning' | 'error';
 
 const TONE_STYLES: Record<NoticeTone, { bg: string; text: string }> = {

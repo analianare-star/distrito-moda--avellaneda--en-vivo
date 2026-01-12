@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Flag, AlertTriangle } from 'lucide-react';
 import { Button } from './Button';
 
+// ReportModal collects a reason to report a stream.
 const REASONS = [
   { value: 'SPAM', label: 'Spam o publicidad' },
   { value: 'OFFTOPIC', label: 'Contenido fuera de tema' },

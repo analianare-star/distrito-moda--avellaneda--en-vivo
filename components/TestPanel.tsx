@@ -1,3 +1,4 @@
+// TestPanel offers admin QA controls for staging flows and data resets.
 import React, { useState } from 'react';
 import { Button } from './Button';
 import { api } from '../services/api';

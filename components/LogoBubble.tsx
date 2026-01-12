@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 
+// LogoBubble displays a branded avatar with animated pastel background.
 type LogoBubbleProps = {
   src?: string;
   alt: string;

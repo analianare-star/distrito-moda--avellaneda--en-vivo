@@ -5,6 +5,8 @@ import { Button } from './Button';
 import { LogoBubble } from './LogoBubble';
 import { PlayCircle, Users, ChevronLeft, ChevronRight, Plus, Sparkles } from 'lucide-react';
 
+// HeroSection renders the featured live carousel and filter controls.
+
 interface HeroSectionProps {
     activeFilter: string;
     onFilterChange: (filter: string) => void;

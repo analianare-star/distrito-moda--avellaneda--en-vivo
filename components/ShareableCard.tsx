@@ -6,6 +6,7 @@ import { LogoBubble } from './LogoBubble';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
+// ShareableCard builds the downloadable shop profile card.
 interface ShareableCardProps {
   shop: Shop;
   stream?: Stream; 

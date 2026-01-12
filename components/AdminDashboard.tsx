@@ -4,6 +4,8 @@ import { Button } from './Button';
 import { LayoutDashboard, Radio, Store, AlertTriangle, CheckCircle, XCircle, Edit, AlertOctagon, BarChart3, Search, Eye, EyeOff, PlayCircle, StopCircle, X, Film, Plus, Save, MapPin, CreditCard, User, Lock, ShoppingBag, Calendar } from 'lucide-react';
 import { StreamStatus, DataIntegrityStatus, Stream, Shop, Reel } from '../types';
 import { api } from '../services/api';
+
+// AdminDashboard centralizes moderation, governance, and system operations.
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { NoticeModal } from './NoticeModal';
 

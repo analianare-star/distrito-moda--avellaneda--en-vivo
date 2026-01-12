@@ -2,6 +2,7 @@ import React from 'react';
 import { Info } from 'lucide-react';
 import { Button } from './Button';
 
+// EmptyState provides a friendly placeholder with optional CTA.
 interface EmptyStateProps {
   title: string;
   message: string;

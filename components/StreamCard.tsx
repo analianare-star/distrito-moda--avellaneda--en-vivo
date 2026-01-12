@@ -1,3 +1,4 @@
+// StreamCard renders a live card with CTA actions and state badges.
 import React, { useState, useEffect } from 'react';
 import { Stream, StreamStatus, UserContext } from '../types';
 import { Button } from './Button';

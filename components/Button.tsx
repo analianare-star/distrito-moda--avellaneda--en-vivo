@@ -1,3 +1,4 @@
+// Button centralizes size and variant styling across the UI.
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

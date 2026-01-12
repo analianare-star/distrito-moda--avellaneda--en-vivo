@@ -5,6 +5,7 @@ import { ShareableCard } from './ShareableCard';
 import { LogoBubble } from './LogoBubble';
 import { X, MapPin, Globe, Instagram, Phone, UserPlus, Check, AlertOctagon, Clock } from 'lucide-react';
 
+// ShopDetailModal presents the shop profile with contact and agenda actions.
 interface ShopDetailModalProps {
   shop: Shop;
   shopStreams?: Stream[]; 

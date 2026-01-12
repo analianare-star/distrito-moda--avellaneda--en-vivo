@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 // Asegurate de que la ruta a 'types' sea correcta (a veces es './types' o '../types')
 import {
   ViewMode,
@@ -9,17 +10,17 @@ import {
   Reel,
   NotificationItem,
 } from "./types";
-import { HeroSection } from "./components/HeroSection";
-import { StreamCard } from "./components/StreamCard";
-import { Dashboard } from "./components/Dashboard";
-import { AdminDashboard } from "./components/AdminDashboard";
 import { LogoBubble } from "./components/LogoBubble";
 import { Button } from "./components/Button";
-import { EmptyState } from "./components/EmptyState";
-import { ShopDetailModal } from "./components/ShopDetailModal";
-import { StoryModal } from "./components/StoryModal";
 import { NoticeModal } from "./components/NoticeModal";
 import { ReportModal } from "./components/ReportModal";
+import { AppHeader } from "./components/layout/AppHeader";
+import { AppFooterNav } from "./components/layout/AppFooterNav";
+import { AccountDrawer } from "./components/layout/AccountDrawer";
+import { AdminPreviewBanner } from "./components/layout/AdminPreviewBanner";
+import { ClientView } from "./components/views/ClientView";
+import { MerchantView } from "./components/views/MerchantView";
+import { AdminView } from "./components/views/AdminView";
 import { api } from "./services/api";
 import {
   X,
@@ -34,13 +35,10 @@ import {
   Store,
   Shield,
   Receipt,
-  ChevronDown,
   Globe,
   Film,
   Mail,
   Key,
-  Search,
-  CalendarDays,
 } from "lucide-react";
 import { FaStore, FaUser, FaEnvelope } from "react-icons/fa";
 import { auth, googleProvider } from "./firebase";
@@ -111,6 +109,8 @@ const EMPTY_SHOP: Shop = {
 const BRAND_LOGO = new URL("./img/logo.svg", import.meta.url).href;
 
 const App: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("CLIENT");
   const [adminPreview, setAdminPreview] = useState<{
     mode: ViewMode;
@@ -119,7 +119,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeBottomNav, setActiveBottomNav] = useState("home");
   const [adminTab, setAdminTab] = useState<
-    "DASHBOARD" | "AGENDA" | "STREAMS" | "SHOPS" | "REELS" | "ADMIN"
+    "DASHBOARD" | "AGENDA" | "STREAMS" | "SHOPS" | "REELS" | "ADMIN" | "REPORTS"
   >("DASHBOARD");
   const [merchantTab, setMerchantTab] = useState<MerchantTab>("RESUMEN");
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
@@ -215,6 +215,11 @@ const App: React.FC = () => {
   ) => {
     setNotice({ title, message, tone });
   };
+  const navigateTo = (path: string, replace = false) => {
+    if (location.pathname !== path) {
+      navigate(path, { replace });
+    }
+  };
   const pushHistory = (label: string) => {
     setUser((prev) => {
       if (!prev.isLoggedIn) return prev;
@@ -228,6 +233,7 @@ const App: React.FC = () => {
   const requireLogin = () => {
     setViewMode("CLIENT");
     setActiveBottomNav("account");
+    navigateTo("/cuenta");
     openLoginModal();
   };
   const requireClient = () => {
@@ -266,8 +272,6 @@ const App: React.FC = () => {
         new Date(a.fullDateISO).getTime() - new Date(b.fullDateISO).getTime()
     );
   const unreadNotifications = notifications.filter((note) => !note.read);
-  const userInitial =
-    (user.name || user.email || "C").trim().charAt(0).toUpperCase() || "C";
 
   // --- DATA LOADING & AUTO-UPDATE ---
   const refreshData = async () => {
@@ -314,20 +318,15 @@ const App: React.FC = () => {
           if (profile?.userType) {
             setAuthProfile(profile);
             if (profile.userType === "ADMIN") {
-              setViewMode("ADMIN");
-              setActiveBottomNav("panel");
-              setAdminTab("DASHBOARD");
+              navigateTo("/admin", true);
             } else if (profile.userType === "SHOP") {
-              setViewMode("MERCHANT");
-              setActiveBottomNav("resumen");
-              setMerchantTab("RESUMEN");
+              navigateTo("/tienda", true);
               if (profile.shopId) {
                 setCurrentShopId(profile.shopId);
               }
               await refreshNotifications(profile);
             } else {
-              setViewMode("CLIENT");
-              setActiveBottomNav("home");
+              navigateTo("/", true);
               await api.createClientMe({
                 displayName: fbUser.displayName || undefined,
                 avatarUrl: fbUser.photoURL || undefined,
@@ -346,17 +345,16 @@ const App: React.FC = () => {
             }
           } else {
             setAuthProfile(null);
-            setViewMode("CLIENT");
-            setActiveBottomNav("home");
+            navigateTo("/", true);
           }
         })();
         setLoginPromptDismissed(true);
         setShowLoginPrompt(false);
-      } else {
-        setUser((prev) => ({
-          ...prev,
-          id: prev.isLoggedIn ? `anon-${Date.now()}` : prev.id,
-          isLoggedIn: false,
+    } else {
+      setUser((prev) => ({
+        ...prev,
+        id: prev.isLoggedIn ? `anon-${Date.now()}` : prev.id,
+        isLoggedIn: false,
           favorites: [],
           reminders: [],
           viewedReels: [],
@@ -365,14 +363,15 @@ const App: React.FC = () => {
           reports: [],
         }));
         setNotifications([]);
-        setAdminPreview(null);
-        setAuthProfile(null);
-        setViewMode("CLIENT");
-        setActiveBottomNav("home");
-        setLoginPromptDismissed(false);
-        setShowLoginPrompt(false);
-        setHasBottomNavInteraction(false);
-      }
+      setAdminPreview(null);
+      setAuthProfile(null);
+      setViewMode("CLIENT");
+      setActiveBottomNav("home");
+      navigateTo("/", true);
+      setLoginPromptDismissed(false);
+      setShowLoginPrompt(false);
+      setHasBottomNavInteraction(false);
+    }
     });
 
     return () => unsubscribe();
@@ -422,27 +421,27 @@ const App: React.FC = () => {
   }, [isResetView]);
 
   useEffect(() => {
-    if (adminPreview) return;
-    if (!authProfile) {
-      if (viewMode !== "CLIENT") setViewMode("CLIENT");
+    if (isResetView || adminPreview) return;
+    if (!authProfile?.userType) return;
+    const path = location.pathname;
+    if (authProfile.userType === "ADMIN") {
+      if (!path.startsWith("/admin")) {
+        navigateTo("/admin", true);
+      }
       return;
     }
-    if (authProfile.userType === "ADMIN" && viewMode !== "ADMIN") {
-      setViewMode("ADMIN");
-      setActiveBottomNav("panel");
-      setAdminTab("DASHBOARD");
+    if (authProfile.userType === "SHOP") {
+      if (!path.startsWith("/tienda")) {
+        navigateTo("/tienda", true);
+      }
       return;
     }
-    if (authProfile.userType === "SHOP" && viewMode !== "MERCHANT") {
-      setViewMode("MERCHANT");
-      setActiveBottomNav("resumen");
-      return;
+    if (authProfile.userType === "CLIENT") {
+      if (path.startsWith("/admin") || path.startsWith("/tienda")) {
+        navigateTo("/", true);
+      }
     }
-    if (authProfile.userType === "CLIENT" && viewMode !== "CLIENT") {
-      setViewMode("CLIENT");
-      setActiveBottomNav("home");
-    }
-  }, [adminPreview, authProfile, viewMode]);
+  }, [adminPreview, authProfile, isResetView, location.pathname]);
 
   // --- AUTO LIFECYCLE SE MANEJA EN BACKEND ---
 
@@ -799,15 +798,12 @@ const App: React.FC = () => {
     if (!stream) return;
     setActiveBottomNav("home");
     setActiveFilter("Próximos");
+    navigateTo("/");
     setShopModalTab("INFO");
     setSelectedShopForModal(stream.shop);
     if (!note.read) {
       handleMarkNotificationRead(note.id);
     }
-  };
-
-  const handleLoginRequest = async () => {
-    openLoginModal("ENTRY");
   };
 
   const openLoginModal = (
@@ -854,6 +850,7 @@ const App: React.FC = () => {
     setActiveBottomNav("home");
     setLoginPromptDismissed(true);
     setShowLoginPrompt(false);
+    navigateTo("/");
   };
 
   const startAdminPreviewShop = (shopId: string) => {
@@ -862,6 +859,7 @@ const App: React.FC = () => {
     setCurrentShopId(shopId);
     setMerchantTab("RESUMEN");
     setActiveBottomNav("resumen");
+    navigateTo("/tienda");
   };
 
   const stopAdminPreview = () => {
@@ -869,6 +867,7 @@ const App: React.FC = () => {
     setViewMode("ADMIN");
     setActiveBottomNav("panel");
     setAdminTab("DASHBOARD");
+    navigateTo("/admin");
   };
 
   const blockPreviewAction = (
@@ -1256,6 +1255,7 @@ const App: React.FC = () => {
       return b.shop.ratingAverage - a.shop.ratingAverage;
     return (b.views || 0) - (a.views || 0);
   });
+  const filteredStreams = getFilteredStreams();
 
   const isPublicShop = (shop: Shop) => {
     if (!shop.status) return true;
@@ -1437,6 +1437,92 @@ const App: React.FC = () => {
     );
   };
 
+  useEffect(() => {
+    if (isResetView || adminPreview) return;
+    const path = location.pathname;
+    if (!authProfile?.userType) {
+      if (path.startsWith("/admin") || path.startsWith("/tienda")) {
+        setViewMode("CLIENT");
+        setActiveBottomNav("home");
+        navigateTo("/", true);
+        return;
+      }
+    }
+    if (path.startsWith("/admin")) {
+      setViewMode("ADMIN");
+      const nextTab = path.includes("/tiendas")
+        ? "SHOPS"
+        : path.includes("/vivos")
+        ? "STREAMS"
+        : path.includes("/compras")
+        ? "ADMIN"
+        : path.includes("/reportes")
+        ? "REPORTS"
+        : "DASHBOARD";
+      const nextNav =
+        nextTab === "SHOPS"
+          ? "shops"
+          : nextTab === "STREAMS"
+          ? "streams"
+          : nextTab === "ADMIN"
+          ? "purchases"
+          : nextTab === "REPORTS"
+          ? "reports"
+          : "panel";
+      setAdminTab(nextTab);
+      setActiveBottomNav(nextNav);
+      return;
+    }
+    if (path.startsWith("/tienda")) {
+      setViewMode("MERCHANT");
+      const nextTab = path.includes("/vivos")
+        ? "VIVOS"
+        : path.includes("/reels")
+        ? "REELS"
+        : path.includes("/redes")
+        ? "REDES"
+        : path.includes("/perfil")
+        ? "PERFIL"
+        : "RESUMEN";
+      const nextNav =
+        nextTab === "VIVOS"
+          ? "vivos"
+          : nextTab === "REELS"
+          ? "reels"
+          : nextTab === "REDES"
+          ? "redes"
+          : nextTab === "PERFIL"
+          ? "perfil"
+          : "resumen";
+      setMerchantTab(nextTab);
+      setActiveBottomNav(nextNav);
+      return;
+    }
+    setViewMode("CLIENT");
+    if (path === "/tiendas") {
+      setActiveBottomNav("shops");
+    } else if (path === "/en-vivo") {
+      setActiveBottomNav("live");
+      setActiveFilter("En Vivo");
+    } else if (path === "/recordatorios") {
+      setActiveBottomNav("reminders");
+      setSavedTab("REMINDERS");
+    } else if (path === "/favoritos") {
+      setActiveBottomNav("reminders");
+      setSavedTab("FAVORITES");
+    } else if (path === "/cuenta") {
+      setActiveBottomNav("account");
+      setAccountTab("RESUMEN");
+      setIsAccountDrawerOpen(true);
+    } else {
+      setActiveBottomNav("home");
+      setActiveFilter("Todos");
+    }
+    if (path !== "/cuenta" && isAccountDrawerOpen) {
+      setIsAccountDrawerOpen(false);
+    }
+  }, [location.pathname, adminPreview, isResetView, authProfile?.userType]);
+
   if (!isResetView && isLoading) {
     return (
       <div className="min-h-screen bg-white">
@@ -1499,8 +1585,14 @@ const App: React.FC = () => {
     if (id === "favorites") {
       setSavedTab("FAVORITES");
       setActiveBottomNav("reminders");
+      navigateTo("/favoritos");
     } else {
       setActiveBottomNav(id);
+      if (id === "home") navigateTo("/");
+      if (id === "shops") navigateTo("/tiendas");
+      if (id === "live") navigateTo("/en-vivo");
+      if (id === "reminders") navigateTo("/recordatorios");
+      if (id === "account") navigateTo("/cuenta");
     }
     if (id === "home") setActiveFilter("Todos");
     if (id === "live") setActiveFilter("En Vivo");
@@ -1526,6 +1618,17 @@ const App: React.FC = () => {
         ? "REPORTS"
         : "DASHBOARD";
     setAdminTab(nextTab);
+    const nextRoute =
+      id === "shops"
+        ? "/admin/tiendas"
+        : id === "streams"
+        ? "/admin/vivos"
+        : id === "purchases"
+        ? "/admin/compras"
+        : id === "reports"
+        ? "/admin/reportes"
+        : "/admin";
+    navigateTo(nextRoute);
   };
 
   const handleMerchantNav = (id: string) => {
@@ -1542,6 +1645,17 @@ const App: React.FC = () => {
         ? "PERFIL"
         : "RESUMEN";
     setMerchantTab(nextTab);
+    const nextRoute =
+      id === "vivos"
+        ? "/tienda/vivos"
+        : id === "reels"
+        ? "/tienda/reels"
+        : id === "redes"
+        ? "/tienda/redes"
+        : id === "perfil"
+        ? "/tienda/perfil"
+        : "/tienda";
+    navigateTo(nextRoute);
   };
 
   const syncMerchantTab = (tab: MerchantTab) => {
@@ -1557,6 +1671,17 @@ const App: React.FC = () => {
         ? "perfil"
         : "resumen";
     setActiveBottomNav(navId);
+    const nextRoute =
+      tab === "VIVOS"
+        ? "/tienda/vivos"
+        : tab === "REELS"
+        ? "/tienda/reels"
+        : tab === "REDES"
+        ? "/tienda/redes"
+        : tab === "PERFIL"
+        ? "/tienda/perfil"
+        : "/tienda";
+    navigateTo(nextRoute);
   };
 
   const isAdminUser = effectiveUserType === "ADMIN";
@@ -1807,89 +1932,17 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
-      {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-3 md:py-4 shadow-sm">
-        <div className="relative flex min-h-[84px] items-center justify-between">
-          <div className="relative hidden md:flex items-center">
-            <button
-              onClick={() => setIsDesktopMenuOpen((prev) => !prev)}
-              className="flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-[11px] font-bold text-gray-500 hover:text-dm-dark"
-              aria-expanded={isDesktopMenuOpen}
-              aria-controls="desktop-menu"
-            >
-              Menú
-              <ChevronDown
-                size={14}
-                className={`transition-transform ${
-                  isDesktopMenuOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-            {isDesktopMenuOpen && (
-              <div
-                id="desktop-menu"
-                className="absolute left-0 top-11 z-50 w-48 rounded-xl border border-gray-100 bg-white shadow-xl"
-              >
-                <div className="py-2">
-                  {bottomNavItems.map((item) => {
-                    const isActive = activeBottomNav === item.id;
-                    const badgeCount =
-                      typeof (item as any).badge === "number"
-                        ? (item as any).badge
-                        : 0;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          item.onSelect();
-                          setIsDesktopMenuOpen(false);
-                        }}
-                        className={`flex w-full items-center justify-between px-4 py-2 text-xs font-bold ${
-                          isActive ? "text-dm-crimson" : "text-gray-500"
-                        } hover:bg-gray-50`}
-                      >
-                        <span className="flex items-center gap-2">
-                          {item.label}
-                          {badgeCount > 0 && (
-                            <span className="rounded-full bg-dm-crimson px-1.5 py-0.5 text-[9px] font-bold text-white">
-                              {badgeCount > 9 ? "9+" : badgeCount}
-                            </span>
-                          )}
-                        </span>
-                        <item.icon size={14} />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="absolute left-1/2 -translate-x-1/2">
-            <img
-              src={BRAND_LOGO}
-              alt="Distrito Moda"
-              className="h-20 w-auto object-contain sm:h-24 md:h-28"
-            />
-          </div>
-          <div className="absolute bottom-2 right-4 flex flex-col items-end text-[11px] font-sans text-gray-500 leading-tight md:right-6">
-            <span className="flex items-center gap-1">
-              <span>Hola</span>
-              <span className="font-semibold text-dm-dark">·</span>
-              <span className="inline-block max-w-[150px] truncate font-semibold text-dm-dark">
-                {user.isLoggedIn ? user.name || "Cliente" : "Invitado"}
-              </span>
-            </span>
-            {user.isLoggedIn && (
-              <button
-                onClick={handleToggleClientLogin}
-                className="mt-0.5 text-[10px] font-semibold text-gray-400 underline underline-offset-2 hover:text-dm-crimson"
-              >
-                Salir
-              </button>
-            )}
-          </div>
-        </div>
-      </nav>
+      <AppHeader
+        brandLogo={BRAND_LOGO}
+        bottomNavItems={bottomNavItems}
+        activeBottomNav={activeBottomNav}
+        isDesktopMenuOpen={isDesktopMenuOpen}
+        onToggleDesktopMenu={() => setIsDesktopMenuOpen((prev) => !prev)}
+        onCloseDesktopMenu={() => setIsDesktopMenuOpen(false)}
+        userName={user.isLoggedIn ? user.name || "Cliente" : "Invitado"}
+        isLoggedIn={user.isLoggedIn}
+        onLogout={handleToggleClientLogin}
+      />
 
       {effectiveViewMode === "CLIENT" &&
         !user.isLoggedIn &&
@@ -2210,385 +2263,64 @@ const App: React.FC = () => {
           </div>
         )}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white/95 backdrop-blur-sm md:hidden overflow-visible">
-        <div className="mx-auto grid w-full max-w-md grid-cols-5 items-end gap-1 px-2 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-3">
-          {bottomNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeBottomNav === item.id;
-            const badgeCount =
-              typeof (item as any).badge === "number" ? (item as any).badge : 0;
-            return (
-              <button
-                key={item.id}
-                onClick={item.onSelect}
-                className={`flex w-full min-h-[44px] flex-col items-center gap-1 text-[11px] font-semibold ${
-                  item.isCenter ? "-translate-y-4" : ""
-                } ${isActive ? "text-dm-crimson" : "text-gray-500"}`}
-              >
-                <span
-                  className={`relative flex h-12 w-12 items-center justify-center rounded-full ${
-                    item.isCenter
-                      ? "bg-dm-crimson text-white shadow-lg shadow-dm-crimson/30 ring-4 ring-white"
-                      : "bg-white"
-                  }`}
-                >
-                  <Icon
-                    size={20}
-                    className={
-                      item.isCenter
-                        ? "text-white"
-                        : isActive
-                        ? "text-dm-crimson"
-                        : "text-gray-400"
-                    }
-                  />
-                  {badgeCount > 0 && !item.isCenter && (
-                    <span className="absolute -right-0.5 -top-0.5 rounded-full bg-dm-crimson px-1.5 py-0.5 text-[9px] font-bold text-white">
-                      {badgeCount > 9 ? "9+" : badgeCount}
-                    </span>
-                  )}
-                </span>
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+      <AppFooterNav items={bottomNavItems} activeId={activeBottomNav} />
 
       {adminPreview && (
-        <div className="fixed top-14 left-0 right-0 z-[60] flex items-center justify-between bg-dm-dark/95 px-4 py-2 text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex h-2 w-2 rounded-full bg-dm-crimson" />
-            <span>
-              Vista admin:{" "}
-              {adminPreview.mode === "CLIENT" ? "Cliente" : "Tienda"}
-              {adminPreview.mode === "MERCHANT" && previewShop?.name
-                ? ` · ${previewShop.name}`
-                : ""}
-            </span>
-          </div>
-          <button
-            onClick={stopAdminPreview}
-            className="rounded-full border border-white/20 px-3 py-1 text-[10px] font-bold text-white hover:border-white/60"
-          >
-            Volver al admin
-          </button>
-        </div>
+        <AdminPreviewBanner
+          mode={adminPreview.mode === "MERCHANT" ? "MERCHANT" : "CLIENT"}
+          shopName={adminPreview.mode === "MERCHANT" ? previewShop?.name : undefined}
+          onExit={stopAdminPreview}
+        />
       )}
 
-      <div
+      <main
         className={`${
           adminPreview ? "pt-24" : "pt-16"
         } pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12`}
       >
         {effectiveViewMode === "CLIENT" ? (
-          <>
-            <div className="mx-auto max-w-3xl px-4 pt-4 md:pt-6">
-              <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 shadow-sm">
-                <Search size={16} className="text-gray-400" />
-                <input
-                  type="search"
-                  value={shopQuery}
-                  onChange={(event) => setShopQuery(event.target.value)}
-                  placeholder="Buscar tiendas, zonas o rubros"
-                  className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
-                />
-                {shopQuery && (
-                  <button
-                    onClick={() => setShopQuery("")}
-                    className="text-[11px] font-semibold text-gray-400 hover:text-dm-crimson"
-                  >
-                    Borrar
-                  </button>
-                )}
-              </div>
-            </div>
-            <HeroSection
-              activeFilter={activeFilter}
-              onFilterChange={setActiveFilter}
-              liveStreams={sortedLiveStreams}
-              activeReels={activeReels}
-              onViewReel={handleViewReel}
-              viewedReels={user.viewedReels}
-              onOpenShop={handleOpenShop}
-            />
-
-            <main className="max-w-7xl mx-auto px-4 py-10">
-              {(activeBottomNav === "home" || activeBottomNav === "live") && (
-                <>
-                  <div className="flex items-center justify-between mb-8">
-                    <h2 className="font-serif text-3xl text-dm-dark">
-                      Agenda de Vivos
-                    </h2>
-                    <div className="text-sm font-sans text-gray-500">
-                      Mostrando:{" "}
-                      <span className="font-bold text-dm-crimson">
-                        {activeFilter}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {getFilteredStreams().map((stream) => (
-                      <StreamCard
-                        key={stream.id}
-                        stream={stream}
-                        user={user}
-                        canClientInteract={canClientInteract}
-                        onNotify={notify}
-                        onOpenShop={() => handleOpenShop(stream.shop)}
-                        onReport={handleReportStream}
-                        onToggleReminder={handleToggleReminder}
-                        onLike={handleLikeStream}
-                        onRate={handleRateStream}
-                        onDownloadCard={handleDownloadCard}
-                      />
-                    ))}
-                    {getFilteredStreams().length === 0 && (
-                      <EmptyState
-                        title="No hay vivos con este filtro"
-                        message="Probá ver todos los vivos o revisá más tarde."
-                        actionLabel="Ver todos"
-                        onAction={() => {
-                          setActiveFilter("Todos");
-                          setActiveBottomNav("home");
-                        }}
-                      />
-                    )}
-                  </div>
-                </>
-              )}
-
-              {activeBottomNav === "shops" && (
-                <>
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="font-serif text-3xl text-dm-dark">
-                      Tiendas
-                    </h2>
-                    <div className="text-sm font-sans text-gray-500">
-                      {filteredPublicShops.length} registradas
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {filteredPublicShops.map((shop) => renderShopCard(shop))}
-                    {filteredPublicShops.length === 0 && (
-                      <EmptyState
-                        title="Aún no hay tiendas publicadas"
-                        message="Volvé más tarde o refrescá la lista."
-                        actionLabel="Actualizar"
-                        onAction={refreshData}
-                      />
-                    )}
-                  </div>
-                </>
-              )}
-
-              {(activeBottomNav === "favorites" ||
-                activeBottomNav === "reminders") && (
-                <>
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <h2 className="font-serif text-3xl text-dm-dark">
-                        {savedTab === "FAVORITES"
-                          ? "Favoritos"
-                          : "Recordatorios"}
-                      </h2>
-                      <p className="text-sm font-sans text-gray-500">
-                        {savedTab === "FAVORITES"
-                          ? `${filteredFavoriteShops.length} tiendas guardadas`
-                          : `${reminderStreams.length} recordatorios activos`}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 rounded-full border border-gray-100 bg-white p-1 text-[11px] font-bold">
-                      <button
-                        onClick={() => setSavedTab("FAVORITES")}
-                        className={`rounded-full px-3 py-1 ${
-                          savedTab === "FAVORITES"
-                            ? "bg-dm-crimson text-white"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        Favoritos
-                      </button>
-                      <button
-                        onClick={() => setSavedTab("REMINDERS")}
-                        className={`rounded-full px-3 py-1 ${
-                          savedTab === "REMINDERS"
-                            ? "bg-dm-crimson text-white"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        Recordatorios
-                      </button>
-                    </div>
-                  </div>
-                  {savedTab === "FAVORITES" ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {filteredFavoriteShops.map((shop) =>
-                        renderShopCard(shop)
-                      )}
-                      {filteredFavoriteShops.length === 0 && (
-                        <EmptyState
-                          title={
-                            canClientInteract
-                              ? "Sin favoritos todavía"
-                              : "Ingresá para guardar tiendas"
-                          }
-                          message={
-                            canClientInteract
-                              ? "Explorá tiendas y guardá las que te interesen."
-                              : "Necesitás iniciar sesión para guardar favoritos."
-                          }
-                          actionLabel={
-                            canClientInteract ? "Explorar tiendas" : "Ingresar"
-                          }
-                          onAction={() => {
-                            if (canClientInteract) {
-                              setActiveBottomNav("shops");
-                            } else {
-                              handleLoginRequest();
-                            }
-                          }}
-                        />
-                      )}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {reminderStreams.map((stream) => (
-                        <div
-                          key={stream.id}
-                          className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm"
-                        >
-                          <p className="text-xs text-gray-500 uppercase">
-                            Recordatorio
-                          </p>
-                          <p className="mt-1 text-sm font-bold text-dm-dark">
-                            {stream.title}
-                          </p>
-                          <p className="text-[11px] text-gray-500">
-                            {stream.scheduledTime} • {stream.shop.name}
-                          </p>
-                          <div className="mt-4 flex items-center justify-between text-[11px] font-bold">
-                            <button
-                              className="text-dm-crimson hover:text-dm-dark"
-                              onClick={() => handleOpenShop(stream.shop)}
-                            >
-                              Ver tienda
-                            </button>
-                            <button
-                              className="text-gray-500 hover:text-dm-crimson"
-                              onClick={() => handleToggleReminder(stream.id)}
-                            >
-                              Quitar
-                            </button>
-                            <button
-                              className="text-dm-crimson hover:text-dm-dark"
-                              onClick={() => handleOpenCalendarInvite(stream)}
-                            >
-                              Agregar al calendario
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                      {reminderStreams.length === 0 && (
-                        <EmptyState
-                          title={
-                            canClientInteract
-                              ? "Sin recordatorios activos"
-                              : "Ingresá para usar recordatorios"
-                          }
-                          message={
-                            canClientInteract
-                              ? "Agendá un vivo para recibir un aviso antes de empezar."
-                              : "Iniciá sesión para activar recordatorios."
-                          }
-                          actionLabel={
-                            canClientInteract ? "Ver vivos" : "Ingresar"
-                          }
-                          onAction={() => {
-                            if (canClientInteract) {
-                              setActiveBottomNav("home");
-                              setActiveFilter("Todos");
-                            } else {
-                              handleLoginRequest();
-                            }
-                          }}
-                        />
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {activeBottomNav === "account" && (
-                <div className="max-w-xl mx-auto rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-sm hidden md:block">
-                  <h2 className="font-serif text-2xl text-dm-dark">
-                    Tu cuenta
-                  </h2>
-                  {user.isLoggedIn ? (
-                    <>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Sesión activa como
-                      </p>
-                      <p className="mt-1 text-sm font-bold text-dm-dark">
-                        {user.name || user.email}
-                      </p>
-                      <Button
-                        className="mt-5"
-                        onClick={handleToggleClientLogin}
-                      >
-                        Cerrar sesión
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Inicia sesión para interactuar con tiendas.
-                      </p>
-                      <Button className="mt-5" onClick={openAudienceSelection}>
-                        Ingresar
-                      </Button>
-                      <button
-                        onClick={openClientRegister}
-                        className="mt-2 text-[11px] font-semibold text-gray-500 hover:text-dm-crimson"
-                      >
-                        Registrarme
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </main>
-
-            {selectedShopForModal && (
-              <ShopDetailModal
-                shop={selectedShopForModal}
-                shopStreams={allStreams.filter(
-                  (s) => s.shop.id === selectedShopForModal.id
-                )}
-                user={user}
-                canClientInteract={canClientInteract}
-                initialTab={shopModalTab}
-                onClose={() => {
-                  setSelectedShopForModal(null);
-                  setShopModalTab("INFO");
-                }}
-                onToggleFavorite={handleToggleFavorite}
-                onRequireLogin={requireLogin}
-                onNotify={notify}
-              />
-            )}
-
-            {selectedReel && (
-              <StoryModal
-                reel={selectedReel}
-                onClose={() => setSelectedReel(null)}
-                onNotify={notify}
-                isSeen={user.viewedReels.includes(selectedReel.id)}
-              />
-            )}
-          </>
+          <ClientView
+            activeBottomNav={activeBottomNav}
+            activeFilter={activeFilter}
+            savedTab={savedTab}
+            shopQuery={shopQuery}
+            filteredStreams={filteredStreams}
+            sortedLiveStreams={sortedLiveStreams}
+            activeReels={activeReels}
+            filteredPublicShops={filteredPublicShops}
+            filteredFavoriteShops={filteredFavoriteShops}
+            reminderStreams={reminderStreams}
+            selectedShopForModal={selectedShopForModal}
+            selectedReel={selectedReel}
+            shopModalTab={shopModalTab}
+            user={user}
+            canClientInteract={canClientInteract}
+            renderShopCard={renderShopCard}
+            onShopQueryChange={setShopQuery}
+            onClearShopQuery={() => setShopQuery("")}
+            onFilterChange={setActiveFilter}
+            onSelectBottomNav={handleClientNav}
+            onRefreshData={refreshData}
+            onOpenShop={handleOpenShop}
+            onViewReel={handleViewReel}
+            onReport={handleReportStream}
+            onToggleReminder={handleToggleReminder}
+            onLike={handleLikeStream}
+            onRate={handleRateStream}
+            onDownloadCard={handleDownloadCard}
+            onSetSavedTab={setSavedTab}
+            onOpenShopModalTab={setShopModalTab}
+            onCloseShopModal={() => setSelectedShopForModal(null)}
+            onCloseReel={() => setSelectedReel(null)}
+            onToggleFavorite={handleToggleFavorite}
+            onRequireLogin={requireLogin}
+            onLogout={handleToggleClientLogin}
+            onNotify={notify}
+            onOpenCalendarInvite={handleOpenCalendarInvite}
+            streams={allStreams}
+          />
         ) : effectiveViewMode === "MERCHANT" ? (
-          <Dashboard
+          <MerchantView
             currentShop={currentShop}
             streams={allStreams}
             onStreamCreate={handleStreamCreate}
@@ -2607,7 +2339,7 @@ const App: React.FC = () => {
             isPreview={Boolean(adminPreview)}
           />
         ) : (
-          <AdminDashboard
+          <AdminView
             streams={allStreams}
             setStreams={setAllStreams}
             shops={allShops}
@@ -2620,7 +2352,7 @@ const App: React.FC = () => {
             onShopUpdate={handleShopUpdate}
           />
         )}
-      </div>
+      </main>
 
       <NoticeModal
         isOpen={Boolean(notice)}
@@ -2674,315 +2406,27 @@ const App: React.FC = () => {
       )}
 
       {effectiveViewMode === "CLIENT" && (
-        <div
-          className={`fixed inset-0 z-[130] ${
-            isAccountDrawerOpen ? "pointer-events-auto" : "pointer-events-none"
-          }`}
-        >
-          <div
-            className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity ${
-              isAccountDrawerOpen ? "opacity-100" : "opacity-0"
-            }`}
-            onClick={() => setIsAccountDrawerOpen(false)}
-          />
-          <aside
-            className={`absolute right-0 top-0 h-full w-[88vw] max-w-sm bg-white/95 backdrop-blur-xl shadow-2xl border-l border-gray-200/70 transition-transform duration-300 md:w-[30vw] md:max-w-md rounded-l-3xl flex flex-col ${
-              isAccountDrawerOpen ? "translate-x-0" : "translate-x-full"
-            }`}
-          >
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-dm-crimson/10 text-dm-crimson font-bold">
-                  {user.isLoggedIn ? userInitial : "G"}
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-gray-400">
-                    Cuenta
-                  </p>
-                  <h3 className="font-serif text-xl text-dm-dark">
-                    Perfil y estado
-                  </h3>
-                  <p className="text-[10px] text-gray-400">
-                    {formatUserType(authProfile?.userType)}
-                  </p>
-                </div>
-              </div>
-              <button
-                className="text-gray-400 hover:text-dm-dark"
-                onClick={() => setIsAccountDrawerOpen(false)}
-                aria-label="Cerrar"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div className="px-6 pt-4 pb-2 border-b border-gray-100 flex gap-2">
-              {accountTabs.map((tab) => {
-                const TabIcon = tab.icon;
-                const badgeCount = tab.badge || 0;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setAccountTab(tab.id as any)}
-                    className={`flex-1 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${
-                      accountTab === tab.id
-                        ? "border-dm-crimson text-dm-crimson bg-red-50"
-                        : "border-gray-200 text-gray-400"
-                    }`}
-                  >
-                    <span className="flex items-center justify-center gap-1">
-                      <TabIcon size={12} />
-                      {tab.label}
-                      {badgeCount > 0 && (
-                        <span className="ml-1 rounded-full bg-dm-crimson px-1.5 py-0.5 text-[9px] font-bold text-white">
-                          {badgeCount > 9 ? "9+" : badgeCount}
-                        </span>
-                      )}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5">
-              {user.isLoggedIn ? (
-                accountTab === "RESUMEN" ? (
-                  <>
-                    <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                      <p className="text-xs text-gray-400 uppercase tracking-widest">
-                        Identidad
-                      </p>
-                      <p className="mt-1 text-sm font-bold text-dm-dark">
-                        {user.name || user.email}
-                      </p>
-                      <p className="text-[11px] text-gray-500">
-                        {user.email || "Correo no disponible"}
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div className="rounded-lg border border-gray-100 p-3 text-center">
-                        <p className="text-gray-400 uppercase tracking-widest">
-                          Favoritos
-                        </p>
-                        <p className="mt-1 text-lg font-bold text-dm-dark">
-                          {user.favorites.length}
-                        </p>
-                      </div>
-                      <div className="rounded-lg border border-gray-100 p-3 text-center">
-                        <p className="text-gray-400 uppercase tracking-widest">
-                          Recordatorios
-                        </p>
-                        <p className="mt-1 text-lg font-bold text-dm-dark">
-                          {user.reminders.length}
-                        </p>
-                      </div>
-                      <div className="rounded-lg border border-gray-100 p-3 text-center">
-                        <p className="text-gray-400 uppercase tracking-widest">
-                          Reportes
-                        </p>
-                        <p className="mt-1 text-lg font-bold text-dm-dark">
-                          {user.reports.length}
-                        </p>
-                      </div>
-                      <div className="rounded-lg border border-gray-100 p-3 text-center">
-                        <p className="text-gray-400 uppercase tracking-widest">
-                          Rol
-                        </p>
-                        <p className="mt-1 text-sm font-bold text-dm-dark">
-                          {formatUserType(authProfile?.userType)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <button
-                        className="rounded-lg border border-gray-100 p-3 text-left hover:border-dm-crimson"
-                        onClick={() => setAccountTab("NOTIFICATIONS")}
-                      >
-                        <p className="text-gray-400 uppercase tracking-widest">
-                          Notificaciones
-                        </p>
-                        <p className="mt-1 text-lg font-bold text-dm-dark">
-                          {unreadNotifications.length}
-                        </p>
-                        <p className="text-[10px] text-gray-400">Pendientes</p>
-                      </button>
-                      <button
-                        className="rounded-lg border border-gray-100 p-3 text-left hover:border-dm-crimson"
-                        onClick={() => setAccountTab("REMINDERS")}
-                      >
-                        <p className="text-gray-400 uppercase tracking-widest">
-                          Recordatorios
-                        </p>
-                        <p className="mt-1 text-lg font-bold text-dm-dark">
-                          {reminderStreams.length}
-                        </p>
-                        <p className="text-[10px] text-gray-400">Activos</p>
-                      </button>
-                    </div>
-                    {user.history.length > 0 && (
-                      <div className="rounded-xl border border-gray-100 bg-white p-4">
-                        <p className="text-[10px] uppercase tracking-widest text-gray-400">
-                          Actividad reciente
-                        </p>
-                        <div className="mt-2 space-y-2 max-h-32 overflow-y-auto pr-1 text-xs text-gray-500">
-                          {user.history.slice(0, 6).map((item, index) => (
-                            <div
-                              key={`${item.at}-${index}`}
-                              className="flex items-start justify-between gap-2"
-                            >
-                              <span className="flex-1">{item.label}</span>
-                              <span className="text-[10px] text-gray-400">
-                                {formatNotificationDate(item.at)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <Button
-                      className="w-full"
-                      onClick={handleToggleClientLogin}
-                    >
-                      Cerrar sesión
-                    </Button>
-                  </>
-                ) : accountTab === "NOTIFICATIONS" ? (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
-                        Notificaciones
-                      </p>
-                      {unreadNotifications.length > 0 && (
-                        <button
-                          className="text-[10px] font-bold text-dm-crimson"
-                          onClick={handleMarkAllNotificationsRead}
-                        >
-                          Marcar todo
-                        </button>
-                      )}
-                    </div>
-                    {notifications.length === 0 ? (
-                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center text-xs text-gray-500">
-                        Sin notificaciones por ahora.
-                      </div>
-                    ) : (
-                      <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
-                        {notifications.map((note) => (
-                          <div
-                            key={note.id}
-                            className="flex items-start gap-2 rounded-lg border border-gray-100 p-3"
-                          >
-                            <span
-                              className={`mt-1 h-2 w-2 rounded-full ${
-                                note.read ? "bg-gray-200" : "bg-dm-crimson"
-                              }`}
-                            />
-                            <div className="flex-1">
-                              <p
-                                className={`text-xs ${
-                                  note.read
-                                    ? "text-gray-500"
-                                    : "text-dm-dark font-semibold"
-                                }`}
-                              >
-                                {note.message}
-                              </p>
-                              <p className="text-[10px] text-gray-400">
-                                {formatNotificationDate(note.createdAt)}
-                              </p>
-                            </div>
-                            <div className="flex flex-col items-end gap-1 text-[10px]">
-                              {note.type === "REMINDER" && note.refId && (
-                                <button
-                                  className="font-bold text-dm-crimson hover:text-dm-dark"
-                                  onClick={() => handleNotificationAction(note)}
-                                >
-                                  Ver vivo
-                                </button>
-                              )}
-                              {!note.read && (
-                                <button
-                                  className="font-bold text-gray-400 hover:text-dm-dark"
-                                  onClick={() =>
-                                    handleMarkNotificationRead(note.id)
-                                  }
-                                >
-                                  Leído
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
-                      Mis recordatorios
-                    </p>
-                    {reminderStreams.length === 0 ? (
-                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center text-xs text-gray-500">
-                        No tenés recordatorios activos.
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {reminderStreams.map((stream) => (
-                          <div
-                            key={stream.id}
-                            className="rounded-lg border border-gray-100 p-3"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="text-xs font-semibold text-dm-dark">
-                                  {stream.title}
-                                </p>
-                                <p className="text-[10px] text-gray-400">
-                                  {stream.scheduledTime} • {stream.shop.name}
-                                </p>
-                              </div>
-                              <button
-                                className="text-[10px] font-bold text-gray-400 hover:text-dm-crimson"
-                                onClick={() => handleToggleReminder(stream.id)}
-                              >
-                                Quitar
-                              </button>
-                            </div>
-                            <div className="mt-2 flex justify-end">
-                              <button
-                                className="inline-flex items-center gap-1 text-[10px] font-bold text-dm-crimson hover:text-dm-dark"
-                                onClick={() => handleOpenCalendarInvite(stream)}
-                              >
-                                <CalendarDays size={12} />
-                                Agregar al calendario
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )
-              ) : (
-                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center">
-                  <p className="text-sm text-gray-500">
-                    Inicia sesión para interactuar con tiendas.
-                  </p>
-                  <Button
-                    className="mt-4 w-full"
-                    onClick={openAudienceSelection}
-                  >
-                    Ingresar
-                  </Button>
-                  <button
-                    onClick={openClientRegister}
-                    className="mt-2 text-[11px] font-semibold text-gray-500 hover:text-dm-crimson"
-                  >
-                    Registrarme
-                  </button>
-                </div>
-              )}
-            </div>
-          </aside>
-        </div>
+        <AccountDrawer
+          isOpen={isAccountDrawerOpen}
+          user={user}
+          userTypeLabel={formatUserType(authProfile?.userType)}
+          accountTabs={accountTabs}
+          activeTab={accountTab}
+          notifications={notifications}
+          unreadCount={unreadNotifications.length}
+          reminderStreams={reminderStreams}
+          formatNotificationDate={formatNotificationDate}
+          onClose={() => setIsAccountDrawerOpen(false)}
+          onTabChange={setAccountTab}
+          onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+          onMarkNotificationRead={handleMarkNotificationRead}
+          onNotificationAction={handleNotificationAction}
+          onToggleReminder={handleToggleReminder}
+          onOpenCalendarInvite={handleOpenCalendarInvite}
+          onLogin={openAudienceSelection}
+          onRegister={openClientRegister}
+          onLogout={handleToggleClientLogin}
+        />
       )}
     </div>
   );

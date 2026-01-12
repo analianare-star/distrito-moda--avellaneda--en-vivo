@@ -1,4 +1,4 @@
-
+// StoryModal shows a reel preview with actions and metadata.
 import React from 'react';
 import { Reel } from '../types';
 import { X, ExternalLink, Clock, Share2, Eye } from 'lucide-react';

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Search } from 'lucide-react';
 
+// AddressAutocomplete helps pick and normalize addresses for shop profiles.
 interface AddressDetails {
     street: string;
     number: string;

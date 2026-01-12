@@ -4,6 +4,8 @@ import { Plus, X, Instagram, Facebook, Video, AlertOctagon, Check, Save, Lock, R
 import { StreamStatus, Shop, SocialHandles, Stream, SocialPlatform, WhatsappLine, WhatsappLabel, Reel, NotificationItem } from '../types';
 import { PLANES_URL } from '../constants';
 import { AddressAutocomplete } from './AddressAutocomplete';
+
+// Dashboard is the shop control panel for schedule, reels, and profile data.
 import { api } from '../services/api';
 import { NoticeModal } from './NoticeModal';
 import { LogoBubble } from './LogoBubble';
