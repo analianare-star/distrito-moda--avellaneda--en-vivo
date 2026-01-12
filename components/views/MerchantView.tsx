@@ -1,7 +1,9 @@
 import React from "react";
-import { Dashboard } from "../Dashboard";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { NotificationItem, Shop, Stream } from "../../types";
+import { MerchantPage } from "../pages/merchant/MerchantPage";
 
+// MerchantView envuelve el panel de tienda con semantica clara.
 // MerchantView wraps the shop dashboard with semantic structure.
 type MerchantTab = "RESUMEN" | "VIVOS" | "REELS" | "REDES" | "PERFIL";
 
@@ -44,24 +46,129 @@ export const MerchantView: React.FC<MerchantViewProps> = ({
 }) => {
   return (
     <section aria-label="Panel de tienda">
-      <Dashboard
-        currentShop={currentShop}
-        streams={streams}
-        onStreamCreate={onStreamCreate}
-        onStreamUpdate={onStreamUpdate}
-        onStreamDelete={onStreamDelete}
-        onShopUpdate={onShopUpdate}
-        onExtendStream={onExtendStream}
-        onBuyQuota={onBuyQuota}
-        onReelChange={onReelChange}
-        onRefreshData={onRefreshData}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-        notifications={notifications}
-        onMarkNotificationRead={onMarkNotificationRead}
-        onMarkAllNotificationsRead={onMarkAllNotificationsRead}
-        isPreview={isPreview}
-      />
+      <Routes>
+        <Route
+          index
+          element={
+            <MerchantPage
+              tab="RESUMEN"
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              currentShop={currentShop}
+              streams={streams}
+              onStreamCreate={onStreamCreate}
+              onStreamUpdate={onStreamUpdate}
+              onStreamDelete={onStreamDelete}
+              onShopUpdate={onShopUpdate}
+              onExtendStream={onExtendStream}
+              onBuyQuota={onBuyQuota}
+              onReelChange={onReelChange}
+              onRefreshData={onRefreshData}
+              notifications={notifications}
+              onMarkNotificationRead={onMarkNotificationRead}
+              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+              isPreview={isPreview}
+            />
+          }
+        />
+        <Route
+          path="vivos"
+          element={
+            <MerchantPage
+              tab="VIVOS"
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              currentShop={currentShop}
+              streams={streams}
+              onStreamCreate={onStreamCreate}
+              onStreamUpdate={onStreamUpdate}
+              onStreamDelete={onStreamDelete}
+              onShopUpdate={onShopUpdate}
+              onExtendStream={onExtendStream}
+              onBuyQuota={onBuyQuota}
+              onReelChange={onReelChange}
+              onRefreshData={onRefreshData}
+              notifications={notifications}
+              onMarkNotificationRead={onMarkNotificationRead}
+              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+              isPreview={isPreview}
+            />
+          }
+        />
+        <Route
+          path="reels"
+          element={
+            <MerchantPage
+              tab="REELS"
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              currentShop={currentShop}
+              streams={streams}
+              onStreamCreate={onStreamCreate}
+              onStreamUpdate={onStreamUpdate}
+              onStreamDelete={onStreamDelete}
+              onShopUpdate={onShopUpdate}
+              onExtendStream={onExtendStream}
+              onBuyQuota={onBuyQuota}
+              onReelChange={onReelChange}
+              onRefreshData={onRefreshData}
+              notifications={notifications}
+              onMarkNotificationRead={onMarkNotificationRead}
+              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+              isPreview={isPreview}
+            />
+          }
+        />
+        <Route
+          path="redes"
+          element={
+            <MerchantPage
+              tab="REDES"
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              currentShop={currentShop}
+              streams={streams}
+              onStreamCreate={onStreamCreate}
+              onStreamUpdate={onStreamUpdate}
+              onStreamDelete={onStreamDelete}
+              onShopUpdate={onShopUpdate}
+              onExtendStream={onExtendStream}
+              onBuyQuota={onBuyQuota}
+              onReelChange={onReelChange}
+              onRefreshData={onRefreshData}
+              notifications={notifications}
+              onMarkNotificationRead={onMarkNotificationRead}
+              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+              isPreview={isPreview}
+            />
+          }
+        />
+        <Route
+          path="perfil"
+          element={
+            <MerchantPage
+              tab="PERFIL"
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              currentShop={currentShop}
+              streams={streams}
+              onStreamCreate={onStreamCreate}
+              onStreamUpdate={onStreamUpdate}
+              onStreamDelete={onStreamDelete}
+              onShopUpdate={onShopUpdate}
+              onExtendStream={onExtendStream}
+              onBuyQuota={onBuyQuota}
+              onReelChange={onReelChange}
+              onRefreshData={onRefreshData}
+              notifications={notifications}
+              onMarkNotificationRead={onMarkNotificationRead}
+              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+              isPreview={isPreview}
+            />
+          }
+        />
+        <Route path="*" element={<Navigate to="/tienda" replace />} />
+      </Routes>
     </section>
   );
 };

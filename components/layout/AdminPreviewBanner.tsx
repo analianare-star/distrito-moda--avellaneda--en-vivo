@@ -1,6 +1,7 @@
 import React from "react";
 
-// AdminPreviewBanner highlights when an admin is previewing client or shop views.
+// AdminPreviewBanner indica vista previa admin de cliente o tienda.
+// AdminPreviewBanner highlights admin preview for client or shop.
 interface AdminPreviewBannerProps {
   mode: "CLIENT" | "MERCHANT";
   shopName?: string;

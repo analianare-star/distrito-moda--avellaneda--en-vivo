@@ -1,8 +1,8 @@
 import React from "react";
 import { ChevronDown } from "lucide-react";
 
-// AppHeader renders the brand, desktop menu, and user greeting.
-// It keeps header semantics and avoids layout logic in App.
+// AppHeader muestra marca, menu y saludo del usuario.
+// AppHeader renders brand, menu, and user greeting.
 export interface HeaderNavItem {
   id: string;
   label: string;

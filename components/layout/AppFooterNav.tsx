@@ -1,7 +1,7 @@
 import React from "react";
 
-// AppFooterNav renders the bottom navigation for mobile.
-// It keeps labels, badges, and the center CTA in one place.
+// AppFooterNav muestra la navegacion inferior mobile.
+// AppFooterNav renders the mobile bottom navigation.
 export interface FooterNavItem {
   id: string;
   label: string;

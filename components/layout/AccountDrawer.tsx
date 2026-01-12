@@ -3,7 +3,8 @@ import { CalendarDays, X } from "lucide-react";
 import { Button } from "../Button";
 import { NotificationItem, Stream, UserContext } from "../../types";
 
-// AccountDrawer shows client profile, notifications, and reminders in a side panel.
+// AccountDrawer muestra perfil, notificaciones y recordatorios del cliente.
+// AccountDrawer renders client profile, notifications, and reminders.
 export type AccountTabId = "RESUMEN" | "NOTIFICATIONS" | "REMINDERS";
 
 export interface AccountTabItem {

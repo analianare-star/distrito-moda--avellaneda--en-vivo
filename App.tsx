@@ -1,6 +1,7 @@
-﻿import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-// Asegurate de que la ruta a 'types' sea correcta (a veces es './types' o '../types')
+import React, { useState, useEffect } from "react";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+// Verifica la ruta de 'types' si cambias estructura.
+// Check the 'types' import path if the structure changes.
 import {
   ViewMode,
   Shop,
@@ -84,7 +85,8 @@ const GoogleMark = () => (
 
 type MerchantTab = "RESUMEN" | "VIVOS" | "REELS" | "REDES" | "PERFIL";
 
-// --- TIENDA DE SEGURIDAD (para evitar crasheos cuando la DB esta vacia) ---
+// Estado de tienda seguro para evitar crashes.
+// Safe shop fallback to avoid crashes.
 const EMPTY_SHOP: Shop = {
   id: "empty",
   name: "Sin Tienda Seleccionada",
@@ -101,13 +103,15 @@ const EMPTY_SHOP: Shop = {
   penalties: [],
   reviews: [],
   ratingAverage: 0,
-  // Campos opcionales nuevos
+  // Campos opcionales nuevos / Optional fields
   paymentMethods: [],
   minimumPurchase: 0,
 };
 
 const BRAND_LOGO = new URL("./img/logo.svg", import.meta.url).href;
 
+// App orquesta estado, rutas y layout global.
+// App orchestrates state, routing, and global layout.
 const App: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -148,17 +152,15 @@ const App: React.FC = () => {
   const [resetViewBusy, setResetViewBusy] = useState(false);
 
   const isResetView =
-    typeof window !== "undefined" &&
-    (window.location.pathname.startsWith("/reset") ||
-      new URLSearchParams(window.location.search).get("mode") ===
-        "resetPassword");
+    location.pathname.startsWith("/reset") ||
+    new URLSearchParams(location.search).get("mode") === "resetPassword";
 
-  // --- CENTRALIZED STATE ---
+  // --- Estado central / Central state ---
   const [allShops, setAllShops] = useState<Shop[]>([]);
   const [allStreams, setAllStreams] = useState<Stream[]>([]);
   const [activeReels, setActiveReels] = useState<Reel[]>([]);
 
-  // User Simulation State
+  // Estado de usuario simulado / Simulated user state
   const [currentShopId, setCurrentShopId] = useState<string>("");
   const [user, setUser] = useState<UserContext>({
     id: `anon-${Date.now()}`,
@@ -175,7 +177,7 @@ const App: React.FC = () => {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [hasBottomNavInteraction, setHasBottomNavInteraction] = useState(false);
 
-  // UI States
+  // Estados de UI / UI state
   const [selectedShopForModal, setSelectedShopForModal] = useState<Shop | null>(
     null
   );
@@ -262,8 +264,8 @@ const App: React.FC = () => {
     setNotifications(Array.isArray(data) ? data : []);
   };
 
-  // --- Derived States (CON PROTECCION ANTI-CRASH) ---
-  // Si no encuentra la tienda o la lista esta vacia, usa la EMPTY_SHOP para no romper la pantalla.
+  // --- Estados derivados con proteccion anti-crash ---
+  // If shop list is empty, fallback to EMPTY_SHOP.
   const currentShop =
     allShops.find((s) => s.id === currentShopId) || allShops[0] || EMPTY_SHOP;
   const previewShop = adminPreview?.shopId
@@ -277,7 +279,7 @@ const App: React.FC = () => {
     );
   const unreadNotifications = notifications.filter((note) => !note.read);
 
-  // --- DATA LOADING & AUTO-UPDATE ---
+  // --- Carga de datos y auto-update / Data loading & auto-update ---
   const refreshData = async () => {
     try {
       const [shops, streams, reels] = await Promise.all([
@@ -290,7 +292,8 @@ const App: React.FC = () => {
       setAllStreams(streams);
       setActiveReels(reels);
 
-      // Initialize currentShopId only if empty and we have shops
+      // Inicializa currentShopId si esta vacio y hay tiendas.
+      // Initialize currentShopId when empty and shops exist.
       if (!currentShopId && shops.length > 0) {
         setCurrentShopId(shops[0].id);
       }
@@ -455,9 +458,10 @@ const App: React.FC = () => {
     }
   }, [adminPreview, authProfile, isResetView, location.pathname]);
 
-  // --- AUTO LIFECYCLE SE MANEJA EN BACKEND ---
+  // --- Ciclo automatico se maneja en backend ---
+  // Auto lifecycle handled by backend.
 
-  // --- BUSINESS LOGIC ACTIONS ---
+  // --- Acciones de negocio / Business actions ---
 
   const handleStreamCreate = async (newStream: Stream) => {
     if (blockPreviewAction()) return false;
@@ -519,7 +523,7 @@ const App: React.FC = () => {
   const handleShopUpdate = async (updatedShop: Shop) => {
     if (blockPreviewAction()) return false;
     try {
-      await api.updateShop(updatedShop.id, updatedShop); // Ajustado para pasar ID y data
+      await api.updateShop(updatedShop.id, updatedShop); // Ajustado para id y data / Adjusted for id and data
       await refreshData();
       return true;
     } catch (error) {
@@ -1450,8 +1454,12 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    if (isResetView || adminPreview) return;
+    if (isResetView) return;
     const path = location.pathname;
+    if (adminPreview && isAdminRoute(path)) {
+      setAdminPreview(null);
+    }
+    if (adminPreview) return;
     if (!authProfile?.userType) {
       if (isAdminRoute(path) || isShopRoute(path)) {
         setViewMode("CLIENT");
@@ -1698,6 +1706,9 @@ const App: React.FC = () => {
 
   const isAdminUser = effectiveUserType === "ADMIN";
   const isMerchantUser = effectiveUserType === "SHOP";
+  const canAccessAdminRoute = authProfile?.userType === "ADMIN";
+  const canAccessShopRoute =
+    authProfile?.userType === "SHOP" || adminPreview?.mode === "MERCHANT";
   const accountBadgeCount = unreadNotifications.length;
   const reminderBadgeCount = reminderStreams.length;
   const userTypeLabels: Record<string, string> = {
@@ -2290,80 +2301,101 @@ const App: React.FC = () => {
           adminPreview ? "pt-24" : "pt-16"
         } pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12`}
       >
-        {effectiveViewMode === "CLIENT" ? (
-          <ClientView
-            activeBottomNav={activeBottomNav}
-            activeFilter={activeFilter}
-            savedTab={savedTab}
-            shopQuery={shopQuery}
-            filteredStreams={filteredStreams}
-            sortedLiveStreams={sortedLiveStreams}
-            activeReels={activeReels}
-            filteredPublicShops={filteredPublicShops}
-            filteredFavoriteShops={filteredFavoriteShops}
-            reminderStreams={reminderStreams}
-            selectedShopForModal={selectedShopForModal}
-            selectedReel={selectedReel}
-            shopModalTab={shopModalTab}
-            user={user}
-            canClientInteract={canClientInteract}
-            renderShopCard={renderShopCard}
-            onShopQueryChange={setShopQuery}
-            onClearShopQuery={() => setShopQuery("")}
-            onFilterChange={setActiveFilter}
-            onSelectBottomNav={handleClientNav}
-            onRefreshData={refreshData}
-            onOpenShop={handleOpenShop}
-            onViewReel={handleViewReel}
-            onReport={handleReportStream}
-            onToggleReminder={handleToggleReminder}
-            onLike={handleLikeStream}
-            onRate={handleRateStream}
-            onDownloadCard={handleDownloadCard}
-            onSetSavedTab={setSavedTab}
-            onOpenShopModalTab={setShopModalTab}
-            onCloseShopModal={() => setSelectedShopForModal(null)}
-            onCloseReel={() => setSelectedReel(null)}
-            onToggleFavorite={handleToggleFavorite}
-            onRequireLogin={requireLogin}
-            onLogout={handleToggleClientLogin}
-            onNotify={notify}
-            onOpenCalendarInvite={handleOpenCalendarInvite}
-            streams={allStreams}
+        <Routes>
+          <Route
+            path="/admin/*"
+            element={
+              canAccessAdminRoute ? (
+                <AdminView
+                  streams={allStreams}
+                  setStreams={setAllStreams}
+                  shops={allShops}
+                  setShops={setAllShops}
+                  onRefreshData={refreshData}
+                  activeTab={adminTab}
+                  onTabChange={setAdminTab}
+                  onPreviewClient={startAdminPreviewClient}
+                  onPreviewShop={startAdminPreviewShop}
+                  onShopUpdate={handleShopUpdate}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-        ) : effectiveViewMode === "MERCHANT" ? (
-          <MerchantView
-            currentShop={currentShop}
-            streams={allStreams}
-            onStreamCreate={handleStreamCreate}
-            onStreamUpdate={handleStreamUpdate}
-            onStreamDelete={handleStreamDelete}
-            onShopUpdate={handleShopUpdate}
-            onExtendStream={handleExtendStream}
-            onBuyQuota={handleBuyQuota}
-            onReelChange={refreshData}
-            onRefreshData={refreshData}
-            activeTab={merchantTab}
-            onTabChange={syncMerchantTab}
-            notifications={notifications}
-            onMarkNotificationRead={handleMarkNotificationRead}
-            onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
-            isPreview={Boolean(adminPreview)}
+          <Route
+            path="/tienda/*"
+            element={
+              canAccessShopRoute ? (
+                <MerchantView
+                  currentShop={currentShop}
+                  streams={allStreams}
+                  onStreamCreate={handleStreamCreate}
+                  onStreamUpdate={handleStreamUpdate}
+                  onStreamDelete={handleStreamDelete}
+                  onShopUpdate={handleShopUpdate}
+                  onExtendStream={handleExtendStream}
+                  onBuyQuota={handleBuyQuota}
+                  onReelChange={refreshData}
+                  onRefreshData={refreshData}
+                  activeTab={merchantTab}
+                  onTabChange={syncMerchantTab}
+                  notifications={notifications}
+                  onMarkNotificationRead={handleMarkNotificationRead}
+                  onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+                  isPreview={Boolean(adminPreview)}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-        ) : (
-          <AdminView
-            streams={allStreams}
-            setStreams={setAllStreams}
-            shops={allShops}
-            setShops={setAllShops}
-            onRefreshData={refreshData}
-            activeTab={adminTab}
-            onTabChange={setAdminTab}
-            onPreviewClient={startAdminPreviewClient}
-            onPreviewShop={startAdminPreviewShop}
-            onShopUpdate={handleShopUpdate}
+          <Route
+            path="/*"
+            element={
+              <ClientView
+                activeBottomNav={activeBottomNav}
+                activeFilter={activeFilter}
+                savedTab={savedTab}
+                shopQuery={shopQuery}
+                filteredStreams={filteredStreams}
+                sortedLiveStreams={sortedLiveStreams}
+                activeReels={activeReels}
+                filteredPublicShops={filteredPublicShops}
+                filteredFavoriteShops={filteredFavoriteShops}
+                reminderStreams={reminderStreams}
+                selectedShopForModal={selectedShopForModal}
+                selectedReel={selectedReel}
+                shopModalTab={shopModalTab}
+                user={user}
+                canClientInteract={canClientInteract}
+                renderShopCard={renderShopCard}
+                onShopQueryChange={setShopQuery}
+                onClearShopQuery={() => setShopQuery("")}
+                onFilterChange={setActiveFilter}
+                onSelectBottomNav={handleClientNav}
+                onRefreshData={refreshData}
+                onOpenShop={handleOpenShop}
+                onViewReel={handleViewReel}
+                onReport={handleReportStream}
+                onToggleReminder={handleToggleReminder}
+                onLike={handleLikeStream}
+                onRate={handleRateStream}
+                onDownloadCard={handleDownloadCard}
+                onSetSavedTab={setSavedTab}
+                onOpenShopModalTab={setShopModalTab}
+                onCloseShopModal={() => setSelectedShopForModal(null)}
+                onCloseReel={() => setSelectedReel(null)}
+                onToggleFavorite={handleToggleFavorite}
+                onRequireLogin={requireLogin}
+                onLogout={handleToggleClientLogin}
+                onNotify={notify}
+                onOpenCalendarInvite={handleOpenCalendarInvite}
+                streams={allStreams}
+              />
+            }
           />
-        )}
+        </Routes>
       </main>
 
       <NoticeModal
