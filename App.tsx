@@ -226,6 +226,15 @@ const App: React.FC = () => {
     path === "/admin" || path.startsWith("/admin/");
   const isShopRoute = (path: string) =>
     path === "/tienda" || path.startsWith("/tienda/");
+  const getIdFromPath = (path: string, prefix: string) => {
+    if (!path.startsWith(prefix)) return null;
+    const rest = path.slice(prefix.length);
+    const id = rest.split("/").filter(Boolean)[0];
+    return id || null;
+  };
+  const getShopIdFromPath = (path: string) => getIdFromPath(path, "/tiendas/");
+  const getStreamIdFromPath = (path: string) =>
+    getIdFromPath(path, "/en-vivo/");
   const pushHistory = (label: string) => {
     setUser((prev) => {
       if (!prev.isLoggedIn) return prev;
@@ -1178,12 +1187,16 @@ const App: React.FC = () => {
     if (!requireClient()) return;
     setShopModalTab("CARD");
     setSelectedShopForModal(stream.shop);
+    navigateTo(`/tiendas/${stream.shop.id}`);
   };
 
   const handleOpenShop = (shop: Shop) => {
     setShopModalTab("INFO");
     setSelectedShopForModal(shop);
     setActiveShopCardId(null);
+    if (effectiveViewMode === "CLIENT") {
+      navigateTo(`/tiendas/${shop.id}`);
+    }
     if (user.isLoggedIn && authProfile?.userType === "CLIENT") {
       pushHistory(`Visitaste: ${shop.name}`);
     }
@@ -1474,6 +1487,10 @@ const App: React.FC = () => {
         ? "SHOPS"
         : path.includes("/vivos")
         ? "STREAMS"
+        : path.includes("/agenda")
+        ? "AGENDA"
+        : path.includes("/reels")
+        ? "REELS"
         : path.includes("/compras")
         ? "ADMIN"
         : path.includes("/reportes")
@@ -1519,6 +1536,27 @@ const App: React.FC = () => {
       return;
     }
     setViewMode("CLIENT");
+    const shopIdFromPath = getShopIdFromPath(path);
+    const streamIdFromPath = getStreamIdFromPath(path);
+    if (shopIdFromPath) {
+      setActiveBottomNav("shops");
+      const match = allShops.find((shop) => shop.id === shopIdFromPath);
+      if (match && selectedShopForModal?.id !== match.id) {
+        setShopModalTab("INFO");
+        setSelectedShopForModal(match);
+      }
+      return;
+    }
+    if (streamIdFromPath) {
+      setActiveBottomNav("live");
+      setActiveFilter("En Vivo");
+      const streamMatch = allStreams.find((stream) => stream.id === streamIdFromPath);
+      if (streamMatch && selectedShopForModal?.id !== streamMatch.shop.id) {
+        setShopModalTab("INFO");
+        setSelectedShopForModal(streamMatch.shop);
+      }
+      return;
+    }
     if (path === "/tiendas") {
       setActiveBottomNav("shops");
     } else if (path === "/en-vivo") {
@@ -1541,7 +1579,15 @@ const App: React.FC = () => {
     if (path !== "/cuenta" && isAccountDrawerOpen) {
       setIsAccountDrawerOpen(false);
     }
-  }, [location.pathname, adminPreview, isResetView, authProfile?.userType]);
+  }, [
+    location.pathname,
+    adminPreview,
+    isResetView,
+    authProfile?.userType,
+    allShops,
+    allStreams,
+    selectedShopForModal?.id,
+  ]);
 
   if (!isResetView && isLoading) {
     return (
@@ -1648,6 +1694,38 @@ const App: React.FC = () => {
         : id === "reports"
         ? "/admin/reportes"
         : "/admin";
+    navigateTo(nextRoute);
+  };
+
+  const syncAdminTab = (
+    tab: "DASHBOARD" | "AGENDA" | "STREAMS" | "SHOPS" | "REELS" | "ADMIN" | "REPORTS"
+  ) => {
+    setAdminTab(tab);
+    const nextRoute =
+      tab === "SHOPS"
+        ? "/admin/tiendas"
+        : tab === "STREAMS"
+        ? "/admin/vivos"
+        : tab === "AGENDA"
+        ? "/admin/agenda"
+        : tab === "REELS"
+        ? "/admin/reels"
+        : tab === "ADMIN"
+        ? "/admin/compras"
+        : tab === "REPORTS"
+        ? "/admin/reportes"
+        : "/admin";
+    const nextNav =
+      tab === "SHOPS"
+        ? "shops"
+        : tab === "STREAMS"
+        ? "streams"
+        : tab === "ADMIN"
+        ? "purchases"
+        : tab === "REPORTS"
+        ? "reports"
+        : "panel";
+    setActiveBottomNav(nextNav);
     navigateTo(nextRoute);
   };
 
@@ -2306,18 +2384,18 @@ const App: React.FC = () => {
             path="/admin/*"
             element={
               canAccessAdminRoute ? (
-                <AdminView
-                  streams={allStreams}
-                  setStreams={setAllStreams}
-                  shops={allShops}
-                  setShops={setAllShops}
-                  onRefreshData={refreshData}
-                  activeTab={adminTab}
-                  onTabChange={setAdminTab}
-                  onPreviewClient={startAdminPreviewClient}
-                  onPreviewShop={startAdminPreviewShop}
-                  onShopUpdate={handleShopUpdate}
-                />
+          <AdminView
+            streams={allStreams}
+            setStreams={setAllStreams}
+            shops={allShops}
+            setShops={setAllShops}
+            onRefreshData={refreshData}
+            activeTab={adminTab}
+            onTabChange={syncAdminTab}
+            onPreviewClient={startAdminPreviewClient}
+            onPreviewShop={startAdminPreviewShop}
+            onShopUpdate={handleShopUpdate}
+          />
               ) : (
                 <Navigate to="/" replace />
               )
@@ -2384,7 +2462,15 @@ const App: React.FC = () => {
                 onDownloadCard={handleDownloadCard}
                 onSetSavedTab={setSavedTab}
                 onOpenShopModalTab={setShopModalTab}
-                onCloseShopModal={() => setSelectedShopForModal(null)}
+            onCloseShopModal={() => {
+              setSelectedShopForModal(null);
+              if (location.pathname.startsWith("/tiendas/")) {
+                navigateTo("/tiendas", true);
+              }
+              if (location.pathname.startsWith("/en-vivo/")) {
+                navigateTo("/en-vivo", true);
+              }
+            }}
                 onCloseReel={() => setSelectedReel(null)}
                 onToggleFavorite={handleToggleFavorite}
                 onRequireLogin={requireLogin}

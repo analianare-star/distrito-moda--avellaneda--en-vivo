@@ -88,6 +88,42 @@ export const AdminView: React.FC<AdminViewProps> = ({
           }
         />
         <Route
+          path="agenda"
+          element={
+            <AdminPage
+              tab="AGENDA"
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              streams={streams}
+              setStreams={setStreams}
+              shops={shops}
+              setShops={setShops}
+              onRefreshData={onRefreshData}
+              onPreviewClient={onPreviewClient}
+              onPreviewShop={onPreviewShop}
+              onShopUpdate={onShopUpdate}
+            />
+          }
+        />
+        <Route
+          path="reels"
+          element={
+            <AdminPage
+              tab="REELS"
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              streams={streams}
+              setStreams={setStreams}
+              shops={shops}
+              setShops={setShops}
+              onRefreshData={onRefreshData}
+              onPreviewClient={onPreviewClient}
+              onPreviewShop={onPreviewShop}
+              onShopUpdate={onShopUpdate}
+            />
+          }
+        />
+        <Route
           path="compras"
           element={
             <AdminPage
