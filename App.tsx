@@ -1662,8 +1662,8 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-3 shadow-sm">
-        <div className="grid grid-cols-3 items-center">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-3 md:py-4 shadow-sm">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center">
           <div className="relative hidden md:flex items-center">
             <button
               onClick={() => setIsDesktopMenuOpen((prev) => !prev)}
@@ -1722,13 +1722,14 @@ const App: React.FC = () => {
             <img
               src={BRAND_LOGO}
               alt="Distrito Moda"
-              className="h-10 w-auto object-contain sm:h-11 md:h-12"
+              className="h-14 w-auto object-contain sm:h-16 md:h-20"
             />
           </div>
-          <div className="flex flex-col items-end text-xs font-sans text-gray-500">
-            <span>
-              Hola:{" "}
-              <span className="ml-1 inline-block max-w-[140px] truncate align-bottom font-semibold text-dm-dark">
+          <div className="flex flex-col items-end text-[11px] font-sans text-gray-500 leading-tight">
+            <span className="flex items-center gap-1">
+              <span>Hola</span>
+              <span className="font-semibold text-dm-dark">·</span>
+              <span className="inline-block max-w-[150px] truncate font-semibold text-dm-dark">
                 {user.isLoggedIn ? user.name || "Cliente" : "Invitado"}
               </span>
             </span>
@@ -2237,12 +2238,13 @@ const App: React.FC = () => {
                               style={{ backgroundImage: `url(${shop.coverUrl})` }}
                             />
                             <div
-                              className="absolute inset-0 backdrop-blur-[2px]"
+                              className="absolute inset-0"
                               style={{
                                 background:
-                                  "linear-gradient(120deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.7) 45%, rgba(255,255,255,0.18) 100%)",
+                                  "linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.75) 35%, rgba(255,255,255,0) 65%)",
                               }}
                             />
+                            <div className="absolute inset-y-0 left-0 w-[35%] bg-white/45 backdrop-blur-[3px]" />
                           </>
                         )}
                         <div className="relative z-10">
@@ -2363,12 +2365,13 @@ const App: React.FC = () => {
                                 }}
                               />
                               <div
-                                className="absolute inset-0 backdrop-blur-[2px]"
+                                className="absolute inset-0"
                                 style={{
                                   background:
-                                    "linear-gradient(120deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.7) 45%, rgba(255,255,255,0.18) 100%)",
+                                    "linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.75) 35%, rgba(255,255,255,0) 65%)",
                                 }}
                               />
+                              <div className="absolute inset-y-0 left-0 w-[35%] bg-white/45 backdrop-blur-[3px]" />
                             </>
                           )}
                           <div className="relative z-10">
