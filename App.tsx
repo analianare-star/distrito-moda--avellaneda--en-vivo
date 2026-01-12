@@ -220,6 +220,10 @@ const App: React.FC = () => {
       navigate(path, { replace });
     }
   };
+  const isAdminRoute = (path: string) =>
+    path === "/admin" || path.startsWith("/admin/");
+  const isShopRoute = (path: string) =>
+    path === "/tienda" || path.startsWith("/tienda/");
   const pushHistory = (label: string) => {
     setUser((prev) => {
       if (!prev.isLoggedIn) return prev;
@@ -305,6 +309,8 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isResetView) return;
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      const currentPath =
+        typeof window !== "undefined" ? window.location.pathname : "/";
       if (fbUser) {
         setUser((prev) => ({
           ...prev,
@@ -326,7 +332,9 @@ const App: React.FC = () => {
               }
               await refreshNotifications(profile);
             } else {
-              navigateTo("/", true);
+              if (isAdminRoute(currentPath) || isShopRoute(currentPath)) {
+                navigateTo("/", true);
+              }
               await api.createClientMe({
                 displayName: fbUser.displayName || undefined,
                 avatarUrl: fbUser.photoURL || undefined,
@@ -345,7 +353,9 @@ const App: React.FC = () => {
             }
           } else {
             setAuthProfile(null);
-            navigateTo("/", true);
+            if (isAdminRoute(currentPath) || isShopRoute(currentPath)) {
+              navigateTo("/", true);
+            }
           }
         })();
         setLoginPromptDismissed(true);
@@ -367,7 +377,9 @@ const App: React.FC = () => {
       setAuthProfile(null);
       setViewMode("CLIENT");
       setActiveBottomNav("home");
-      navigateTo("/", true);
+      if (isAdminRoute(currentPath) || isShopRoute(currentPath)) {
+        navigateTo("/", true);
+      }
       setLoginPromptDismissed(false);
       setShowLoginPrompt(false);
       setHasBottomNavInteraction(false);
@@ -425,19 +437,19 @@ const App: React.FC = () => {
     if (!authProfile?.userType) return;
     const path = location.pathname;
     if (authProfile.userType === "ADMIN") {
-      if (!path.startsWith("/admin")) {
+      if (!isAdminRoute(path)) {
         navigateTo("/admin", true);
       }
       return;
     }
     if (authProfile.userType === "SHOP") {
-      if (!path.startsWith("/tienda")) {
+      if (!isShopRoute(path)) {
         navigateTo("/tienda", true);
       }
       return;
     }
     if (authProfile.userType === "CLIENT") {
-      if (path.startsWith("/admin") || path.startsWith("/tienda")) {
+      if (isAdminRoute(path) || isShopRoute(path)) {
         navigateTo("/", true);
       }
     }
@@ -1441,14 +1453,14 @@ const App: React.FC = () => {
     if (isResetView || adminPreview) return;
     const path = location.pathname;
     if (!authProfile?.userType) {
-      if (path.startsWith("/admin") || path.startsWith("/tienda")) {
+      if (isAdminRoute(path) || isShopRoute(path)) {
         setViewMode("CLIENT");
         setActiveBottomNav("home");
         navigateTo("/", true);
         return;
       }
     }
-    if (path.startsWith("/admin")) {
+    if (isAdminRoute(path)) {
       setViewMode("ADMIN");
       const nextTab = path.includes("/tiendas")
         ? "SHOPS"
@@ -1473,7 +1485,7 @@ const App: React.FC = () => {
       setActiveBottomNav(nextNav);
       return;
     }
-    if (path.startsWith("/tienda")) {
+    if (isShopRoute(path)) {
       setViewMode("MERCHANT");
       const nextTab = path.includes("/vivos")
         ? "VIVOS"
