@@ -2226,34 +2226,71 @@ const App: React.FC = () => {
                       <button
                         key={shop.id}
                         onClick={() => handleOpenShop(shop)}
-                        className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm transition hover:shadow-md"
+                        className={`group relative overflow-hidden rounded-2xl border border-gray-100 p-4 md:p-5 text-left shadow-sm transition hover:shadow-md ${
+                          shop.coverUrl ? "min-h-[140px]" : "bg-white"
+                        }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <LogoBubble
-                            src={shop.logoUrl}
-                            alt={shop.name}
-                            size={48}
-                            seed={shop.id || shop.name}
-                          />
-                          <div>
-                            <p className="text-sm font-bold text-dm-dark">
-                              {shop.name}
-                            </p>
-                            <p className="text-[11px] text-gray-500 uppercase">
-                              {shop.plan}
-                            </p>
+                        {shop.coverUrl && (
+                          <>
+                            <div
+                              className="absolute inset-0 bg-cover bg-center"
+                              style={{ backgroundImage: `url(${shop.coverUrl})` }}
+                            />
+                            <div
+                              className="absolute inset-0 backdrop-blur-[2px]"
+                              style={{
+                                background:
+                                  "linear-gradient(120deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.7) 45%, rgba(255,255,255,0.18) 100%)",
+                              }}
+                            />
+                          </>
+                        )}
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-3">
+                            <LogoBubble
+                              src={shop.logoUrl}
+                              alt={shop.name}
+                              size={48}
+                              seed={shop.id || shop.name}
+                            />
+                            <div>
+                              <p className="text-sm font-bold text-dm-dark">
+                                {shop.name}
+                              </p>
+                              <p
+                                className={`text-[11px] uppercase ${
+                                  shop.coverUrl
+                                    ? "text-gray-600"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                {shop.plan}
+                              </p>
+                            </div>
                           </div>
+                          <div
+                            className={`mt-2 flex items-center gap-2 text-[10px] ${
+                              shop.coverUrl
+                                ? "text-gray-700"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            <span className="font-bold text-dm-dark">
+                              {shop.ratingAverage?.toFixed(1) || "0.0"}
+                            </span>
+                            <span>★</span>
+                            <span>({shop.ratingCount || 0})</span>
+                          </div>
+                          <p
+                            className={`mt-3 text-xs line-clamp-2 ${
+                              shop.coverUrl
+                                ? "text-gray-700"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {shop.address || "Sin dirección cargada"}
+                          </p>
                         </div>
-                        <div className="mt-2 flex items-center gap-2 text-[10px] text-gray-500">
-                          <span className="font-bold text-dm-dark">
-                            {shop.ratingAverage?.toFixed(1) || "0.0"}
-                          </span>
-                          <span>★</span>
-                          <span>({shop.ratingCount || 0})</span>
-                        </div>
-                        <p className="mt-3 text-xs text-gray-500 line-clamp-2">
-                          {shop.address || "Sin dirección cargada"}
-                        </p>
                       </button>
                     ))}
                     {filteredPublicShops.length === 0 && (
@@ -2313,27 +2350,60 @@ const App: React.FC = () => {
                         <button
                           key={shop.id}
                           onClick={() => handleOpenShop(shop)}
-                          className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm transition hover:shadow-md"
+                          className={`group relative overflow-hidden rounded-2xl border border-gray-100 p-4 md:p-5 text-left shadow-sm transition hover:shadow-md ${
+                            shop.coverUrl ? "min-h-[140px]" : "bg-white"
+                          }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <LogoBubble
-                              src={shop.logoUrl}
-                              alt={shop.name}
-                              size={48}
-                              seed={shop.id || shop.name}
-                            />
-                            <div>
-                              <p className="text-sm font-bold text-dm-dark">
-                                {shop.name}
-                              </p>
-                              <p className="text-[11px] text-gray-500 uppercase">
-                                {shop.plan}
-                              </p>
+                          {shop.coverUrl && (
+                            <>
+                              <div
+                                className="absolute inset-0 bg-cover bg-center"
+                                style={{
+                                  backgroundImage: `url(${shop.coverUrl})`,
+                                }}
+                              />
+                              <div
+                                className="absolute inset-0 backdrop-blur-[2px]"
+                                style={{
+                                  background:
+                                    "linear-gradient(120deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.7) 45%, rgba(255,255,255,0.18) 100%)",
+                                }}
+                              />
+                            </>
+                          )}
+                          <div className="relative z-10">
+                            <div className="flex items-center gap-3">
+                              <LogoBubble
+                                src={shop.logoUrl}
+                                alt={shop.name}
+                                size={48}
+                                seed={shop.id || shop.name}
+                              />
+                              <div>
+                                <p className="text-sm font-bold text-dm-dark">
+                                  {shop.name}
+                                </p>
+                                <p
+                                  className={`text-[11px] uppercase ${
+                                    shop.coverUrl
+                                      ? "text-gray-600"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  {shop.plan}
+                                </p>
+                              </div>
                             </div>
+                            <p
+                              className={`mt-3 text-xs line-clamp-2 ${
+                                shop.coverUrl
+                                  ? "text-gray-700"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              {shop.address || "Sin dirección cargada"}
+                            </p>
                           </div>
-                          <p className="mt-3 text-xs text-gray-500 line-clamp-2">
-                            {shop.address || "Sin dirección cargada"}
-                          </p>
                         </button>
                       ))}
                       {filteredFavoriteShops.length === 0 && (

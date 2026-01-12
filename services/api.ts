@@ -128,6 +128,7 @@ const mapShop = (shop: any): Shop => {
     ratingAverage: Number(shop?.ratingAverage ?? 0),
     ratingCount: Number(shop?.ratingCount ?? 0),
     logoUrl: shop?.logoUrl || '',
+    coverUrl: shop?.coverUrl || undefined,
     quotaWallet,
   };
 };
@@ -383,6 +384,7 @@ export const api = {
       email: data.email,
       address: data.address,
       logoUrl: data.logoUrl,
+      coverUrl: data.coverUrl,
       website: data.website,
       addressDetails: data.addressDetails || {},
       paymentMethods: data.paymentMethods || [],
