@@ -1722,7 +1722,7 @@ const App: React.FC = () => {
             <img
               src={BRAND_LOGO}
               alt="Distrito Moda"
-              className="h-8 w-auto object-contain"
+              className="h-10 w-auto object-contain sm:h-11 md:h-12"
             />
           </div>
           <div className="flex flex-col items-end text-xs font-sans text-gray-500">
