@@ -1356,6 +1356,19 @@ const App: React.FC = () => {
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${shop.coverUrl})` }}
         />
+        <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full bg-white/85 px-2 py-1 shadow-sm">
+          <div className="rounded-full bg-white/90 p-0.5 ring-2 ring-white">
+            <LogoBubble
+              src={shop.logoUrl}
+              alt={shop.name}
+              size={28}
+              seed={shop.id || shop.name}
+            />
+          </div>
+          <span className="max-w-[140px] truncate text-xs font-bold text-dm-dark">
+            {shop.name}
+          </span>
+        </div>
 
         {isActive && (
           <>
@@ -1779,7 +1792,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Navigation Bar */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-3 md:py-4 shadow-sm">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center">
+        <div className="relative flex min-h-[84px] items-center justify-between">
           <div className="relative hidden md:flex items-center">
             <button
               onClick={() => setIsDesktopMenuOpen((prev) => !prev)}
@@ -1834,14 +1847,14 @@ const App: React.FC = () => {
               </div>
             )}
           </div>
-          <div className="flex justify-center">
+          <div className="absolute left-1/2 -translate-x-1/2">
             <img
               src={BRAND_LOGO}
               alt="Distrito Moda"
-              className="h-16 w-auto object-contain sm:h-20 md:h-24"
+              className="h-20 w-auto object-contain sm:h-24 md:h-28"
             />
           </div>
-          <div className="flex flex-col items-end text-[11px] font-sans text-gray-500 leading-tight">
+          <div className="absolute bottom-2 right-4 flex flex-col items-end text-[11px] font-sans text-gray-500 leading-tight md:right-6">
             <span className="flex items-center gap-1">
               <span>Hola</span>
               <span className="font-semibold text-dm-dark">·</span>
