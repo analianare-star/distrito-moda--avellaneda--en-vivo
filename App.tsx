@@ -1352,10 +1352,27 @@ const App: React.FC = () => {
         onKeyDown={(event) => handleShopCardKeyDown(event, shop.id)}
         className="group relative min-h-[140px] overflow-hidden rounded-2xl border border-gray-100 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-dm-crimson/40"
       >
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${shop.coverUrl})` }}
+        <img
+          src={shop.coverUrl}
+          alt={`Portada ${shop.name}`}
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="lazy"
+          decoding="async"
+          draggable={false}
         />
+        <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full bg-white/85 px-2 py-1 shadow-sm">
+          <div className="rounded-full bg-white/90 p-0.5 ring-2 ring-white">
+            <LogoBubble
+              src={shop.logoUrl}
+              alt={shop.name}
+              size={28}
+              seed={shop.id || shop.name}
+            />
+          </div>
+          <span className="max-w-[140px] truncate text-xs font-bold text-dm-dark">
+            {shop.name}
+          </span>
+        </div>
         <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full bg-white/85 px-2 py-1 shadow-sm">
           <div className="rounded-full bg-white/90 p-0.5 ring-2 ring-white">
             <LogoBubble
