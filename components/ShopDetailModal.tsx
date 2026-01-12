@@ -71,7 +71,6 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                     style={{ backgroundImage: `url(${shop.coverUrl})` }}
                 />
             )}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-transparent" />
             <button 
                 onClick={onClose}
                 className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/20 hover:bg-black/40 rounded-full p-2 transition-colors z-10"

@@ -179,6 +179,7 @@ const App: React.FC = () => {
   const [selectedShopForModal, setSelectedShopForModal] = useState<Shop | null>(
     null
   );
+  const [activeShopCardId, setActiveShopCardId] = useState<string | null>(null);
   const [shopModalTab, setShopModalTab] = useState<"INFO" | "CARD">("INFO");
   const [selectedReel, setSelectedReel] = useState<Reel | null>(null);
   const [reportTarget, setReportTarget] = useState<Stream | null>(null);
@@ -1167,6 +1168,7 @@ const App: React.FC = () => {
   const handleOpenShop = (shop: Shop) => {
     setShopModalTab("INFO");
     setSelectedShopForModal(shop);
+    setActiveShopCardId(null);
     if (user.isLoggedIn && authProfile?.userType === "CLIENT") {
       pushHistory(`Visitaste: ${shop.name}`);
     }
@@ -1290,6 +1292,120 @@ const App: React.FC = () => {
   };
   const filteredPublicShops = filterShopsByQuery(publicShops);
   const filteredFavoriteShops = filterShopsByQuery(favoriteShops);
+  const toggleShopCard = (shopId: string) => {
+    setActiveShopCardId((prev) => (prev === shopId ? null : shopId));
+  };
+  const handleShopCardKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+    shopId: string
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      toggleShopCard(shopId);
+    }
+  };
+  const renderShopCard = (shop: Shop) => {
+    const isActive = activeShopCardId === shop.id;
+    const hasCover = Boolean(shop.coverUrl);
+
+    if (!hasCover) {
+      return (
+        <button
+          key={shop.id}
+          onClick={() => handleOpenShop(shop)}
+          className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm transition hover:shadow-md"
+        >
+          <div className="flex items-center gap-3">
+            <LogoBubble
+              src={shop.logoUrl}
+              alt={shop.name}
+              size={48}
+              seed={shop.id || shop.name}
+            />
+            <div>
+              <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
+              <p className="text-[11px] text-gray-500 uppercase">
+                {shop.plan}
+              </p>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center gap-2 text-[10px] text-gray-500">
+            <span className="font-bold text-dm-dark">
+              {shop.ratingAverage?.toFixed(1) || "0.0"}
+            </span>
+            <span>★</span>
+            <span>({shop.ratingCount || 0})</span>
+          </div>
+          <p className="mt-3 text-xs text-gray-500 line-clamp-2">
+            {shop.address || "Sin dirección cargada"}
+          </p>
+        </button>
+      );
+    }
+
+    return (
+      <div
+        key={shop.id}
+        role="button"
+        tabIndex={0}
+        onClick={() => toggleShopCard(shop.id)}
+        onKeyDown={(event) => handleShopCardKeyDown(event, shop.id)}
+        className="group relative min-h-[140px] overflow-hidden rounded-2xl border border-gray-100 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-dm-crimson/40"
+      >
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${shop.coverUrl})` }}
+        />
+
+        {isActive && (
+          <>
+            <div className="absolute inset-0 bg-white/75 backdrop-blur-md transition-opacity" />
+            <div className="relative z-10 flex h-full flex-col justify-between p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-white/80 p-1 ring-2 ring-white/90 shadow-sm">
+                  <LogoBubble
+                    src={shop.logoUrl}
+                    alt={shop.name}
+                    size={44}
+                    seed={shop.id || shop.name}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-dm-dark">
+                    {shop.name}
+                  </p>
+                  <p className="text-[11px] uppercase text-gray-600">
+                    {shop.plan}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2 text-[10px] text-gray-600">
+                    <span className="font-bold text-dm-dark">
+                      {shop.ratingAverage?.toFixed(1) || "0.0"}
+                    </span>
+                    <span>★</span>
+                    <span>({shop.ratingCount || 0})</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <p className="text-xs text-gray-700 line-clamp-2">
+                  {shop.address || "Sin dirección cargada"}
+                </p>
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleOpenShop(shop);
+                  }}
+                  className="whitespace-nowrap rounded-full bg-dm-crimson px-3 py-1.5 text-[11px] font-bold text-white shadow-sm hover:bg-dm-crimson/90"
+                >
+                  Ver más
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
 
   if (!isResetView && isLoading) {
     return (
@@ -1722,7 +1838,7 @@ const App: React.FC = () => {
             <img
               src={BRAND_LOGO}
               alt="Distrito Moda"
-              className="h-14 w-auto object-contain sm:h-16 md:h-20"
+              className="h-16 w-auto object-contain sm:h-20 md:h-24"
             />
           </div>
           <div className="flex flex-col items-end text-[11px] font-sans text-gray-500 leading-tight">
@@ -2223,78 +2339,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {filteredPublicShops.map((shop) => (
-                      <button
-                        key={shop.id}
-                        onClick={() => handleOpenShop(shop)}
-                        className={`group relative overflow-hidden rounded-2xl border border-gray-100 p-4 md:p-5 text-left shadow-sm transition hover:shadow-md ${
-                          shop.coverUrl ? "min-h-[140px]" : "bg-white"
-                        }`}
-                      >
-                        {shop.coverUrl && (
-                          <>
-                            <div
-                              className="absolute inset-0 bg-cover bg-center"
-                              style={{ backgroundImage: `url(${shop.coverUrl})` }}
-                            />
-                            <div
-                              className="absolute inset-0"
-                              style={{
-                                background:
-                                  "linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.75) 35%, rgba(255,255,255,0) 65%)",
-                              }}
-                            />
-                            <div className="absolute inset-y-0 left-0 w-[35%] bg-white/45 backdrop-blur-[3px]" />
-                          </>
-                        )}
-                        <div className="relative z-10">
-                          <div className="flex items-center gap-3">
-                            <LogoBubble
-                              src={shop.logoUrl}
-                              alt={shop.name}
-                              size={48}
-                              seed={shop.id || shop.name}
-                            />
-                            <div>
-                              <p className="text-sm font-bold text-dm-dark">
-                                {shop.name}
-                              </p>
-                              <p
-                                className={`text-[11px] uppercase ${
-                                  shop.coverUrl
-                                    ? "text-gray-600"
-                                    : "text-gray-500"
-                                }`}
-                              >
-                                {shop.plan}
-                              </p>
-                            </div>
-                          </div>
-                          <div
-                            className={`mt-2 flex items-center gap-2 text-[10px] ${
-                              shop.coverUrl
-                                ? "text-gray-700"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            <span className="font-bold text-dm-dark">
-                              {shop.ratingAverage?.toFixed(1) || "0.0"}
-                            </span>
-                            <span>★</span>
-                            <span>({shop.ratingCount || 0})</span>
-                          </div>
-                          <p
-                            className={`mt-3 text-xs line-clamp-2 ${
-                              shop.coverUrl
-                                ? "text-gray-700"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {shop.address || "Sin dirección cargada"}
-                          </p>
-                        </div>
-                      </button>
-                    ))}
+                    {filteredPublicShops.map((shop) => renderShopCard(shop))}
                     {filteredPublicShops.length === 0 && (
                       <EmptyState
                         title="Aún no hay tiendas publicadas"
@@ -2348,67 +2393,9 @@ const App: React.FC = () => {
                   </div>
                   {savedTab === "FAVORITES" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {filteredFavoriteShops.map((shop) => (
-                        <button
-                          key={shop.id}
-                          onClick={() => handleOpenShop(shop)}
-                          className={`group relative overflow-hidden rounded-2xl border border-gray-100 p-4 md:p-5 text-left shadow-sm transition hover:shadow-md ${
-                            shop.coverUrl ? "min-h-[140px]" : "bg-white"
-                          }`}
-                        >
-                          {shop.coverUrl && (
-                            <>
-                              <div
-                                className="absolute inset-0 bg-cover bg-center"
-                                style={{
-                                  backgroundImage: `url(${shop.coverUrl})`,
-                                }}
-                              />
-                              <div
-                                className="absolute inset-0"
-                                style={{
-                                  background:
-                                    "linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.75) 35%, rgba(255,255,255,0) 65%)",
-                                }}
-                              />
-                              <div className="absolute inset-y-0 left-0 w-[35%] bg-white/45 backdrop-blur-[3px]" />
-                            </>
-                          )}
-                          <div className="relative z-10">
-                            <div className="flex items-center gap-3">
-                              <LogoBubble
-                                src={shop.logoUrl}
-                                alt={shop.name}
-                                size={48}
-                                seed={shop.id || shop.name}
-                              />
-                              <div>
-                                <p className="text-sm font-bold text-dm-dark">
-                                  {shop.name}
-                                </p>
-                                <p
-                                  className={`text-[11px] uppercase ${
-                                    shop.coverUrl
-                                      ? "text-gray-600"
-                                      : "text-gray-500"
-                                  }`}
-                                >
-                                  {shop.plan}
-                                </p>
-                              </div>
-                            </div>
-                            <p
-                              className={`mt-3 text-xs line-clamp-2 ${
-                                shop.coverUrl
-                                  ? "text-gray-700"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              {shop.address || "Sin dirección cargada"}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
+                      {filteredFavoriteShops.map((shop) =>
+                        renderShopCard(shop)
+                      )}
                       {filteredFavoriteShops.length === 0 && (
                         <EmptyState
                           title={
