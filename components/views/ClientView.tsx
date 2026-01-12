@@ -141,7 +141,43 @@ export const ClientView: React.FC<ClientViewProps> = ({
           }
         />
         <Route
+          path="/en-vivo/:streamId"
+          element={
+            <ClientHomePage
+              activeFilter={activeFilter}
+              filteredStreams={filteredStreams}
+              sortedLiveStreams={sortedLiveStreams}
+              activeReels={activeReels}
+              user={user}
+              canClientInteract={canClientInteract}
+              onFilterChange={onFilterChange}
+              onSelectBottomNav={onSelectBottomNav}
+              onOpenShop={onOpenShop}
+              onViewReel={onViewReel}
+              onReport={onReport}
+              onToggleReminder={onToggleReminder}
+              onLike={onLike}
+              onRate={onRate}
+              onDownloadCard={onDownloadCard}
+              onNotify={onNotify}
+            />
+          }
+        />
+        <Route
           path="/tiendas"
+          element={
+            <ClientShopsPage
+              shopQuery={shopQuery}
+              filteredPublicShops={filteredPublicShops}
+              renderShopCard={renderShopCard}
+              onShopQueryChange={onShopQueryChange}
+              onClearShopQuery={onClearShopQuery}
+              onRefreshData={onRefreshData}
+            />
+          }
+        />
+        <Route
+          path="/tiendas/:shopId"
           element={
             <ClientShopsPage
               shopQuery={shopQuery}
@@ -231,39 +267,3 @@ export const ClientView: React.FC<ClientViewProps> = ({
     </section>
   );
 };
-        <Route
-          path="/tiendas/:shopId"
-          element={
-            <ClientShopsPage
-              shopQuery={shopQuery}
-              filteredPublicShops={filteredPublicShops}
-              renderShopCard={renderShopCard}
-              onShopQueryChange={onShopQueryChange}
-              onClearShopQuery={onClearShopQuery}
-              onRefreshData={onRefreshData}
-            />
-          }
-        />
-        <Route
-          path="/en-vivo/:streamId"
-          element={
-            <ClientHomePage
-              activeFilter={activeFilter}
-              filteredStreams={filteredStreams}
-              sortedLiveStreams={sortedLiveStreams}
-              activeReels={activeReels}
-              user={user}
-              canClientInteract={canClientInteract}
-              onFilterChange={onFilterChange}
-              onSelectBottomNav={onSelectBottomNav}
-              onOpenShop={onOpenShop}
-              onViewReel={onViewReel}
-              onReport={onReport}
-              onToggleReminder={onToggleReminder}
-              onLike={onLike}
-              onRate={onRate}
-              onDownloadCard={onDownloadCard}
-              onNotify={onNotify}
-            />
-          }
-        />
