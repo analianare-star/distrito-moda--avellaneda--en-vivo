@@ -11,7 +11,6 @@ import {
   Reel,
   NotificationItem,
 } from "./types";
-import { LogoBubble } from "./components/LogoBubble";
 import { Button } from "./components/Button";
 import { NoticeModal } from "./components/NoticeModal";
 import { ReportModal } from "./components/ReportModal";
@@ -19,15 +18,14 @@ import { AppHeader } from "./components/layout/AppHeader";
 import { AppFooterNav } from "./components/layout/AppFooterNav";
 import { AccountDrawer } from "./components/layout/AccountDrawer";
 import { AdminPreviewBanner } from "./components/layout/AdminPreviewBanner";
+import { AuthModal } from "./components/layout/AuthModal";
 import { ShopCard } from "./components/ShopCard";
-import authStyles from "./components/layout/AuthModal.module.css";
-import resetStyles from "./components/layout/ResetView.module.css";
+import { ResetView } from "./components/layout/ResetView";
 import { ClientView } from "./components/views/ClientView";
 import { MerchantView } from "./components/views/MerchantView";
 import { AdminView } from "./components/views/AdminView";
 import { api } from "./services/api";
 import {
-  X,
   User,
   UserCircle,
   Bell,
@@ -41,10 +39,7 @@ import {
   Receipt,
   Globe,
   Film,
-  Mail,
-  Key,
 } from "lucide-react";
-import { FaStore, FaUser, FaEnvelope } from "react-icons/fa";
 import { auth, googleProvider } from "./firebase";
 import {
   confirmPasswordReset,
@@ -65,26 +60,6 @@ type AuthProfile = {
   adminRole?: string;
 };
 
-const GoogleMark = () => (
-  <svg viewBox="0 0 48 48" className="h-7 w-7" aria-hidden>
-    <path
-      fill="#EA4335"
-      d="M24 9.5c3.3 0 6.3 1.2 8.7 3.5l6.5-6.5C35.3 2.7 30 0.5 24 0.5 14.6 0.5 6.4 5.9 2.5 13.7l7.6 5.9C12 13.2 17.5 9.5 24 9.5z"
-    />
-    <path
-      fill="#4285F4"
-      d="M46.5 24.5c0-1.8-0.2-3.1-0.5-4.5H24v8.5h12.6c-0.3 2.1-1.8 5.3-5.2 7.5l8 6.2c4.7-4.4 7.1-10.8 7.1-17.7z"
-    />
-    <path
-      fill="#FBBC05"
-      d="M10.1 28.7c-0.5-1.4-0.8-2.9-0.8-4.5s0.3-3.1 0.7-4.5l-7.6-5.9C0.9 17.1 0 20.5 0 24c0 3.5 0.9 6.9 2.5 10.2l7.6-5.5z"
-    />
-    <path
-      fill="#34A853"
-      d="M24 48c6 0 11.3-2 15.1-5.5l-8-6.2c-2.1 1.4-4.9 2.3-7.1 2.3-6.5 0-12-3.8-13.9-9.4l-7.6 5.5C6.4 42.1 14.6 48 24 48z"
-    />
-  </svg>
-);
 
 type MerchantTab = "RESUMEN" | "VIVOS" | "REELS" | "REDES" | "PERFIL";
 
@@ -1808,107 +1783,18 @@ const App: React.FC = () => {
 
   if (isResetView) {
     return (
-      <div className={resetStyles.page}>
-        <div className={resetStyles.card}>
-          <div className={resetStyles.header}>
-            <div className={resetStyles.titleRow}>
-              <Shield size={18} className="text-dm-crimson" />
-              <p className={resetStyles.title}>Restablecer clave</p>
-            </div>
-            <button
-              onClick={() => window.location.assign("/")}
-              className={resetStyles.closeButton}
-              aria-label="Volver al inicio"
-            >
-              <X size={12} />
-            </button>
-          </div>
-          <p className={resetStyles.sub}>
-            {resetViewEmail
-              ? `Cuenta: ${resetViewEmail}`
-              : "Validando enlace..."}
-          </p>
-
-          {resetViewStatus === "loading" && (
-            <div className={`${resetStyles.box} ${resetStyles.boxNeutral}`}>
-              Verificando enlace...
-            </div>
-          )}
-
-          {resetViewStatus === "error" && (
-            <div className={`${resetStyles.box} ${resetStyles.boxError}`}>
-              {resetViewError || "No se pudo validar el enlace."}
-            </div>
-          )}
-
-          {resetViewStatus === "success" && (
-            <div className={`${resetStyles.box} ${resetStyles.boxSuccess}`}>
-              Tu contraseña se actualizó correctamente. Ya podés iniciar sesión.
-              <button
-                onClick={() => window.location.assign("/")}
-                className={resetStyles.primaryButton}
-              >
-                Ir a iniciar sesión
-              </button>
-            </div>
-          )}
-
-          {resetViewStatus === "ready" && (
-            <form
-              className={resetStyles.form}
-              onSubmit={(event) => {
-                event.preventDefault();
-                handleResetViewSubmit();
-              }}
-            >
-              <label className={resetStyles.label}>
-                Nueva contraseña
-                <div className={resetStyles.inputWrap}>
-                  <Key size={14} className="text-gray-400" />
-                  <input
-                    type="password"
-                    value={resetViewPassword}
-                    onChange={(event) =>
-                      setResetViewPassword(event.target.value)
-                    }
-                    className={resetStyles.input}
-                    placeholder="Mínimo 6 caracteres"
-                    required
-                  />
-                </div>
-              </label>
-              <label className={resetStyles.label}>
-                Repetí la contraseña
-                <div className={resetStyles.inputWrap}>
-                  <Key size={14} className="text-gray-400" />
-                  <input
-                    type="password"
-                    value={resetViewConfirm}
-                    onChange={(event) =>
-                      setResetViewConfirm(event.target.value)
-                    }
-                    className={resetStyles.input}
-                    placeholder="Confirmá la clave"
-                    required
-                  />
-                </div>
-              </label>
-              {resetViewError && (
-                <p className={resetStyles.errorText}>
-                  {resetViewError}
-                </p>
-              )}
-              <button
-                type="submit"
-                disabled={resetViewBusy}
-                className={resetStyles.submit}
-              >
-                {resetViewBusy ? "Guardando..." : "Guardar contraseña"}
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
+      <ResetView
+        status={resetViewStatus}
+        email={resetViewEmail}
+        password={resetViewPassword}
+        confirm={resetViewConfirm}
+        error={resetViewError}
+        busy={resetViewBusy}
+        onClose={() => window.location.assign("/")}
+        onPasswordChange={setResetViewPassword}
+        onConfirmChange={setResetViewConfirm}
+        onSubmit={handleResetViewSubmit}
+      />
     );
   }
 
@@ -1926,324 +1812,32 @@ const App: React.FC = () => {
         onLogout={handleToggleClientLogin}
       />
 
-      {effectiveViewMode === "CLIENT" &&
-        !user.isLoggedIn &&
-        showLoginPrompt && (
-          <div className={authStyles.overlay}>
-            <div className={authStyles.card}>
-              <div className={authStyles.header}>
-                <div>
-                  <p className={authStyles.title}>Ingreso</p>
-                  <p className={authStyles.subtitle}>
-                    Accede a recordatorios, favoritos y reportes.
-                  </p>
-                </div>
-                <button
-                  onClick={handleContinueAsGuest}
-                  className={authStyles.closeButton}
-                  aria-label="Cerrar"
-                >
-                  <X size={12} />
-                </button>
-              </div>
-
-              {loginStep === "ENTRY" && (
-                <div className={authStyles.stack}>
-                  <button
-                    onClick={() => setLoginStep("AUDIENCE")}
-                    className={authStyles.primaryButton}
-                  >
-                    Ingresar
-                  </button>
-                  <button
-                    onClick={openAudienceSelection}
-                    className={authStyles.linkButton}
-                  >
-                    Registrarme
-                  </button>
-                </div>
-              )}
-
-              {loginStep === "AUDIENCE" && (
-                <div className={authStyles.roleGrid}>
-                  <button
-                    onClick={() => {
-                      setLoginMode("EMAIL");
-                      setLoginAudience("SHOP");
-                      setClientEmailMode("LOGIN");
-                      setLoginError("");
-                      setLoginStep("SHOP");
-                    }}
-                    className={authStyles.roleButton}
-                  >
-                    <FaStore size={22} className="mb-2 text-dm-crimson" />
-                    Soy tienda
-                    <span className={authStyles.roleNote}>
-                      Acceso mayorista
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setLoginMode("GOOGLE");
-                      setLoginAudience(null);
-                      setLoginError("");
-                      setLoginStep("CLIENT");
-                    }}
-                    className={authStyles.roleButton}
-                  >
-                    <FaUser size={22} className="mb-2 text-dm-crimson" />
-                    Soy cliente
-                    <span className={authStyles.roleNote}>
-                      Comprar y seguir
-                    </span>
-                  </button>
-                </div>
-              )}
-
-              {loginStep === "SHOP" && (
-                <form
-                  className={authStyles.form}
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    handleEmailLogin();
-                  }}
-                >
-                  <p className={authStyles.formHint}>
-                    Usá el correo registrado por el administrador.
-                  </p>
-                  <label className={authStyles.label}>
-                    Correo electrónico
-                    <div className={authStyles.inputWrap}>
-                      <Mail size={14} className="text-gray-400" />
-                      <input
-                        type="email"
-                        value={loginEmail}
-                        onChange={(event) => setLoginEmail(event.target.value)}
-                        className={authStyles.input}
-                        placeholder="correo de la tienda"
-                        autoComplete="email"
-                        required
-                      />
-                    </div>
-                  </label>
-                  <label className={authStyles.label}>
-                    Contraseña
-                    <div className={authStyles.inputWrap}>
-                      <Key size={14} className="text-gray-400" />
-                      <input
-                        type="password"
-                        value={loginPassword}
-                        onChange={(event) =>
-                          setLoginPassword(event.target.value)
-                        }
-                        className={authStyles.input}
-                        placeholder="Tu contraseña"
-                        autoComplete="current-password"
-                        required
-                      />
-                    </div>
-                  </label>
-                  {loginError && (
-                    <p className={authStyles.errorText}>
-                      {loginError}
-                    </p>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={loginBusy}
-                    className={authStyles.primaryButton}
-                  >
-                    {loginBusy ? "Ingresando..." : "Ingresar"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={resetBusy}
-                    onClick={handlePasswordReset}
-                    className={authStyles.secondaryButton}
-                  >
-                    {resetBusy ? "Enviando enlace..." : "Olvidé mi contraseña"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLoginStep("AUDIENCE")}
-                    className={authStyles.backButton}
-                  >
-                    Volver
-                  </button>
-                </form>
-              )}
-
-              {loginStep === "CLIENT" && (
-                <div className={authStyles.clientStack}>
-                  <div className={authStyles.clientGrid}>
-                    <button
-                      onClick={handleGoogleLogin}
-                      disabled={loginBusy}
-                      className={authStyles.clientOption}
-                    >
-                      <span className={authStyles.googleIcon}>
-                        <GoogleMark />
-                      </span>
-                      Continuar con tu cuenta de Google
-                    </button>
-                    <button
-                      onClick={() => {
-                        setLoginMode("EMAIL");
-                        setLoginAudience(null);
-                        setClientEmailMode("LOGIN");
-                        setLoginError("");
-                        setLoginStep("CLIENT_EMAIL");
-                      }}
-                      className={authStyles.clientOption}
-                    >
-                      <span className={authStyles.mailIcon}>
-                        <FaEnvelope size={18} />
-                      </span>
-                      Continuá con tu correo
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setLoginMode("EMAIL");
-                      setLoginAudience(null);
-                      setClientEmailMode("REGISTER");
-                      setLoginError("");
-                      setLoginStep("CLIENT_EMAIL");
-                    }}
-                    className={authStyles.linkButton}
-                  >
-                    Registrate
-                  </button>
-                  {loginError && (
-                    <p className={authStyles.errorText}>
-                      {loginError}
-                    </p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setLoginStep("AUDIENCE")}
-                    className={authStyles.backButton}
-                  >
-                    Volver
-                  </button>
-                </div>
-              )}
-
-              {loginStep === "CLIENT_EMAIL" && (
-                <form
-                  className={authStyles.form}
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    if (clientEmailMode === "REGISTER") {
-                      handleEmailRegister();
-                    } else {
-                      handleEmailLogin();
-                    }
-                  }}
-                >
-                  <p className={authStyles.formHint}>
-                    {clientEmailMode === "REGISTER"
-                      ? "Creando cuenta de cliente."
-                      : "Ingresá con tu correo."}
-                  </p>
-                  <label className={authStyles.label}>
-                    Correo electrónico
-                    <div className={authStyles.inputWrap}>
-                      <Mail size={14} className="text-gray-400" />
-                      <input
-                        type="email"
-                        value={loginEmail}
-                        onChange={(event) => setLoginEmail(event.target.value)}
-                        className={authStyles.input}
-                        placeholder="tu@email.com"
-                        autoComplete="email"
-                        required
-                      />
-                    </div>
-                  </label>
-                  <label className={authStyles.label}>
-                    Contraseña
-                    <div className={authStyles.inputWrap}>
-                      <Key size={14} className="text-gray-400" />
-                      <input
-                        type="password"
-                        value={loginPassword}
-                        onChange={(event) =>
-                          setLoginPassword(event.target.value)
-                        }
-                        className={authStyles.input}
-                        placeholder="Tu contraseña"
-                        autoComplete={
-                          clientEmailMode === "REGISTER"
-                            ? "new-password"
-                            : "current-password"
-                        }
-                        required
-                      />
-                    </div>
-                  </label>
-                  {loginError && (
-                    <p className={authStyles.errorText}>
-                      {loginError}
-                    </p>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={loginBusy}
-                    className={authStyles.primaryButton}
-                  >
-                    {loginBusy
-                      ? clientEmailMode === "REGISTER"
-                        ? "Creando cuenta..."
-                        : "Ingresando..."
-                      : clientEmailMode === "REGISTER"
-                      ? "Registrarme"
-                      : "Ingresar"}
-                  </button>
-                  {clientEmailMode === "LOGIN" && (
-                    <button
-                      type="button"
-                      disabled={resetBusy}
-                      onClick={handlePasswordReset}
-                      className={authStyles.secondaryButton}
-                    >
-                      {resetBusy
-                        ? "Enviando enlace..."
-                        : "Olvidé mi contraseña"}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setClientEmailMode((prev) =>
-                        prev === "REGISTER" ? "LOGIN" : "REGISTER"
-                      )
-                    }
-                    className={authStyles.inlineLink}
-                  >
-                    {clientEmailMode === "REGISTER"
-                      ? "¿Ya tenés cuenta? Iniciá sesión"
-                      : "Quiero registrarme"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLoginStep("CLIENT")}
-                    className={authStyles.backButton}
-                  >
-                    Volver
-                  </button>
-                </form>
-              )}
-
-              <button
-                onClick={handleContinueAsGuest}
-                className={authStyles.continueGuest}
-              >
-                Continuar como visitante
-              </button>
-            </div>
-          </div>
-        )}
+      <AuthModal
+        isOpen={
+          effectiveViewMode === "CLIENT" && !user.isLoggedIn && showLoginPrompt
+        }
+        loginStep={loginStep}
+        clientEmailMode={clientEmailMode}
+        loginEmail={loginEmail}
+        loginPassword={loginPassword}
+        loginError={loginError}
+        loginBusy={loginBusy}
+        resetBusy={resetBusy}
+        onClose={handleContinueAsGuest}
+        onContinueAsGuest={handleContinueAsGuest}
+        onOpenAudienceSelection={openAudienceSelection}
+        onEmailLogin={handleEmailLogin}
+        onEmailRegister={handleEmailRegister}
+        onGoogleLogin={handleGoogleLogin}
+        onPasswordReset={handlePasswordReset}
+        onSetLoginStep={setLoginStep}
+        onSetLoginMode={setLoginMode}
+        onSetLoginAudience={setLoginAudience}
+        onSetClientEmailMode={setClientEmailMode}
+        onSetLoginEmail={setLoginEmail}
+        onSetLoginPassword={setLoginPassword}
+        onSetLoginError={setLoginError}
+      />
 
       <AppFooterNav items={bottomNavItems} activeId={activeBottomNav} />
 
