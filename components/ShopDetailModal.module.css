@@ -7,11 +7,13 @@
 }
 
 .header {
-  @apply relative h-36 bg-dm-dark flex-shrink-0 overflow-hidden;
+  @apply relative h-24 md:h-28 bg-dm-dark flex-shrink-0 overflow-visible;
 }
 
 .headerCover {
   @apply absolute inset-0 bg-cover bg-center;
+  background-position: center 30%;
+  background-repeat: no-repeat;
 }
 
 .closeButton {
@@ -19,7 +21,7 @@
 }
 
 .headerContent {
-  @apply absolute -bottom-10 left-6 flex items-end justify-between w-[calc(100%-48px)];
+  @apply absolute bottom-0 left-6 right-6 z-10 flex items-end justify-between translate-y-1/2;
 }
 
 .followButton {
@@ -39,7 +41,7 @@
 }
 
 .body {
-  @apply pt-12 px-6 pb-6 flex-1 overflow-y-auto;
+  @apply pt-16 px-6 pb-6 flex-1 overflow-y-auto;
 }
 
 .title {

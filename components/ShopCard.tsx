@@ -72,7 +72,7 @@ export const ShopCard: React.FC<ShopCardProps> = ({
         decoding="async"
         draggable={false}
       />
-      <div className={styles.chip}>
+      <div className={`${styles.chip} ${isActive ? styles.chipHidden : ''}`}>
         <div className={styles.chipAvatar}>
           <LogoBubble
             src={shop.logoUrl}

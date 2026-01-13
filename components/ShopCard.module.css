@@ -35,7 +35,7 @@
 }
 
 .chip {
-  @apply absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full bg-white/85 px-2 py-1 shadow-sm;
+  @apply absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full bg-white/85 px-2 py-1 shadow-sm transition-opacity duration-200;
 }
 
 .chipAvatar {
@@ -44,6 +44,10 @@
 
 .chipName {
   @apply max-w-[140px] truncate text-xs font-bold text-dm-dark;
+}
+
+.chipHidden {
+  @apply opacity-0 pointer-events-none;
 }
 
 .activeOverlay {
