@@ -45,7 +45,7 @@
 }
 
 .title {
-  @apply font-serif text-3xl text-dm-dark leading-none mb-4;
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark leading-none mb-4;
 }
 
 .tabs {

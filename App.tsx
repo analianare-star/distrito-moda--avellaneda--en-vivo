@@ -1383,6 +1383,7 @@ const App: React.FC = () => {
     });
 
   const publicShops = sortShopsByPriority(allShops.filter(isPublicShop));
+  const featuredShops = publicShops.slice(0, 60);
   const favoriteShops = sortShopsByPriority(
     allShops.filter((shop) => user.favorites.includes(shop.id))
   );
@@ -1910,6 +1911,7 @@ const App: React.FC = () => {
                 filteredStreams={filteredStreams}
                 sortedLiveStreams={sortedLiveStreams}
                 activeReels={activeReels}
+                featuredShops={featuredShops}
                 filteredPublicShops={filteredPublicShops}
                 filteredFavoriteShops={filteredFavoriteShops}
                 reminderStreams={reminderStreams}

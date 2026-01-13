@@ -33,7 +33,7 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({
   onConfirm,
 }) => {
   if (!isOpen) return null;
-  const styles = TONE_STYLES[tone];
+  const toneStyles = TONE_STYLES[tone];
 
   return (
     <div className={styles.overlay}>
@@ -45,7 +45,7 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({
         >
           <X size={18} />
         </button>
-        <div className={`${styles.titleBadge} ${styles.bg} ${styles.text}`}>
+        <div className={`${styles.titleBadge} ${toneStyles.bg} ${toneStyles.text}`}>
           {title}
         </div>
         <p className={styles.message}>{message}</p>

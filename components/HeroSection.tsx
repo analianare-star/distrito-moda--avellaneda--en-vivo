@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Stream, StreamStatus, Reel } from '../types';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Stream, Reel, Shop } from '../types';
 import { FILTERS } from '../constants';
 import { Button } from './Button';
 import { LogoBubble } from './LogoBubble';
@@ -13,6 +13,7 @@ interface HeroSectionProps {
     onFilterChange: (filter: string) => void;
     liveStreams: Stream[]; 
     activeReels: Reel[]; 
+    featuredShops: Shop[];
     onViewReel: (reel: Reel) => void; 
     viewedReels: string[];
     onOpenShop: (shop: Stream['shop']) => void;
@@ -23,11 +24,69 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     onFilterChange, 
     liveStreams,
     activeReels,
+    featuredShops,
     onViewReel,
     viewedReels,
     onOpenShop
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const showcasePool = useMemo(
+    () =>
+      featuredShops.filter(
+        (shop) => (shop.coverUrl && shop.coverUrl.trim()) || shop.logoUrl
+      ),
+    [featuredShops]
+  );
+  const [showcaseShops, setShowcaseShops] = useState<Shop[]>([]);
+  const lastShowcaseIdsRef = useRef<string[]>([]);
+  const showcaseLayout = ["wide", "tall", "small", "small", "wide"];
+
+  const pickRandomShops = (
+    pool: Shop[],
+    count: number,
+    excludeIds: string[]
+  ) => {
+    if (pool.length === 0) return [];
+    const filteredPool =
+      excludeIds.length > 0
+        ? pool.filter((shop) => !excludeIds.includes(shop.id))
+        : pool;
+    if (filteredPool.length >= count) {
+      const shuffled = [...filteredPool];
+      for (let i = shuffled.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled.slice(0, count);
+    }
+    const shuffledAll = [...pool];
+    for (let i = shuffledAll.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledAll[i], shuffledAll[j]] = [shuffledAll[j], shuffledAll[i]];
+    }
+    return shuffledAll.slice(0, count);
+  };
+
+  useEffect(() => {
+    if (showcasePool.length === 0) {
+      setShowcaseShops([]);
+      return;
+    }
+    const initial = pickRandomShops(showcasePool, 5, lastShowcaseIdsRef.current);
+    setShowcaseShops(initial);
+    lastShowcaseIdsRef.current = initial.map((shop) => shop.id);
+    const timer = setInterval(() => {
+      const nextBatch = pickRandomShops(
+        showcasePool,
+        5,
+        lastShowcaseIdsRef.current
+      );
+      setShowcaseShops(nextBatch);
+      lastShowcaseIdsRef.current = nextBatch.map((shop) => shop.id);
+    }, 7000);
+    return () => clearInterval(timer);
+  }, [showcasePool]);
 
   const sortedReels = [...activeReels].sort((a, b) => {
       const aSeen = viewedReels.includes(a.id);
@@ -59,6 +118,55 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   return (
     <div className={styles.root}>
+      {showcaseShops.length > 0 && (
+        <section className={styles.showcase}>
+          <div className={styles.showcaseHeader}>
+            <div>
+              <p className={styles.showcaseEyebrow}>Novedades de tiendas</p>
+              <h2 className={styles.showcaseTitle}>Explorá Avellaneda en Vivo</h2>
+            </div>
+            <button
+              className={styles.showcaseAction}
+              onClick={() => onFilterChange("Todos")}
+            >
+              Ver todo
+            </button>
+          </div>
+          <div className={styles.showcaseGrid}>
+            {showcaseShops.map((shop, index) => {
+              const layout = showcaseLayout[index] || "small";
+              const tileClass =
+                layout === "wide"
+                  ? styles.showcaseTileWide
+                  : layout === "tall"
+                  ? styles.showcaseTileTall
+                  : "";
+              return (
+                <button
+                  key={shop.id}
+                  className={`${styles.showcaseTile} ${tileClass}`}
+                  onClick={() => onOpenShop(shop)}
+                >
+                  <img
+                    src={shop.coverUrl || shop.logoUrl}
+                    alt={shop.name}
+                    loading="lazy"
+                    decoding="async"
+                    className={styles.showcaseImage}
+                  />
+                  <div className={styles.showcaseOverlay} />
+                  <div className={styles.showcaseInfo}>
+                    <span className={styles.showcaseName}>{shop.name}</span>
+                    <span className={styles.showcaseMeta}>
+                      {shop.plan?.toString() || "Tienda"}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
       
       {/* --- STORIES / REELS CAROUSEL --- */}
       {sortedReels.length > 0 && (
@@ -224,30 +332,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
               )}
           </div>
-      )}
-
-      {/* STANDARD BANNER (Only if no live) */}
-      {!activeStream && (
-        <div className={styles.banner}>
-            <div className={styles.bannerBackdrop}>
-                <img 
-                src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop" 
-                alt="Showroom Background" 
-                className={styles.bannerImage}
-                />
-                <div className={styles.bannerOverlay}></div>
-            </div>
-
-            <div className={styles.bannerContent}>
-                <span className={styles.bannerEyebrow}>DISTRITO MODA</span>
-                <h1 className={styles.bannerTitle}>
-                Avellaneda en Vivo
-                </h1>
-                <p className={styles.bannerText}>
-                La pasarela digital mayorista más grande de la región.
-                </p>
-            </div>
-        </div>
       )}
 
       {/* FILTERS BAR */}

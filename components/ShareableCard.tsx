@@ -179,8 +179,8 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
               seed={shop.id || shop.name}
               className="mb-3"
             />
-            <h2 className="font-serif text-3xl text-white leading-tight text-center px-4">
-                {shop.name}
+            <h2 className="font-serif text-[20px] md:text-2xl text-white leading-tight text-center px-4">
+              {shop.name}
             </h2>
             <p className="font-sans text-dm-light text-xs tracking-[0.2em] uppercase mt-2 text-center px-6">
                 {stream?.title || 'Distrito Moda'}

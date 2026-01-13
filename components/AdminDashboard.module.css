@@ -71,7 +71,7 @@
 }
 
 .dashboardTitle {
-  @apply font-serif text-2xl text-dm-dark;
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark;
 }
 
 .statsGrid {
@@ -835,7 +835,7 @@
 }
 
 .sectionTitle {
-  @apply font-serif text-2xl text-dm-dark;
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark;
 }
 
 .sectionFilters {
@@ -947,7 +947,7 @@
 }
 
 .createModalHeaderTitle {
-  @apply font-serif text-2xl text-dm-dark font-bold leading-tight;
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark font-bold leading-tight;
 }
 
 .createModalHeaderSubtitle {

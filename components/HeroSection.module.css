@@ -2,6 +2,68 @@
   @apply w-full flex flex-col overflow-x-hidden;
 }
 
+.showcase {
+  @apply w-full bg-white border-b border-gray-100 px-0 pt-0 pb-0;
+}
+
+.showcaseHeader {
+  @apply w-full px-3 pt-4 pb-3 flex items-end justify-between gap-4;
+}
+
+.showcaseEyebrow {
+  @apply text-[10px] uppercase tracking-[0.32em] text-gray-400;
+}
+
+.showcaseTitle {
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark;
+}
+
+.showcaseAction {
+  @apply rounded-full border border-gray-200 px-3 py-1 text-[10px] font-bold text-gray-500 hover:border-dm-crimson hover:text-dm-crimson;
+}
+
+.showcaseGrid {
+  @apply w-full grid grid-cols-2 gap-[3px] auto-rows-[90px] sm:auto-rows-[110px] md:grid-cols-3 md:auto-rows-[130px];
+}
+
+.showcaseTile {
+  @apply relative overflow-hidden rounded-2xl border border-gray-100 bg-gray-100 shadow-sm text-left transition-transform duration-300 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-dm-crimson/60;
+}
+
+.showcaseTileWide {
+  @apply col-span-2;
+}
+
+.showcaseTileTall {
+  @apply row-span-2;
+}
+
+.showcaseImage {
+  @apply w-full h-full object-cover;
+}
+
+.showcaseOverlay {
+  @apply absolute inset-0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.32) 35%,
+    rgba(0, 0, 0, 0) 70%
+  );
+}
+
+.showcaseInfo {
+  @apply absolute left-4 bottom-4 flex max-w-[70%] flex-col;
+}
+
+.showcaseName {
+  @apply text-sm font-bold text-white drop-shadow;
+}
+
+.showcaseMeta {
+  @apply text-[10px] uppercase tracking-[0.2em] text-white/70;
+}
+
 .reelsWrap {
   @apply w-full bg-white border-b border-gray-100 pt-6 pb-6 animate-in slide-in-from-top-2 fade-in duration-500;
 }

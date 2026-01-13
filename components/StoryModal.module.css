@@ -67,7 +67,7 @@
 }
 
 .contentTitle {
-  @apply text-white font-serif text-2xl mb-2;
+  @apply text-white font-serif text-[20px] md:text-2xl mb-2;
 }
 
 .contentText {

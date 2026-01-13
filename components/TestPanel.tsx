@@ -74,7 +74,7 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-            <h2 className="font-serif text-2xl text-dm-dark flex items-center gap-2">
+            <h2 className="font-serif text-[20px] md:text-2xl text-dm-dark flex items-center gap-2">
                 <AlertTriangle className="text-dm-crimson" /> Panel de Pruebas & Simulaciones
             </h2>
             <p className="text-gray-500 -mt-6">Herramientas para QA y demostración de lógica de negocio.</p>

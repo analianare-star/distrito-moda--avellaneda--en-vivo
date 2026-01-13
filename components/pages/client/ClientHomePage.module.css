@@ -11,7 +11,7 @@
 }
 
 .scheduleTitle {
-  @apply font-serif text-3xl text-dm-dark;
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark;
 }
 
 .scheduleFilter {
@@ -23,5 +23,13 @@
 }
 
 .streamsGrid {
-  @apply grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4;
+  @apply grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4;
+}
+
+.streamItem {
+  @apply col-span-1;
+}
+
+.streamItemWide {
+  @apply col-span-2 md:col-span-2;
 }

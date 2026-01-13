@@ -87,7 +87,7 @@
 }
 
 .summaryTitle {
-  @apply font-serif text-3xl text-dm-dark;
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark;
 }
 
 .summarySubtitle {
@@ -299,7 +299,7 @@
 }
 
 .reelsTitle {
-  @apply font-serif text-3xl text-dm-dark;
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark;
 }
 
 .reelsSubtitle {
@@ -427,7 +427,7 @@
 }
 
 .socialsTitle {
-  @apply font-serif text-3xl text-dm-dark;
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark;
 }
 
 .socialsSubtitle {
@@ -491,7 +491,7 @@
 }
 
 .profileTitle {
-  @apply font-serif text-3xl text-dm-dark;
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark;
 }
 
 .profileSubtitle {
@@ -639,7 +639,7 @@
 }
 
 .modalTitle {
-  @apply font-serif text-2xl text-dm-dark;
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark;
 }
 
 .modalSubtitle {
@@ -731,7 +731,7 @@
 }
 
 .streamsTitle {
-  @apply font-serif text-3xl text-dm-dark;
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark;
 }
 
 .streamsSubtitle {

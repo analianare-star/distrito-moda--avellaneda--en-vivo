@@ -18,6 +18,7 @@ interface ClientViewProps {
   filteredStreams: Stream[];
   sortedLiveStreams: Stream[];
   activeReels: Reel[];
+  featuredShops: Shop[];
   filteredPublicShops: Shop[];
   filteredFavoriteShops: Shop[];
   reminderStreams: Stream[];
@@ -59,6 +60,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
   filteredStreams,
   sortedLiveStreams,
   activeReels,
+  featuredShops,
   filteredPublicShops,
   filteredFavoriteShops,
   reminderStreams,
@@ -102,6 +104,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
               filteredStreams={filteredStreams}
               sortedLiveStreams={sortedLiveStreams}
               activeReels={activeReels}
+              featuredShops={featuredShops}
               user={user}
               canClientInteract={canClientInteract}
               onFilterChange={onFilterChange}
@@ -125,6 +128,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
               filteredStreams={filteredStreams}
               sortedLiveStreams={sortedLiveStreams}
               activeReels={activeReels}
+              featuredShops={featuredShops}
               user={user}
               canClientInteract={canClientInteract}
               onFilterChange={onFilterChange}
@@ -148,6 +152,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
               filteredStreams={filteredStreams}
               sortedLiveStreams={sortedLiveStreams}
               activeReels={activeReels}
+              featuredShops={featuredShops}
               user={user}
               canClientInteract={canClientInteract}
               onFilterChange={onFilterChange}

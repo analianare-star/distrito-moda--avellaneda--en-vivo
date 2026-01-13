@@ -12,6 +12,7 @@ interface ClientHomePageProps {
   filteredStreams: Stream[];
   sortedLiveStreams: Stream[];
   activeReels: Reel[];
+  featuredShops: Shop[];
   user: UserContext;
   canClientInteract: boolean;
   onFilterChange: (value: string) => void;
@@ -31,6 +32,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
   filteredStreams,
   sortedLiveStreams,
   activeReels,
+  featuredShops,
   user,
   canClientInteract,
   onFilterChange,
@@ -44,6 +46,9 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
   onDownloadCard,
   onNotify,
 }) => {
+  const visibleStreams = filteredStreams.slice(0, 6);
+  const streamLayout = ["wide", "small", "small", "wide", "small", "small"];
+
   return (
     <section className={styles.section} aria-label="Contenido principal">
       <HeroSection
@@ -51,6 +56,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
         onFilterChange={onFilterChange}
         liveStreams={sortedLiveStreams}
         activeReels={activeReels}
+        featuredShops={featuredShops}
         onViewReel={onViewReel}
         viewedReels={user.viewedReels}
         onOpenShop={onOpenShop}
@@ -58,28 +64,37 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
 
       <div className={styles.schedule}>
         <div className={styles.scheduleHeader}>
-          <h2 className={styles.scheduleTitle}>Agenda de Vivos</h2>
+          <h2 className={styles.scheduleTitle}>Vivos recientes</h2>
           <div className={styles.scheduleFilter}>
             Mostrando: <span className={styles.filterValue}>{activeFilter}</span>
           </div>
         </div>
         <div className={styles.streamsGrid}>
-          {filteredStreams.map((stream) => (
-            <StreamCard
-              key={stream.id}
-              stream={stream}
-              user={user}
-              canClientInteract={canClientInteract}
-              onNotify={onNotify}
-              onOpenShop={() => onOpenShop(stream.shop)}
-              onReport={onReport}
-              onToggleReminder={onToggleReminder}
-              onLike={onLike}
-              onRate={onRate}
-              onDownloadCard={onDownloadCard}
-            />
-          ))}
-          {filteredStreams.length === 0 && (
+          {visibleStreams.map((stream, index) => {
+            const layout = streamLayout[index] || "small";
+            return (
+              <div
+                key={stream.id}
+                className={`${styles.streamItem} ${
+                  layout === "wide" ? styles.streamItemWide : ""
+                }`}
+              >
+                <StreamCard
+                  stream={stream}
+                  user={user}
+                  canClientInteract={canClientInteract}
+                  onNotify={onNotify}
+                  onOpenShop={() => onOpenShop(stream.shop)}
+                  onReport={onReport}
+                  onToggleReminder={onToggleReminder}
+                  onLike={onLike}
+                  onRate={onRate}
+                  onDownloadCard={onDownloadCard}
+                />
+              </div>
+            );
+          })}
+          {visibleStreams.length === 0 && (
             <EmptyState
               title="No hay vivos con este filtro"
               message="Probá ver todos los vivos o revisá más tarde."

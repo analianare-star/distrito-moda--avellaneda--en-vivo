@@ -1,9 +1,9 @@
 .header {
-  @apply fixed top-0 left-0 right-0 z-50 border-b border-gray-100 bg-white/95 px-6 py-3 shadow-sm backdrop-blur-sm md:py-4;
+  @apply fixed top-0 left-0 right-0 z-50 border-b border-gray-100 bg-white/95 px-4 py-2 shadow-sm backdrop-blur-sm md:px-6 md:py-3;
 }
 
 .nav {
-  @apply relative flex min-h-[88px] items-center justify-between;
+  @apply relative flex min-h-[76px] items-center justify-between;
 }
 
 .desktopMenuWrap {
@@ -47,11 +47,11 @@
 }
 
 .logoImage {
-  @apply w-auto object-contain sm:h-24 md:h-28;
+  @apply h-24 w-auto object-contain sm:h-28 md:h-32;
 }
 
 .userInfo {
-  @apply absolute bottom-2 right-4 flex flex-col items-end text-[11px] font-sans leading-tight text-gray-500 md:right-6;
+  @apply absolute bottom-1 right-4 flex flex-col items-end text-[11px] font-sans leading-tight text-gray-500 md:right-6;
 }
 
 .userDot {
