@@ -39,7 +39,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     <header className={styles.header}>
       <nav
         className={styles.nav}
-        aria-label="Navegacion principal"
+        aria-label="Navegación principal"
       >
         <div className={styles.desktopMenuWrap}>
           <button
@@ -48,7 +48,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             aria-expanded={isDesktopMenuOpen}
             aria-controls="desktop-menu"
           >
-            Menu
+            Menú
             <ChevronDown
               size={14}
               className={`${styles.menuChevron} ${

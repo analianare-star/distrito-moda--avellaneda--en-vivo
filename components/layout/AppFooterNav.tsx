@@ -22,7 +22,7 @@ export const AppFooterNav: React.FC<AppFooterNavProps> = ({ items, activeId }) =
     <footer className={styles.footer}>
       <nav
         className={styles.nav}
-        aria-label="Navegacion inferior"
+        aria-label="Navegación inferior"
       >
         {items.map((item) => {
           const Icon = item.icon;

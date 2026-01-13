@@ -63,7 +63,24 @@ type AuthProfile = {
 };
 
 
+type AdminTab =
+  | "DASHBOARD"
+  | "AGENDA"
+  | "STREAMS"
+  | "SHOPS"
+  | "REELS"
+  | "ADMIN"
+  | "REPORTS";
 type MerchantTab = "RESUMEN" | "VIVOS" | "REELS" | "REDES" | "PERFIL";
+type ClientNavId =
+  | "home"
+  | "shops"
+  | "live"
+  | "reminders"
+  | "account"
+  | "favorites";
+type AdminNavId = "panel" | "shops" | "streams" | "purchases" | "reports";
+type MerchantNavId = "resumen" | "vivos" | "reels" | "redes" | "perfil";
 
 // Estado de tienda seguro para evitar crashes.
 // Safe shop fallback to avoid crashes.
@@ -90,6 +107,74 @@ const EMPTY_SHOP: Shop = {
 
 const BRAND_LOGO = new URL("./img/logo.svg", import.meta.url).href;
 
+const CLIENT_NAV_CONFIG: Record<
+  ClientNavId,
+  {
+    path: string;
+    navId?: ClientNavId;
+    filter?: "Todos" | "En Vivo";
+    savedTab?: "FAVORITES" | "REMINDERS";
+    openDrawer?: boolean;
+    accountTab?: "RESUMEN" | "NOTIFICATIONS" | "REMINDERS";
+  }
+> = {
+  home: { path: "/", filter: "Todos" },
+  shops: { path: "/tiendas" },
+  live: { path: "/en-vivo", filter: "En Vivo" },
+  reminders: { path: "/recordatorios", savedTab: "REMINDERS" },
+  favorites: { path: "/favoritos", savedTab: "FAVORITES", navId: "reminders" },
+  account: { path: "/cuenta", openDrawer: true, accountTab: "RESUMEN" },
+};
+
+const CLIENT_PATH_TO_NAV: Record<string, ClientNavId> = {
+  "/": "home",
+  "/tiendas": "shops",
+  "/en-vivo": "live",
+  "/recordatorios": "reminders",
+  "/favoritos": "favorites",
+  "/cuenta": "account",
+};
+
+const ADMIN_NAV_TO_TAB: Record<AdminNavId, AdminTab> = {
+  panel: "DASHBOARD",
+  shops: "SHOPS",
+  streams: "STREAMS",
+  purchases: "ADMIN",
+  reports: "REPORTS",
+};
+
+const ADMIN_TAB_CONFIG: Record<
+  AdminTab,
+  { path: string; navId: AdminNavId }
+> = {
+  DASHBOARD: { path: "/admin", navId: "panel" },
+  AGENDA: { path: "/admin/agenda", navId: "panel" },
+  STREAMS: { path: "/admin/vivos", navId: "streams" },
+  SHOPS: { path: "/admin/tiendas", navId: "shops" },
+  REELS: { path: "/admin/reels", navId: "panel" },
+  ADMIN: { path: "/admin/compras", navId: "purchases" },
+  REPORTS: { path: "/admin/reportes", navId: "reports" },
+};
+
+const MERCHANT_NAV_TO_TAB: Record<MerchantNavId, MerchantTab> = {
+  resumen: "RESUMEN",
+  vivos: "VIVOS",
+  reels: "REELS",
+  redes: "REDES",
+  perfil: "PERFIL",
+};
+
+const MERCHANT_TAB_CONFIG: Record<
+  MerchantTab,
+  { path: string; navId: MerchantNavId }
+> = {
+  RESUMEN: { path: "/tienda", navId: "resumen" },
+  VIVOS: { path: "/tienda/vivos", navId: "vivos" },
+  REELS: { path: "/tienda/reels", navId: "reels" },
+  REDES: { path: "/tienda/redes", navId: "redes" },
+  PERFIL: { path: "/tienda/perfil", navId: "perfil" },
+};
+
 // App orquesta estado, rutas y layout global.
 // App orchestrates state, routing, and global layout.
 const App: React.FC = () => {
@@ -102,9 +187,7 @@ const App: React.FC = () => {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeBottomNav, setActiveBottomNav] = useState("home");
-  const [adminTab, setAdminTab] = useState<
-    "DASHBOARD" | "AGENDA" | "STREAMS" | "SHOPS" | "REELS" | "ADMIN" | "REPORTS"
-  >("DASHBOARD");
+  const [adminTab, setAdminTab] = useState<AdminTab>("DASHBOARD");
   const [merchantTab, setMerchantTab] = useState<MerchantTab>("RESUMEN");
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
   const [authProfile, setAuthProfile] = useState<AuthProfile | null>(null);
@@ -215,6 +298,24 @@ const App: React.FC = () => {
   const getShopIdFromPath = (path: string) => getIdFromPath(path, "/tiendas/");
   const getStreamIdFromPath = (path: string) =>
     getIdFromPath(path, "/en-vivo/");
+  const resolveAdminTabFromPath = (path: string): AdminTab => {
+    if (path.startsWith("/admin/tiendas")) return "SHOPS";
+    if (path.startsWith("/admin/vivos")) return "STREAMS";
+    if (path.startsWith("/admin/agenda")) return "AGENDA";
+    if (path.startsWith("/admin/reels")) return "REELS";
+    if (path.startsWith("/admin/compras")) return "ADMIN";
+    if (path.startsWith("/admin/reportes")) return "REPORTS";
+    return "DASHBOARD";
+  };
+  const resolveMerchantTabFromPath = (path: string): MerchantTab => {
+    if (path.startsWith("/tienda/vivos")) return "VIVOS";
+    if (path.startsWith("/tienda/reels")) return "REELS";
+    if (path.startsWith("/tienda/redes")) return "REDES";
+    if (path.startsWith("/tienda/perfil")) return "PERFIL";
+    return "RESUMEN";
+  };
+  const resolveClientNavFromPath = (path: string): ClientNavId | null =>
+    CLIENT_PATH_TO_NAV[path] || null;
   const pushHistory = (label: string) => {
     setUser((prev) => {
       if (!prev.isLoggedIn) return prev;
@@ -892,7 +993,7 @@ const App: React.FC = () => {
       setLoginBusy(true);
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
-      console.error("Error iniciando sesion:", error);
+      console.error("Error iniciando sesión:", error);
       setLoginError("No se pudo iniciar sesión con Google.");
       setNotice({
         title: "No se pudo iniciar sesión",
@@ -1094,7 +1195,7 @@ const App: React.FC = () => {
         await signOut(auth);
         setLoginPromptDismissed(false);
       } catch (error) {
-        console.error("Error cerrando sesion:", error);
+        console.error("Error cerrando sesión:", error);
         setNotice({
           title: "Error de sesión",
           message: "No se pudo cerrar la sesión.",
@@ -1341,56 +1442,18 @@ const App: React.FC = () => {
     }
     if (isAdminRoute(path)) {
       setViewMode("ADMIN");
-      const nextTab = path.includes("/tiendas")
-        ? "SHOPS"
-        : path.includes("/vivos")
-        ? "STREAMS"
-        : path.includes("/agenda")
-        ? "AGENDA"
-        : path.includes("/reels")
-        ? "REELS"
-        : path.includes("/compras")
-        ? "ADMIN"
-        : path.includes("/reportes")
-        ? "REPORTS"
-        : "DASHBOARD";
-      const nextNav =
-        nextTab === "SHOPS"
-          ? "shops"
-          : nextTab === "STREAMS"
-          ? "streams"
-          : nextTab === "ADMIN"
-          ? "purchases"
-          : nextTab === "REPORTS"
-          ? "reports"
-          : "panel";
+      const nextTab = resolveAdminTabFromPath(path);
+      const nextConfig = ADMIN_TAB_CONFIG[nextTab];
       setAdminTab(nextTab);
-      setActiveBottomNav(nextNav);
+      setActiveBottomNav(nextConfig.navId);
       return;
     }
     if (isShopRoute(path)) {
       setViewMode("MERCHANT");
-      const nextTab = path.includes("/vivos")
-        ? "VIVOS"
-        : path.includes("/reels")
-        ? "REELS"
-        : path.includes("/redes")
-        ? "REDES"
-        : path.includes("/perfil")
-        ? "PERFIL"
-        : "RESUMEN";
-      const nextNav =
-        nextTab === "VIVOS"
-          ? "vivos"
-          : nextTab === "REELS"
-          ? "reels"
-          : nextTab === "REDES"
-          ? "redes"
-          : nextTab === "PERFIL"
-          ? "perfil"
-          : "resumen";
+      const nextTab = resolveMerchantTabFromPath(path);
+      const nextConfig = MERCHANT_TAB_CONFIG[nextTab];
       setMerchantTab(nextTab);
-      setActiveBottomNav(nextNav);
+      setActiveBottomNav(nextConfig.navId);
       return;
     }
     setViewMode("CLIENT");
@@ -1415,21 +1478,16 @@ const App: React.FC = () => {
       }
       return;
     }
-    if (path === "/tiendas") {
-      setActiveBottomNav("shops");
-    } else if (path === "/en-vivo") {
-      setActiveBottomNav("live");
-      setActiveFilter("En Vivo");
-    } else if (path === "/recordatorios") {
-      setActiveBottomNav("reminders");
-      setSavedTab("REMINDERS");
-    } else if (path === "/favoritos") {
-      setActiveBottomNav("reminders");
-      setSavedTab("FAVORITES");
-    } else if (path === "/cuenta") {
-      setActiveBottomNav("account");
-      setAccountTab("RESUMEN");
-      setIsAccountDrawerOpen(true);
+    const clientNav = resolveClientNavFromPath(path);
+    if (clientNav) {
+      const clientConfig = CLIENT_NAV_CONFIG[clientNav];
+      setActiveBottomNav(clientConfig.navId ?? clientNav);
+      if (clientConfig.filter) setActiveFilter(clientConfig.filter);
+      if (clientConfig.savedTab) setSavedTab(clientConfig.savedTab);
+      if (clientConfig.openDrawer) {
+        setAccountTab(clientConfig.accountTab || "RESUMEN");
+        setIsAccountDrawerOpen(true);
+      }
     } else {
       setActiveBottomNav("home");
       setActiveFilter("Todos");
@@ -1506,138 +1564,50 @@ const App: React.FC = () => {
     setHasBottomNavInteraction(true);
     setShowLoginPrompt(false);
     setViewMode("CLIENT");
-    if (id === "favorites") {
-      setSavedTab("FAVORITES");
-      setActiveBottomNav("reminders");
-      navigateTo("/favoritos");
-    } else {
-      setActiveBottomNav(id);
-      if (id === "home") navigateTo("/");
-      if (id === "shops") navigateTo("/tiendas");
-      if (id === "live") navigateTo("/en-vivo");
-      if (id === "reminders") navigateTo("/recordatorios");
-      if (id === "account") navigateTo("/cuenta");
-    }
-    if (id === "home") setActiveFilter("Todos");
-    if (id === "live") setActiveFilter("En Vivo");
-    if (id === "reminders") setSavedTab("REMINDERS");
-    if (id === "account") {
+    const config = CLIENT_NAV_CONFIG[id as ClientNavId];
+    if (!config) return;
+    const nextNav = config.navId ?? id;
+    setActiveBottomNav(nextNav);
+    navigateTo(config.path);
+    if (config.filter) setActiveFilter(config.filter);
+    if (config.savedTab) setSavedTab(config.savedTab);
+    if (config.openDrawer) {
       setIsAccountDrawerOpen(true);
-      setAccountTab("RESUMEN");
+      setAccountTab(config.accountTab || "RESUMEN");
       void refreshNotifications(authProfile);
     }
   };
 
-  const handleAdminNav = (id: string) => {
+  const handleAdminNav = (id: AdminNavId) => {
     setViewMode("ADMIN");
-    setActiveBottomNav(id);
-    const nextTab =
-      id === "shops"
-        ? "SHOPS"
-        : id === "streams"
-        ? "STREAMS"
-        : id === "purchases"
-        ? "ADMIN"
-        : id === "reports"
-        ? "REPORTS"
-        : "DASHBOARD";
+    const nextTab = ADMIN_NAV_TO_TAB[id] || "DASHBOARD";
+    const nextConfig = ADMIN_TAB_CONFIG[nextTab];
     setAdminTab(nextTab);
-    const nextRoute =
-      id === "shops"
-        ? "/admin/tiendas"
-        : id === "streams"
-        ? "/admin/vivos"
-        : id === "purchases"
-        ? "/admin/compras"
-        : id === "reports"
-        ? "/admin/reportes"
-        : "/admin";
-    navigateTo(nextRoute);
+    setActiveBottomNav(nextConfig.navId);
+    navigateTo(nextConfig.path);
   };
 
-  const syncAdminTab = (
-    tab: "DASHBOARD" | "AGENDA" | "STREAMS" | "SHOPS" | "REELS" | "ADMIN" | "REPORTS"
-  ) => {
+  const syncAdminTab = (tab: AdminTab) => {
     setAdminTab(tab);
-    const nextRoute =
-      tab === "SHOPS"
-        ? "/admin/tiendas"
-        : tab === "STREAMS"
-        ? "/admin/vivos"
-        : tab === "AGENDA"
-        ? "/admin/agenda"
-        : tab === "REELS"
-        ? "/admin/reels"
-        : tab === "ADMIN"
-        ? "/admin/compras"
-        : tab === "REPORTS"
-        ? "/admin/reportes"
-        : "/admin";
-    const nextNav =
-      tab === "SHOPS"
-        ? "shops"
-        : tab === "STREAMS"
-        ? "streams"
-        : tab === "ADMIN"
-        ? "purchases"
-        : tab === "REPORTS"
-        ? "reports"
-        : "panel";
-    setActiveBottomNav(nextNav);
-    navigateTo(nextRoute);
+    const nextConfig = ADMIN_TAB_CONFIG[tab];
+    setActiveBottomNav(nextConfig.navId);
+    navigateTo(nextConfig.path);
   };
 
-  const handleMerchantNav = (id: string) => {
+  const handleMerchantNav = (id: MerchantNavId) => {
     setViewMode("MERCHANT");
-    setActiveBottomNav(id);
-    const nextTab =
-      id === "vivos"
-        ? "VIVOS"
-        : id === "reels"
-        ? "REELS"
-        : id === "redes"
-        ? "REDES"
-        : id === "perfil"
-        ? "PERFIL"
-        : "RESUMEN";
+    const nextTab = MERCHANT_NAV_TO_TAB[id] || "RESUMEN";
+    const nextConfig = MERCHANT_TAB_CONFIG[nextTab];
     setMerchantTab(nextTab);
-    const nextRoute =
-      id === "vivos"
-        ? "/tienda/vivos"
-        : id === "reels"
-        ? "/tienda/reels"
-        : id === "redes"
-        ? "/tienda/redes"
-        : id === "perfil"
-        ? "/tienda/perfil"
-        : "/tienda";
-    navigateTo(nextRoute);
+    setActiveBottomNav(nextConfig.navId);
+    navigateTo(nextConfig.path);
   };
 
   const syncMerchantTab = (tab: MerchantTab) => {
     setMerchantTab(tab);
-    const navId =
-      tab === "VIVOS"
-        ? "vivos"
-        : tab === "REELS"
-        ? "reels"
-        : tab === "REDES"
-        ? "redes"
-        : tab === "PERFIL"
-        ? "perfil"
-        : "resumen";
-    setActiveBottomNav(navId);
-    const nextRoute =
-      tab === "VIVOS"
-        ? "/tienda/vivos"
-        : tab === "REELS"
-        ? "/tienda/reels"
-        : tab === "REDES"
-        ? "/tienda/redes"
-        : tab === "PERFIL"
-        ? "/tienda/perfil"
-        : "/tienda";
-    navigateTo(nextRoute);
+    const nextConfig = MERCHANT_TAB_CONFIG[tab];
+    setActiveBottomNav(nextConfig.navId);
+    navigateTo(nextConfig.path);
   };
 
   const isAdminUser = effectiveUserType === "ADMIN";

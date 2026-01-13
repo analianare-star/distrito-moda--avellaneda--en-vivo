@@ -859,21 +859,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               <p className={styles.statLabel}>EN VIVO</p>
                               <p className={styles.statValue}>{liveCount}</p>
                             </div>
-                            <Radio className="text-red-500" />
+                            <Radio className={styles.statsIconLive} />
                         </div>
                         <div className={styles.statsCard}>
                             <div>
                               <p className={styles.statLabel}>INCUMPLIDOS</p>
                               <p className={styles.statValue}>{missedCount}</p>
                             </div>
-                            <AlertTriangle className="text-orange-500" />
+                            <AlertTriangle className={styles.statsIconWarning} />
                         </div>
                         <div className={styles.statsCard}>
                             <div>
                               <p className={styles.statLabel}>PENALIZADAS</p>
                               <p className={styles.statValue}>{penalizedShops}</p>
                             </div>
-                            <AlertOctagon className="text-gray-500" />
+                            <AlertOctagon className={styles.statsIconMuted} />
                         </div>
                         <div className={styles.statsCard}>
                             <div>
@@ -882,11 +882,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 {reels.filter(r => r.status === 'ACTIVE').length}
                               </p>
                             </div>
-                            <Film className="text-dm-crimson" />
+                            <Film className={styles.statsIconAccent} />
                         </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className={styles.inboxWrap}>
                         <div className={styles.sectionHeader}>
                             <div>
                                 <p className={styles.sectionLabel}>INBOX OPERATIVO</p>
@@ -1028,15 +1028,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <div className={styles.tableMobile}>
                             {filteredAgendaStreams.length > 0 ? (
                                 filteredAgendaStreams.map((stream) => (
-                                    <div key={stream.id} className="p-3 space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-sm font-bold text-dm-dark">{stream.shop?.name || 'Sin tienda'}</p>
-                                            <span className="text-[11px] font-bold text-gray-600">{formatStreamStatus(stream.status)}</span>
+                                    <div key={stream.id} className={styles.listItem}>
+                                        <div className={styles.listRow}>
+                                            <p className={styles.listTitle}>{stream.shop?.name || 'Sin tienda'}</p>
+                                            <span className={styles.listStatus}>{formatStreamStatus(stream.status)}</span>
                                         </div>
-                                        <p className="text-[11px] text-gray-600">
+                                        <p className={styles.listMeta}>
                                             {new Date(stream.fullDateISO).toLocaleDateString()} {stream.scheduledTime} hs
                                         </p>
-                                        <p className="text-[11px] text-gray-600 uppercase">{stream.platform}</p>
+                                        <p className={styles.listMetaUpper}>{stream.platform}</p>
                                     </div>
                                 ))
                             ) : (
@@ -1107,28 +1107,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <div className={styles.tableMobile}>
                             {filteredStreams.length > 0 ? (
                               filteredStreams.map((stream) => (
-                                <div key={stream.id} className="p-3 space-y-2">
-                                    <div className="flex items-center justify-between">
+                                <div key={stream.id} className={styles.listItem}>
+                                    <div className={styles.listRow}>
                                         <div>
-                                            <p className="text-sm font-bold text-dm-dark">{stream.title}</p>
-                                            <p className="text-[11px] text-gray-600">{stream.shop.name}</p>
+                                            <p className={styles.listTitle}>{stream.title}</p>
+                                            <p className={styles.listMeta}>{stream.shop.name}</p>
                                         </div>
-                                        <span className={`text-[11px] px-2 py-1 rounded ${stream.status === 'LIVE' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                                        <span
+                                          className={`${styles.statusBadge} ${
+                                            stream.status === 'LIVE'
+                                              ? styles.statusBadgeLive
+                                              : styles.statusBadgeMuted
+                                          }`}
+                                        >
                                             {formatStreamStatus(stream.status)}
                                         </span>
                                     </div>
-                                    <div className="flex items-center justify-between text-[11px] text-gray-600">
+                                    <div className={`${styles.listRow} ${styles.listMeta}`}>
                                         <span>Reportes</span>
                                         {stream.reportCount > 0 ? (
-                                            <span className="text-red-600 font-bold flex items-center gap-1"><AlertTriangle size={12}/> {stream.reportCount}</span>
+                                            <span className={styles.listAlert}><AlertTriangle size={12}/> {stream.reportCount}</span>
                                         ) : (
                                             <span>-</span>
                                         )}
                                     </div>
-                                    <div className="flex flex-wrap gap-2 pt-2">
+                                    <div className={styles.listActions}>
                                         <button 
                                             onClick={() => toggleVisibility(stream.id)} 
-                                            className={`px-3 py-1.5 border rounded text-xs font-bold flex items-center gap-2 transition-colors ${stream.isVisible ? 'text-gray-600 hover:bg-gray-100' : 'bg-gray-100 text-gray-400'}`}
+                                            className={`${styles.visibilityButton} ${stream.isVisible ? styles.visibilityOn : styles.visibilityOff}`}
                                         >
                                             {stream.isVisible ? <Eye size={14}/> : <EyeOff size={14}/>}
                                             {stream.isVisible ? 'Visible' : 'Oculto'}
@@ -1137,7 +1143,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         {stream.status === 'UPCOMING' && (
                                             <button 
                                                 onClick={() => handleStatusChange(stream.id, StreamStatus.LIVE)} 
-                                                className="px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold flex items-center gap-2"
+                                                className={styles.actionSuccess}
                                             >
                                                 <PlayCircle size={14}/> Iniciar
                                             </button>
@@ -1146,7 +1152,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         {stream.status === 'LIVE' && (
                                             <button 
                                                 onClick={() => handleStatusChange(stream.id, StreamStatus.FINISHED)} 
-                                                className="px-3 py-1.5 border border-red-200 bg-white text-red-600 rounded text-xs font-bold flex items-center gap-2"
+                                                className={styles.actionDangerGhost}
                                             >
                                                 <StopCircle size={14}/> Finalizar
                                             </button>
@@ -1155,7 +1161,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         {stream.status === 'LIVE' && (
                                             <button 
                                                 onClick={() => forceExtend(stream.id)} 
-                                                className="px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold"
+                                                className={styles.actionSuccess}
                                             >
                                                 +30 min
                                             </button>
@@ -1164,7 +1170,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         {(stream.status === 'UPCOMING' || stream.status === 'LIVE') && (
                                             <button 
                                                 onClick={() => editStreamUrl(stream.id)} 
-                                                className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold"
+                                                className={styles.actionNeutral}
                                             >
                                                 URL
                                             </button>
@@ -1173,7 +1179,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         {(stream.status === 'UPCOMING' || stream.status === 'LIVE') && (
                                             <button 
                                                 onClick={() => adjustStreamTime(stream.id)} 
-                                                className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold"
+                                                className={styles.actionNeutral}
                                             >
                                                 Hora
                                             </button>
@@ -1182,7 +1188,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         {stream.status === 'UPCOMING' && (
                                             <button 
                                                 onClick={() => cancelStream(stream.id)} 
-                                                className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold"
+                                                className={styles.actionNeutral}
                                             >
                                                 Cancelar
                                             </button>
@@ -1191,7 +1197,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         {stream.status !== 'BANNED' && (
                                             <button 
                                                 onClick={() => banStream(stream.id)} 
-                                                className="px-3 py-1.5 border border-red-200 bg-red-50 text-red-600 rounded text-xs font-bold"
+                                                className={styles.actionDanger}
                                             >
                                                 Bloquear
                                             </button>
@@ -1209,7 +1215,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <tr>
                                         <th className={styles.tableHeadCell}>Info</th>
                                         <th className={styles.tableHeadCell}>Reportes</th>
-                                        <th className={`${styles.tableHeadCell} text-right`}>Acciones</th>
+                                        <th className={`${styles.tableHeadCell} ${styles.tableHeadCellRight}`}>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className={styles.tableBody}>
@@ -1217,19 +1223,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         filteredStreams.map(stream => (
                                         <tr key={stream.id}>
                                             <td className={styles.tableCell}>
-                                                <p className="font-bold text-sm">{stream.title}</p>
-                                                <p className="text-xs text-gray-500">{stream.shop.name}</p>
-                                                <span className={`text-[10px] px-1 rounded ${stream.status === 'LIVE' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}>{formatStreamStatus(stream.status)}</span>
+                                                <p className={styles.tableTitle}>{stream.title}</p>
+                                                <p className={styles.tableMeta}>{stream.shop.name}</p>
+                                                <span className={`${styles.tableStatus} ${stream.status === 'LIVE' ? styles.tableStatusLive : styles.tableStatusMuted}`}>{formatStreamStatus(stream.status)}</span>
                                             </td>
                                             <td className={styles.tableCell}>
-                                                {stream.reportCount > 0 ? <span className="text-red-600 font-bold flex items-center gap-1"><AlertTriangle size={12}/> {stream.reportCount}</span> : '-'}
+                                                {stream.reportCount > 0 ? <span className={styles.listAlert}><AlertTriangle size={12}/> {stream.reportCount}</span> : '-'}
                                             </td>
                                             <td className={styles.tableCell}>
-                                                <div className="flex justify-end gap-2">
+                                                <div className={styles.listActionsRight}>
                                                     <button 
                                                         onClick={() => toggleVisibility(stream.id)} 
                                                         title={stream.isVisible ? "Ocultar vivo de la app" : "Hacer visible en la app"}
-                                                        className={`px-3 py-1.5 border rounded text-xs font-bold flex items-center gap-2 transition-colors ${stream.isVisible ? 'text-gray-600 hover:bg-gray-100' : 'bg-gray-100 text-gray-400'}`}
+                                                        className={`${styles.visibilityButton} ${stream.isVisible ? styles.visibilityOn : styles.visibilityOff}`}
                                                     >
                                                         {stream.isVisible ? <Eye size={14}/> : <EyeOff size={14}/>}
                                                         {stream.isVisible ? 'Visible' : 'Oculto'}
@@ -1239,7 +1245,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <button 
                                                             onClick={() => handleStatusChange(stream.id, StreamStatus.LIVE)} 
                                                             title="INICIAR VIVO: Comienza el contador de 30 minutos."
-                                                            className="px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold flex items-center gap-2 hover:bg-green-100 transition-colors shadow-sm"
+                                                            className={styles.actionSuccessHover}
                                                         >
                                                             <PlayCircle size={14}/> Iniciar
                                                         </button>
@@ -1249,7 +1255,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <button 
                                                             onClick={() => handleStatusChange(stream.id, StreamStatus.FINISHED)} 
                                                             title="FINALIZAR VIVO: Cortar transmisión inmediatamente."
-                                                            className="px-3 py-1.5 border border-red-200 bg-white text-red-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-red-50 transition-colors shadow-sm"
+                                                            className={styles.actionDangerGhostHover}
                                                         >
                                                             <StopCircle size={14}/> Finalizar
                                                         </button>
@@ -1259,7 +1265,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <button 
                                                             onClick={() => forceExtend(stream.id)} 
                                                             title="FORZAR EXTENSION +30"
-                                                            className="px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold flex items-center gap-2 hover:bg-green-100 transition-colors shadow-sm"
+                                                            className={styles.actionSuccessHover}
                                                         >
                                                             +30 min
                                                         </button>
@@ -1269,7 +1275,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <button 
                                                             onClick={() => editStreamUrl(stream.id)} 
                                                             title="EDITAR URL"
-                                                            className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm"
+                                                            className={styles.actionNeutralHover}
                                                         >
                                                             URL
                                                         </button>
@@ -1279,7 +1285,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <button 
                                                             onClick={() => adjustStreamTime(stream.id)} 
                                                             title="AJUSTAR HORA"
-                                                            className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm"
+                                                            className={styles.actionNeutralHover}
                                                         >
                                                             Hora
                                                         </button>
@@ -1289,7 +1295,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <button 
                                                             onClick={() => cancelStream(stream.id)} 
                                                             title="CANCELAR VIVO"
-                                                            className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm"
+                                                            className={styles.actionNeutralHover}
                                                         >
                                                             Cancelar
                                                         </button>
@@ -1299,7 +1305,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <button 
                                                             onClick={() => banStream(stream.id)} 
                                                             title="BLOQUEAR VIVO"
-                                                            className="px-3 py-1.5 border border-red-200 bg-red-50 text-red-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-red-100 transition-colors shadow-sm"
+                                                            className={styles.actionDangerHover}
                                                         >
                                                             Bloquear
                                                         </button>
@@ -1346,24 +1352,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <div className={styles.tableMobile}>
                             {reportsLoading ? (
                                 Array.from({ length: 4 }).map((_, index) => (
-                                    <div key={index} className="p-3 space-y-2 animate-pulse">
-                                        <div className="h-4 w-40 bg-gray-200 rounded" />
-                                        <div className="h-3 w-28 bg-gray-100 rounded" />
-                                        <div className="h-3 w-full bg-gray-100 rounded" />
+                                    <div key={index} className={styles.skeletonItem}>
+                                        <div className={styles.skeletonLineLg} />
+                                        <div className={styles.skeletonLineMd} />
+                                        <div className={styles.skeletonLineFull} />
                                     </div>
                                 ))
                             ) : filteredReports.length > 0 ? (
                                 filteredReports.map((report) => (
-                                    <div key={report.id} className="p-3 space-y-2">
+                                    <div key={report.id} className={styles.listItem}>
                                         <div>
-                                            <p className="text-sm font-bold text-dm-dark">{report?.stream?.title || report.streamId}</p>
-                                            <p className="text-[11px] text-gray-600">{report?.stream?.shop?.name || 'Sin tienda'}</p>
+                                            <p className={styles.listTitle}>{report?.stream?.title || report.streamId}</p>
+                                            <p className={styles.listMeta}>{report?.stream?.shop?.name || 'Sin tienda'}</p>
                                         </div>
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="font-bold text-gray-700">{formatReportStatus(report.status)}</span>
-                                            <span className="text-[11px] text-gray-600">{report.reason || 'Sin motivo'}</span>
+                                        <div className={`${styles.listRow} ${styles.listRowSmall}`}>
+                                            <span className={styles.listStatus}>{formatReportStatus(report.status)}</span>
+                                            <span className={styles.listMeta}>{report.reason || 'Sin motivo'}</span>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className={styles.listActionsRight}>
                                             <Button
                                                 size="sm"
                                                 variant="outline"
@@ -1423,25 +1429,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         <th className={styles.tableHeadCell}>Vivo</th>
                                         <th className={styles.tableHeadCell}>Estado</th>
                                         <th className={styles.tableHeadCell}>Motivo</th>
-                                        <th className={`${styles.tableHeadCell} text-right`}>Acciones</th>
+                                        <th className={`${styles.tableHeadCell} ${styles.tableHeadCellRight}`}>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className={styles.tableBody}>
                                     {reportsLoading ? (
                                         Array.from({ length: 6 }).map((_, index) => (
-                                            <tr key={index} className="animate-pulse">
-                                                <td className="px-6 py-4">
-                                                    <div className="h-3 w-40 bg-gray-200 rounded" />
-                                                    <div className="mt-2 h-2 w-24 bg-gray-100 rounded" />
+                                            <tr key={index} className={styles.skeletonRow}>
+                                                <td className={styles.skeletonCell}>
+                                                    <div className={styles.skeletonBlockLg} />
+                                                    <div className={styles.skeletonBlockMd} />
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="h-3 w-12 bg-gray-200 rounded" />
+                                                <td className={styles.skeletonCell}>
+                                                    <div className={styles.skeletonBlockSm} />
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="h-3 w-32 bg-gray-100 rounded" />
+                                                <td className={styles.skeletonCell}>
+                                                    <div className={styles.skeletonBlockWide} />
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="h-7 w-24 bg-gray-100 rounded inline-block" />
+                                                <td className={`${styles.skeletonCell} ${styles.tableCellRight}`}>
+                                                    <div className={styles.skeletonBlockButton} />
                                                 </td>
                                             </tr>
                                         ))
@@ -1449,15 +1455,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         filteredReports.map((report) => (
                                             <tr key={report.id}>
                                                 <td className={styles.tableCell}>
-                                                    <p className="text-xs font-bold">{report?.stream?.title || report.streamId}</p>
-                                                    <p className="text-[10px] text-gray-400">{report?.stream?.shop?.name || 'Sin tienda'}</p>
+                                                    <p className={styles.reportTitle}>{report?.stream?.title || report.streamId}</p>
+                                                    <p className={styles.reportMeta}>{report?.stream?.shop?.name || 'Sin tienda'}</p>
                                                 </td>
-                                                <td className={`${styles.tableCell} text-xs font-bold`}>{formatReportStatus(report.status)}</td>
+                                                <td className={`${styles.tableCell} ${styles.reportStatus}`}>{formatReportStatus(report.status)}</td>
                                                 <td className={styles.tableCell}>
-                                                    <p className="text-[10px] text-gray-500">{report.reason || 'Sin motivo'}</p>
+                                                    <p className={styles.reportReason}>{report.reason || 'Sin motivo'}</p>
                                                 </td>
-                                                <td className={`${styles.tableCell} text-right`}>
-                                                    <div className="flex justify-end gap-2">
+                                                <td className={`${styles.tableCell} ${styles.tableCellRight}`}>
+                                                    <div className={styles.tableActions}>
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
@@ -1526,19 +1532,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <div className={styles.shopsActions}>
                             <button
                                 onClick={() => setShopFilter(shopFilter === 'PENDING_VERIFICATION' ? 'ALL' : 'PENDING_VERIFICATION')}
-                                className={`text-xs font-bold px-3 py-2 rounded-full border ${shopFilter === 'PENDING_VERIFICATION' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-white text-gray-500 border-gray-200'}`}
+                                className={`${styles.shopFilterButton} ${shopFilter === 'PENDING_VERIFICATION' ? styles.shopFilterActive : styles.shopFilterInactive}`}
                             >
                                 Pendientes ({pendingShops.length})
                             </button>
-                            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-dm-crimson hover:bg-red-700 border-none text-white shadow-lg shadow-dm-crimson/20">
-                                <Plus size={18} className="mr-2" /> Nueva Tienda
+                            <Button onClick={() => setIsCreateModalOpen(true)} className={styles.adminPrimaryButton}>
+                                <Plus size={18} className={styles.buttonIcon} /> Nueva Tienda
                             </Button>
                             <Button
                                 variant="outline"
                                 onClick={onPreviewClient}
-                                className="border-gray-200 text-gray-600"
+                                className={styles.adminOutlineButton}
                             >
-                                <Eye size={16} className="mr-2" /> Ver como cliente
+                                <Eye size={16} className={styles.buttonIcon} /> Ver como cliente
                             </Button>
                         </div>
                     </div>
@@ -1569,77 +1575,80 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               filteredShops.map((shop) => {
                                 const status = shop.status || 'ACTIVE';
                                 return (
-                                    <div key={shop.id} className="p-3 space-y-2">
-                                        <div className="flex items-center justify-between">
+                                    <div key={shop.id} className={styles.shopCard}>
+                                        <div className={styles.shopHeader}>
                                             <div>
-                                                <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
-                                                <p className="text-[11px] text-gray-600">{shop.plan}</p>
+                                                <p className={styles.shopName}>{shop.name}</p>
+                                                <p className={styles.shopPlan}>{shop.plan}</p>
                                             </div>
-                                            <span className={`text-[11px] px-2 py-1 rounded-full font-bold ${
-                                                status === 'ACTIVE' ? 'bg-green-50 text-green-600' :
-                                                status === 'PENDING_VERIFICATION' ? 'bg-yellow-50 text-yellow-700' :
-                                                status === 'AGENDA_SUSPENDED' ? 'bg-orange-50 text-orange-600' :
-                                                'bg-red-50 text-red-600'
+                                            <span className={`${styles.shopStatusBadge} ${
+                                                status === 'ACTIVE' ? styles.shopStatusActive :
+                                                status === 'PENDING_VERIFICATION' ? styles.shopStatusPending :
+                                                status === 'AGENDA_SUSPENDED' ? styles.shopStatusSuspended :
+                                                styles.shopStatusBlocked
                                             }`}>{formatShopStatus(status)}</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-[11px] text-gray-600">
+                                        <div className={`${styles.listRow} ${styles.listMeta}`}>
                                             <span>Integridad</span>
-                                            <span className={`text-[11px] px-2 py-1 rounded-full font-bold ${
-                                                shop.dataIntegrity === 'COMPLETE' ? 'bg-green-50 text-green-600' :
-                                                shop.dataIntegrity === 'MINIMAL' ? 'bg-yellow-50 text-yellow-600' :
-                                                'bg-red-50 text-red-600'
+                                            <span className={`${styles.integrityBadge} ${
+                                                shop.dataIntegrity === 'COMPLETE' ? styles.integrityComplete :
+                                                shop.dataIntegrity === 'MINIMAL' ? styles.integrityMinimal :
+                                                styles.integrityMissing
                                             }`}>{formatIntegrity(shop.dataIntegrity)}</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-[11px] text-gray-600">
+                                        <div className={`${styles.listRow} ${styles.listMeta}`}>
                                             <span>Penalización</span>
-                                            <button onClick={() => togglePenalty(shop.id)} className={`text-[11px] font-bold px-2 py-1 rounded border ${shop.isPenalized ? 'bg-red-50 border-red-200 text-red-600' : 'border-gray-200'}`}>
+                                            <button
+                                                onClick={() => togglePenalty(shop.id)}
+                                                className={`${styles.penaltyButton} ${shop.isPenalized ? styles.penaltyActive : styles.penaltyInactive}`}
+                                            >
                                                 {shop.isPenalized ? 'ACTIVA' : 'No'}
                                             </button>
                                         </div>
-                                        <div className="flex flex-wrap gap-2 pt-2">
+                                        <div className={styles.listActions}>
                                             {status === 'PENDING_VERIFICATION' && (
                                                 <>
-                                                  <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Activar</button>
-                                                  <button onClick={() => rejectShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-red-50 text-red-600 border-red-200">Rechazar</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
+                                                  <button onClick={() => activateShop(shop.id)} className={`${styles.tinyButton} ${styles.tinySuccess}`}>Activar</button>
+                                                  <button onClick={() => rejectShop(shop.id)} className={`${styles.tinyButton} ${styles.tinyDanger}`}>Rechazar</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
                                                 </>
                                             )}
                                             {status === 'ACTIVE' && (
                                                 <>
-                                                  <button onClick={() => suspendAgenda(shop.id)} className="text-xs border px-2 py-1 rounded bg-orange-50 text-orange-600 border-orange-200">Suspender Agenda</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
+                                                  <button onClick={() => suspendAgenda(shop.id)} className={`${styles.tinyButton} ${styles.tinyWarn}`}>Suspender Agenda</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
                                                 </>
                                             )}
                                             {status === 'AGENDA_SUSPENDED' && (
                                                 <>
-                                                  <button onClick={() => liftSuspension(shop.id)} className="text-xs border px-2 py-1 rounded bg-blue-50 text-blue-600 border-blue-200">Levantar Sancion</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
+                                                  <button onClick={() => liftSuspension(shop.id)} className={`${styles.tinyButton} ${styles.tinyInfo}`}>Levantar Sancion</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
                                                 </>
                                             )}
                                             {(status === 'HIDDEN' || status === 'BANNED') && (
                                                 <>
-                                                  <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Reactivar</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
+                                                  <button onClick={() => activateShop(shop.id)} className={`${styles.tinyButton} ${styles.tinySuccess}`}>Reactivar</button>
+                                                  <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
                                                 </>
                                             )}
-                                            <button onClick={() => assignOwner(shop.id)} className="text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200">
+                                            <button onClick={() => assignOwner(shop.id)} className={`${styles.tinyButton} ${styles.tinyIndigo}`}>
                                                 Asignar dueño
                                             </button>
                                             <button
                                                 onClick={() => openEditShop(shop)}
-                                                className="text-xs border px-2 py-1 rounded bg-white text-gray-600 border-gray-200"
+                                                className={`${styles.tinyButton} ${styles.tinyOutline}`}
                                             >
                                                 Editar datos
                                             </button>
                                             <button
                                                 onClick={() => onPreviewShop(shop.id)}
-                                                className="text-xs border px-2 py-1 rounded bg-white text-gray-600 border-gray-200"
+                                                className={`${styles.tinyButton} ${styles.tinyOutline}`}
                                             >
                                                 Ver como tienda
                                             </button>
                                             <button
                                                 onClick={() => deleteShop(shop)}
-                                                className="text-xs border px-2 py-1 rounded bg-red-50 text-red-600 border-red-200"
+                                                className={`${styles.tinyButton} ${styles.tinyDanger}`}
                                             >
                                                 Eliminar
                                             </button>
@@ -1660,7 +1669,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         <th className={styles.tableHeadCell}>Estado</th>
                                         <th className={styles.tableHeadCell}>Integridad</th>
                                         <th className={styles.tableHeadCell}>Penalización</th>
-                                        <th className={`${styles.tableHeadCell} text-right`}>Acciones</th>
+                                        <th className={`${styles.tableHeadCell} ${styles.tableHeadCellRight}`}>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className={styles.tableBody}>
@@ -1669,73 +1678,76 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         const status = shop.status || 'ACTIVE';
                                         return (
                                         <tr key={shop.id}>
-                                            <td className={`${styles.tableCell} font-bold text-sm`}>{shop.name}</td>
-                                            <td className={`${styles.tableCell} text-xs`}>{shop.plan}</td>
+                                            <td className={`${styles.tableCell} ${styles.tableTitle}`}>{shop.name}</td>
+                                            <td className={styles.tableCell}>{shop.plan}</td>
                                             <td className={styles.tableCell}>
-                                                <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
-                                                    status === 'ACTIVE' ? 'bg-green-50 text-green-600' :
-                                                    status === 'PENDING_VERIFICATION' ? 'bg-yellow-50 text-yellow-700' :
-                                                    status === 'AGENDA_SUSPENDED' ? 'bg-orange-50 text-orange-600' :
-                                                    'bg-red-50 text-red-600'
+                                                <span className={`${styles.shopStatusBadge} ${
+                                                    status === 'ACTIVE' ? styles.shopStatusActive :
+                                                    status === 'PENDING_VERIFICATION' ? styles.shopStatusPending :
+                                                    status === 'AGENDA_SUSPENDED' ? styles.shopStatusSuspended :
+                                                    styles.shopStatusBlocked
                                                 }`}>{formatShopStatus(status)}</span>
                                             </td>
                                             <td className={styles.tableCell}>
-                                                <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
-                                                    shop.dataIntegrity === 'COMPLETE' ? 'bg-green-50 text-green-600' :
-                                                    shop.dataIntegrity === 'MINIMAL' ? 'bg-yellow-50 text-yellow-600' :
-                                                    'bg-red-50 text-red-600'
+                                                <span className={`${styles.integrityBadge} ${
+                                                    shop.dataIntegrity === 'COMPLETE' ? styles.integrityComplete :
+                                                    shop.dataIntegrity === 'MINIMAL' ? styles.integrityMinimal :
+                                                    styles.integrityMissing
                                                 }`}>{formatIntegrity(shop.dataIntegrity)}</span>
                                             </td>
                                             <td className={styles.tableCell}>
-                                                <button onClick={() => togglePenalty(shop.id)} className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded border ${shop.isPenalized ? 'bg-red-50 border-red-200 text-red-600' : 'border-gray-200'}`}>
+                                                <button
+                                                    onClick={() => togglePenalty(shop.id)}
+                                                    className={`${styles.penaltyButton} ${shop.isPenalized ? styles.penaltyActive : styles.penaltyInactive}`}
+                                                >
                                                     {shop.isPenalized ? 'ACTIVA' : 'No'}
                                                 </button>
                                             </td>
-                                            <td className={`${styles.tableCell} text-right`}>
-                                                <div className="flex justify-end gap-2">
+                                            <td className={`${styles.tableCell} ${styles.tableCellRight}`}>
+                                                <div className={styles.tableActions}>
                                                     {status === 'PENDING_VERIFICATION' && (
                                                         <>
-                                                          <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Activar</button>
-                                                          <button onClick={() => rejectShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-red-50 text-red-600 border-red-200">Rechazar</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
+                                                          <button onClick={() => activateShop(shop.id)} className={`${styles.tinyButton} ${styles.tinySuccess}`}>Activar</button>
+                                                          <button onClick={() => rejectShop(shop.id)} className={`${styles.tinyButton} ${styles.tinyDanger}`}>Rechazar</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
                                                         </>
                                                     )}
                                                     {status === 'ACTIVE' && (
                                                         <>
-                                                          <button onClick={() => suspendAgenda(shop.id)} className="text-xs border px-2 py-1 rounded bg-orange-50 text-orange-600 border-orange-200">Suspender Agenda</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
+                                                          <button onClick={() => suspendAgenda(shop.id)} className={`${styles.tinyButton} ${styles.tinyWarn}`}>Suspender Agenda</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
                                                         </>
                                                     )}
                                                     {status === 'AGENDA_SUSPENDED' && (
                                                         <>
-                                                          <button onClick={() => liftSuspension(shop.id)} className="text-xs border px-2 py-1 rounded bg-blue-50 text-blue-600 border-blue-200">Levantar Sancion</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
+                                                          <button onClick={() => liftSuspension(shop.id)} className={`${styles.tinyButton} ${styles.tinyInfo}`}>Levantar Sancion</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
                                                         </>
                                                     )}
                                                     {(status === 'HIDDEN' || status === 'BANNED') && (
                                                         <>
-                                                          <button onClick={() => activateShop(shop.id)} className="text-xs border px-2 py-1 rounded bg-green-50 text-green-700 border-green-200">Reactivar</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className="text-xs border px-2 py-1 rounded bg-gray-50 text-gray-600 border-gray-200">Restablecer clave</button>
+                                                          <button onClick={() => activateShop(shop.id)} className={`${styles.tinyButton} ${styles.tinySuccess}`}>Reactivar</button>
+                                                          <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
                                                         </>
                                                     )}
-                                                    <button onClick={() => assignOwner(shop.id)} className="text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200">
+                                                    <button onClick={() => assignOwner(shop.id)} className={`${styles.tinyButton} ${styles.tinyIndigo}`}>
                                                         Asignar dueño
                                                     </button>
                                                     <button
                                                         onClick={() => openEditShop(shop)}
-                                                        className="text-xs border px-2 py-1 rounded bg-white text-gray-600 border-gray-200"
+                                                        className={`${styles.tinyButton} ${styles.tinyOutline}`}
                                                     >
                                                         Editar datos
                                                     </button>
                                                     <button
                                                         onClick={() => onPreviewShop(shop.id)}
-                                                        className="text-xs border px-2 py-1 rounded bg-white text-gray-600 border-gray-200"
+                                                        className={`${styles.tinyButton} ${styles.tinyOutline}`}
                                                     >
                                                         Ver como tienda
                                                     </button>
                                                     <button
                                                         onClick={() => deleteShop(shop)}
-                                                        className="text-xs border px-2 py-1 rounded bg-red-50 text-red-600 border-red-200"
+                                                        className={`${styles.tinyButton} ${styles.tinyDanger}`}
                                                     >
                                                         Eliminar
                                                     </button>
@@ -1761,36 +1773,36 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <div className={styles.tableCard}>
                         <div className={styles.tableMobile}>
                             {reels.map((reel) => (
-                                <div key={reel.id} className="p-3 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
-                                                <img src={reel.shopLogo} alt={reel.shopName} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                                <div key={reel.id} className={styles.reelRow}>
+                                    <div className={styles.reelHeader}>
+                                        <div className={styles.reelShop}>
+                                            <div className={styles.reelAvatar}>
+                                                <img src={reel.shopLogo} alt={reel.shopName} loading="lazy" decoding="async" className={styles.reelAvatarImg} />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-dm-dark">{reel.shopName}</p>
-                                                <p className="text-[11px] text-gray-500">{new Date(reel.createdAtISO).toLocaleDateString()}</p>
+                                                <p className={styles.reelShopName}>{reel.shopName}</p>
+                                                <p className={styles.reelDate}>{new Date(reel.createdAtISO).toLocaleDateString()}</p>
                                             </div>
                                         </div>
-                                        <span className="text-[11px] text-gray-500">{reel.platform}</span>
+                                        <span className={styles.reelPlatform}>{reel.platform}</span>
                                     </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className={`text-[11px] px-2 py-1 rounded font-bold ${
-                                            reel.status === 'ACTIVE' ? 'bg-green-50 text-green-700' :
-                                            reel.status === 'EXPIRED' ? 'bg-gray-100 text-gray-500' :
-                                            'bg-red-50 text-red-600'
+                                    <div className={styles.reelStats}>
+                                        <span className={`${styles.reelStatusBadge} ${
+                                            reel.status === 'ACTIVE' ? styles.reelStatusActive :
+                                            reel.status === 'EXPIRED' ? styles.reelStatusExpired :
+                                            styles.reelStatusHidden
                                         }`}>
                                             {formatReelStatus(reel.status)}
                                         </span>
-                                        <span className="text-[11px] text-gray-600">{reel.views || 0} vistas</span>
+                                        <span className={styles.reelViews}>{reel.views || 0} vistas</span>
                                     </div>
-                                    <div className="flex items-center justify-between">
+                                    <div className={styles.reelFooter}>
                                         {reel.origin === 'EXTRA' && (
-                                            <span className="text-[11px] bg-yellow-50 text-yellow-600 px-1 rounded border border-yellow-200">EXTRA</span>
+                                            <span className={styles.reelExtra}>EXTRA</span>
                                         )}
-                                        <button 
+                                        <button
                                             onClick={() => toggleReelHide(reel)}
-                                            className={`text-xs border px-2 py-1 rounded ${reel.status === 'HIDDEN' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}
+                                            className={`${styles.reelToggleButton} ${reel.status === 'HIDDEN' ? styles.reelToggleOn : styles.reelToggleOff}`}
                                         >
                                             {reel.status === 'HIDDEN' ? 'Reactivar' : 'Ocultar'}
                                         </button>
@@ -1806,37 +1818,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         <th className={styles.tableHeadCell}>Plataforma</th>
                                         <th className={styles.tableHeadCell}>Estado</th>
                                         <th className={styles.tableHeadCell}>Vistas</th>
-                                        <th className={`${styles.tableHeadCell} text-right`}>Acciones</th>
+                                        <th className={`${styles.tableHeadCell} ${styles.tableHeadCellRight}`}>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className={styles.tableBody}>
                                     {reels.map(reel => (
                                         <tr key={reel.id}>
                                             <td className={styles.tableCell}>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden"><img src={reel.shopLogo} alt={reel.shopName} loading="lazy" decoding="async" className="w-full h-full object-cover"/></div>
+                                                <div className={styles.reelShop}>
+                                                    <div className={styles.reelAvatar}>
+                                                      <img src={reel.shopLogo} alt={reel.shopName} loading="lazy" decoding="async" className={styles.reelAvatarImg}/>
+                                                    </div>
                                                     <div>
-                                                        <p className="font-bold text-sm">{reel.shopName}</p>
-                                                        <p className="text-[10px] text-gray-400">{new Date(reel.createdAtISO).toLocaleDateString()}</p>
+                                                        <p className={styles.reelShopName}>{reel.shopName}</p>
+                                                        <p className={styles.reportMeta}>{new Date(reel.createdAtISO).toLocaleDateString()}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className={`${styles.tableCell} text-xs`}>{reel.platform}</td>
+                                            <td className={styles.tableCell}>{reel.platform}</td>
                                             <td className={styles.tableCell}>
-                                                <span className={`text-[10px] px-2 py-1 rounded font-bold ${
-                                                    reel.status === 'ACTIVE' ? 'bg-green-50 text-green-700' :
-                                                    reel.status === 'EXPIRED' ? 'bg-gray-100 text-gray-500' :
-                                                    'bg-red-50 text-red-600'
+                                                <span className={`${styles.reelStatusBadge} ${
+                                                    reel.status === 'ACTIVE' ? styles.reelStatusActive :
+                                                    reel.status === 'EXPIRED' ? styles.reelStatusExpired :
+                                                    styles.reelStatusHidden
                                                 }`}>
                                                     {formatReelStatus(reel.status)}
                                                 </span>
-                                                {reel.origin === 'EXTRA' && <span className="ml-2 text-[10px] bg-yellow-50 text-yellow-600 px-1 rounded border border-yellow-200">EXTRA</span>}
+                                                {reel.origin === 'EXTRA' && <span className={styles.reelExtra}>EXTRA</span>}
                                             </td>
-                                            <td className={`${styles.tableCell} text-xs`}>{reel.views || 0}</td>
-                                            <td className={`${styles.tableCell} text-right`}>
+                                            <td className={styles.tableCell}>{reel.views || 0}</td>
+                                            <td className={`${styles.tableCell} ${styles.tableCellRight}`}>
                                                 <button 
                                                     onClick={() => toggleReelHide(reel)}
-                                                    className={`text-xs border px-2 py-1 rounded ${reel.status === 'HIDDEN' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}
+                                                    className={`${styles.reelToggleButton} ${reel.status === 'HIDDEN' ? styles.reelToggleOn : styles.reelToggleOff}`}
                                                 >
                                                     {reel.status === 'HIDDEN' ? 'Reactivar' : 'Ocultar'}
                                                 </button>
@@ -1854,23 +1868,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className={styles.section}>
                     <h2 className={styles.sectionTitle}>Administrativo</h2>
                     <div className={styles.adminGrid}>
-                        <div className="bg-white rounded-xl shadow-sm border p-6 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h3 className="font-bold text-dm-dark">Solicitudes de Compra</h3>
+                        <div className={styles.adminCard}>
+                            <div className={styles.adminCardHeader}>
+                                <h3 className={styles.adminCardTitle}>Solicitudes de Compra</h3>
                             </div>
-                            <p className="text-xs text-gray-500">Bandeja de solicitudes pendientes (PENDING).</p>
-                            <div className="flex flex-col gap-2">
+                            <p className={styles.adminCardSubtitle}>Bandeja de solicitudes pendientes (PENDING).</p>
+                            <div className={styles.adminCardStack}>
                                 <input
                                     type="text"
                                     placeholder="Buscar tienda..."
                                     value={purchaseQuery}
                                     onChange={(e) => setPurchaseQuery(e.target.value)}
-                                    className="w-full p-2 border border-gray-200 rounded text-xs"
+                                    className={styles.adminField}
                                 />
                                 <select
                                     value={purchaseStatusFilter}
                                     onChange={(e) => setPurchaseStatusFilter(e.target.value as any)}
-                                    className="w-full p-2 border border-gray-200 rounded text-xs bg-white"
+                                    className={styles.adminFieldWhite}
                                 >
                                     <option value="PENDING">Pendientes</option>
                                     <option value="APPROVED">Aprobadas</option>
@@ -1879,52 +1893,52 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 </select>
                             </div>
                             {purchasesLoading ? (
-                                <div className="space-y-3">
+                                <div className={styles.adminListStack}>
                                     {Array.from({ length: 3 }).map((_, index) => (
-                                        <div key={index} className="border border-gray-100 rounded-lg p-3 text-xs animate-pulse">
-                                            <div className="h-3 w-32 bg-gray-200 rounded" />
-                                            <div className="mt-2 h-2 w-24 bg-gray-100 rounded" />
-                                            <div className="mt-3 h-7 w-24 bg-gray-100 rounded" />
+                                        <div key={index} className={styles.adminNoteSkeleton}>
+                                            <div className={styles.adminNoteSkeletonLineMd} />
+                                            <div className={styles.adminNoteSkeletonLineXs} />
+                                            <div className={styles.adminNoteSkeletonLineSm} />
                                         </div>
                                     ))}
                                 </div>
                             ) : filteredPurchases.length === 0 ? (
-                                <div className="text-xs text-gray-400 border border-dashed border-gray-200 rounded-lg p-4">
+                                <div className={styles.adminEmpty}>
                                     Sin solicitudes registradas.
                                 </div>
                             ) : (
-                                <div className="space-y-3">
+                                <div className={styles.adminListStack}>
                                     {filteredPurchases.map((req) => (
-                                        <div key={req.purchaseId} className="border border-gray-100 rounded-lg p-3 text-xs">
-                                            <div className="flex items-center justify-between">
+                                        <div key={req.purchaseId} className={styles.adminRequestItem}>
+                                            <div className={styles.adminRequestHeader}>
                                                 <div>
-                                                    <p className="font-bold text-dm-dark">{req.shop?.name || 'Tienda'}</p>
-                                                    <p className="text-[10px] text-gray-500 uppercase">
+                                                    <p className={styles.adminRequestTitle}>{req.shop?.name || 'Tienda'}</p>
+                                                    <p className={styles.adminRequestMeta}>
                                                         {req.type === 'LIVE_PACK' ? 'Cupos de vivos' : req.type === 'REEL_PACK' ? 'Cupos de historias' : req.type}
                                                     </p>
                                                 </div>
-                                                <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 border ${
+                                                <span className={`${styles.purchaseStatusBadge} ${
                                                     req.status === 'APPROVED'
-                                                      ? 'bg-green-50 text-green-700 border-green-200'
+                                                      ? styles.purchaseApproved
                                                       : req.status === 'REJECTED'
-                                                      ? 'bg-red-50 text-red-600 border-red-200'
-                                                      : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                                      ? styles.purchaseRejected
+                                                      : styles.purchasePending
                                                 }`}>
                                                     {formatPurchaseStatus(req.status)}
                                                 </span>
                                             </div>
-                                            <div className="mt-2 flex items-center justify-between">
-                                                <span className="text-gray-500">Cantidad: <span className="font-bold text-dm-dark">{req.quantity}</span></span>
-                                                <div className="flex gap-2">
+                                            <div className={styles.adminRequestFooter}>
+                                                <span className={styles.adminRequestQty}>Cantidad: <span className={styles.adminRequestQtyValue}>{req.quantity}</span></span>
+                                                <div className={styles.adminRequestActions}>
                                                     <button
                                                         onClick={() => handleRejectPurchase(req.purchaseId)}
-                                                        className="text-[10px] px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50"
+                                                        className={styles.adminActionReject}
                                                     >
                                                         Rechazar
                                                     </button>
                                                     <button
                                                         onClick={() => handleApprovePurchase(req.purchaseId)}
-                                                        className="text-[10px] px-2 py-1 rounded border border-green-200 text-green-600 hover:bg-green-50"
+                                                        className={styles.adminActionApprove}
                                                     >
                                                         Aprobar
                                                     </button>
@@ -1935,14 +1949,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 </div>
                             )}
                         </div>
-                        <div className="bg-white rounded-xl shadow-sm border p-6 space-y-4">
-                            <h3 className="font-bold text-dm-dark">Asignación Manual de Cupos</h3>
-                            <p className="text-xs text-gray-500">Compensación manual (solo Superadmin).</p>
-                            <form onSubmit={handleAssignQuota} className="space-y-3">
+                        <div className={styles.adminCard}>
+                            <h3 className={styles.adminCardTitle}>Asignación Manual de Cupos</h3>
+                            <p className={styles.adminCardSubtitle}>Compensación manual (solo Superadmin).</p>
+                            <form onSubmit={handleAssignQuota} className={styles.adminForm}>
                                 <select
                                     value={quotaShopId}
                                     onChange={(e) => setQuotaShopId(e.target.value)}
-                                    className="w-full p-2 border rounded text-sm bg-white"
+                                    className={styles.adminInput}
                                 >
                                     <option value="">Seleccionar tienda...</option>
                                     {shops.map(shop => (
@@ -1952,7 +1966,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <select
                                     value={quotaType}
                                     onChange={(e) => setQuotaType(e.target.value as any)}
-                                    className="w-full p-2 border rounded text-sm bg-white"
+                                    className={styles.adminInput}
                                 >
                                     <option value="STREAM">Vivos</option>
                                     <option value="REEL">Reels</option>
@@ -1961,36 +1975,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     type="number"
                                     value={quotaAmount}
                                     onChange={(e) => setQuotaAmount(parseInt(e.target.value || '0', 10))}
-                                    className="w-full p-2 border rounded text-sm"
+                                    className={styles.adminInput}
                                     min={1}
                                 />
-                                <Button type="submit" className="w-full">Asignar Cupos</Button>
+                                <Button type="submit" className={styles.adminActionButton}>Asignar Cupos</Button>
                             </form>
                         </div>
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border p-6 flex items-center justify-between">
-                        <div>
-                            <h3 className="font-bold text-dm-dark">Actuar como Distrito Moda</h3>
-                            <p className="text-xs text-gray-500">Publicar vivos y reels oficiales destacados.</p>
-                        </div>
-                        <label className="flex items-center gap-2 text-sm font-bold text-gray-600">
-                            <input
-                                type="checkbox"
-                                checked={officialMode}
-                                onChange={() => setOfficialMode(!officialMode)}
-                                className="w-4 h-4"
-                            />
-                            Modo Oficial
-                        </label>
-                    </div>
-                    <div className="bg-white rounded-xl shadow-sm border p-6">
-                        <div className="flex items-center justify-between">
+                    <div className={styles.adminCard}>
+                        <div className={styles.adminToggleRow}>
                             <div>
-                                <h3 className="font-bold text-dm-dark">Estado del sistema</h3>
-                                <p className="text-xs text-gray-500">Cron de notificaciones, sanciones y vivos.</p>
+                                <h3 className={styles.adminCardTitle}>Actuar como Distrito Moda</h3>
+                                <p className={styles.adminCardSubtitle}>Publicar vivos y reels oficiales destacados.</p>
+                            </div>
+                            <label className={styles.adminToggleLabel}>
+                                <input
+                                    type="checkbox"
+                                    checked={officialMode}
+                                    onChange={() => setOfficialMode(!officialMode)}
+                                    className={styles.adminToggleInput}
+                                />
+                                Modo Oficial
+                            </label>
+                        </div>
+                    </div>
+                    <div className={styles.adminCard}>
+                        <div className={styles.adminCardHeader}>
+                            <div>
+                                <h3 className={styles.adminCardTitle}>Estado del sistema</h3>
+                                <p className={styles.adminCardSubtitle}>Cron de notificaciones, sanciones y vivos.</p>
                             </div>
                             <button
-                                className="text-[10px] font-bold text-dm-crimson"
+                                className={styles.adminUpdateButton}
                                 onClick={refreshSystemStatus}
                                 disabled={systemStatusLoading}
                             >
@@ -1998,109 +2014,109 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </button>
                         </div>
                         {systemStatusLoading ? (
-                            <div className="mt-4 space-y-2">
-                                <div className="h-3 w-32 rounded bg-gray-100 animate-pulse" />
-                                <div className="h-3 w-48 rounded bg-gray-100 animate-pulse" />
-                                <div className="h-3 w-40 rounded bg-gray-100 animate-pulse" />
+                            <div className={styles.adminPulseRow}>
+                                <div className={styles.adminPulseLineSm} />
+                                <div className={styles.adminPulseLineMd} />
+                                <div className={styles.adminPulseLineLg} />
                             </div>
                         ) : systemStatus ? (
-                            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                                <div className="rounded-lg border border-gray-100 p-3">
-                                    <p className="text-[10px] uppercase tracking-widest text-gray-400">Notificaciones</p>
-                                    <p className={`mt-1 font-bold ${systemStatus.notifications?.enabled ? 'text-green-700' : 'text-gray-500'}`}>
+                            <div className={styles.adminInfoGrid}>
+                                <div className={styles.adminInfoCard}>
+                                    <p className={styles.adminInfoLabel}>Notificaciones</p>
+                                    <p className={`${styles.systemState} ${systemStatus.notifications?.enabled ? styles.systemStateOn : styles.systemStateOff}`}>
                                         {systemStatus.notifications?.enabled ? 'Activo' : 'Inactivo'}
                                     </p>
-                                    <p className="text-[10px] text-gray-400">
+                                    <p className={styles.adminInfoValue}>
                                         Intervalo {systemStatus.notifications?.intervalMinutes ?? '-'} min · Ventana {systemStatus.notifications?.windowMinutes ?? '-'} min
                                     </p>
                                 </div>
-                                <div className="rounded-lg border border-gray-100 p-3">
-                                    <p className="text-[10px] uppercase tracking-widest text-gray-400">Sanciones</p>
-                                    <p className={`mt-1 font-bold ${systemStatus.sanctions?.enabled ? 'text-green-700' : 'text-gray-500'}`}>
+                                <div className={styles.adminInfoCard}>
+                                    <p className={styles.adminInfoLabel}>Sanciones</p>
+                                    <p className={`${styles.systemState} ${systemStatus.sanctions?.enabled ? styles.systemStateOn : styles.systemStateOff}`}>
                                         {systemStatus.sanctions?.enabled ? 'Activo' : 'Inactivo'}
                                     </p>
-                                    <p className="text-[10px] text-gray-400">
+                                    <p className={styles.adminInfoValue}>
                                         Intervalo {systemStatus.sanctions?.intervalMinutes ?? '-'} min
                                     </p>
                                 </div>
-                                <div className="rounded-lg border border-gray-100 p-3">
-                                    <p className="text-[10px] uppercase tracking-widest text-gray-400">Ciclo de vivos</p>
-                                    <p className={`mt-1 font-bold ${systemStatus.streams?.enabled ? 'text-green-700' : 'text-gray-500'}`}>
+                                <div className={styles.adminInfoCard}>
+                                    <p className={styles.adminInfoLabel}>Ciclo de vivos</p>
+                                    <p className={`${styles.systemState} ${systemStatus.streams?.enabled ? styles.systemStateOn : styles.systemStateOff}`}>
                                         {systemStatus.streams?.enabled ? 'Activo' : 'Inactivo'}
                                     </p>
-                                    <p className="text-[10px] text-gray-400">
+                                    <p className={styles.adminInfoValue}>
                                         Intervalo {systemStatus.streams?.intervalMinutes ?? '-'} min
                                     </p>
                                 </div>
-                                <div className="md:col-span-3 text-[10px] text-gray-400">
+                                <div className={styles.adminInfoFooter}>
                                     Entorno: {systemStatus.nodeEnv || '-'} · {systemStatus.serverTime ? new Date(systemStatus.serverTime).toLocaleString('es-AR') : ''}
                                 </div>
                             </div>
                         ) : (
-                            <p className="mt-4 text-xs text-gray-400">Sin datos de sistema.</p>
+                            <p className={styles.adminEmptyText}>Sin datos de sistema.</p>
                         )}
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border p-6">
-                        <div className="flex items-center justify-between">
+                    <div className={styles.adminCard}>
+                        <div className={styles.adminCardHeader}>
                             <div>
-                                <h3 className="font-bold text-dm-dark">Ciclo de vivos</h3>
-                                <p className="text-xs text-gray-500">Arranca y finaliza vivos segun agenda.</p>
+                                <h3 className={styles.adminCardTitle}>Ciclo de vivos</h3>
+                                <p className={styles.adminCardSubtitle}>Arranca y finaliza vivos segun agenda.</p>
                             </div>
-                            <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">
+                            <span className={styles.adminActionBadge}>
                                 Activo
                             </span>
                         </div>
-                        <Button className="mt-4 w-full" onClick={runStreamsLifecycle} disabled={streamsLifecycleRunning}>
+                        <Button className={styles.adminActionButton} onClick={runStreamsLifecycle} disabled={streamsLifecycleRunning}>
                             {streamsLifecycleRunning ? 'Procesando...' : 'Ejecutar ciclo'}
                         </Button>
                         {streamsLifecycleSummary && (
-                          <p className="mt-3 text-xs text-gray-500">
+                          <p className={styles.adminActionNote}>
                             Ultima corrida: {streamsLifecycleSummary.started ?? 0} iniciados · {streamsLifecycleSummary.finished ?? 0} finalizados.
                           </p>
                         )}
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border p-6">
-                        <div className="flex items-center justify-between">
+                    <div className={styles.adminCard}>
+                        <div className={styles.adminCardHeader}>
                             <div>
-                                <h3 className="font-bold text-dm-dark">Motor de sanciones</h3>
-                                <p className="text-xs text-gray-500">Ejecuta la corrida del motor (Paso 7).</p>
+                                <h3 className={styles.adminCardTitle}>Motor de sanciones</h3>
+                                <p className={styles.adminCardSubtitle}>Ejecuta la corrida del motor (Paso 7).</p>
                             </div>
-                            <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">
+                            <span className={styles.adminActionBadge}>
                                 Activo
                             </span>
                         </div>
-                        <Button className="mt-4 w-full" onClick={runSanctions} disabled={sanctionsRunning}>
+                        <Button className={styles.adminActionButton} onClick={runSanctions} disabled={sanctionsRunning}>
                             {sanctionsRunning ? 'Ejecutando...' : 'Ejecutar motor'}
                         </Button>
                         {sanctionsSummary && (
-                          <p className="mt-3 text-xs text-gray-500">
+                          <p className={styles.adminActionNote}>
                             Última corrida: {sanctionsSummary.candidates ?? 0} candidatos · {sanctionsSummary.sanctioned ?? 0} sancionados.
                           </p>
                         )}
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border p-6">
-                        <div className="flex items-center justify-between">
+                    <div className={styles.adminCard}>
+                        <div className={styles.adminCardHeader}>
                             <div>
-                                <h3 className="font-bold text-dm-dark">Notificaciones</h3>
-                                <p className="text-xs text-gray-500">Cola y estados del sistema.</p>
+                                <h3 className={styles.adminCardTitle}>Notificaciones</h3>
+                                <p className={styles.adminCardSubtitle}>Cola y estados del sistema.</p>
                             </div>
-                            <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">
+                            <span className={styles.adminActionBadge}>
                                 Activo
                             </span>
                         </div>
-                        <Button className="mt-4 w-full" onClick={runNotifications} disabled={notificationsRunning}>
+                        <Button className={styles.adminActionButton} onClick={runNotifications} disabled={notificationsRunning}>
                             {notificationsRunning ? 'Procesando...' : 'Ejecutar cola'}
                         </Button>
                         {notificationsSummary && (
-                          <p className="mt-3 text-xs text-gray-500">
+                          <p className={styles.adminActionNote}>
                             Última corrida: {notificationsSummary.created ?? 0} creadas · {notificationsSummary.skipped ?? 0} omitidas.
                           </p>
                         )}
-                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <div className={styles.adminTagRow}>
                           <select
                             value={notificationFilter}
                             onChange={(e) => setNotificationFilter(e.target.value as any)}
-                            className="rounded-lg border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-600"
+                            className={styles.notificationFilterSelect}
                           >
                             <option value="UNREAD">No leídas</option>
                             <option value="ALL">Todas</option>
@@ -2108,7 +2124,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <select
                             value={notificationType}
                             onChange={(e) => setNotificationType(e.target.value as any)}
-                            className="rounded-lg border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-600"
+                            className={styles.notificationFilterSelect}
                           >
                             <option value="ALL">Todos los tipos</option>
                             <option value="SYSTEM">Sistema</option>
@@ -2116,39 +2132,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <option value="PURCHASE">Compra</option>
                           </select>
                           <button
-                            className="text-[10px] font-bold text-dm-crimson"
+                            className={styles.notificationRefreshButton}
                             onClick={refreshAdminNotifications}
                           >
                             Actualizar
                           </button>
                         </div>
-                        <div className="mt-4 max-h-44 space-y-3 overflow-y-auto pr-1">
+                        <div className={styles.adminNoteList}>
                           {notificationsLoading ? (
                             Array.from({ length: 4 }).map((_, index) => (
-                              <div key={index} className="rounded-lg border border-gray-100 p-3 text-[11px] animate-pulse">
-                                <div className="h-2 w-20 bg-gray-200 rounded" />
-                                <div className="mt-2 h-3 w-40 bg-gray-100 rounded" />
-                                <div className="mt-2 h-2 w-24 bg-gray-100 rounded" />
+                              <div key={index} className={styles.adminNoteSkeleton}>
+                                <div className={styles.adminNoteSkeletonLineSm} />
+                                <div className={styles.adminNoteSkeletonLineMd} />
+                                <div className={styles.adminNoteSkeletonLineXs} />
                               </div>
                             ))
                           ) : adminNotifications.length === 0 ? (
-                            <p className="text-xs text-gray-400">No hay notificaciones para mostrar.</p>
+                            <p className={styles.adminNoteEmpty}>No hay notificaciones para mostrar.</p>
                           ) : (
                             adminNotifications.map((note) => (
-                              <div key={note.id} className="rounded-lg border border-gray-100 p-3 text-[11px] text-gray-600">
-                                <div className="flex items-center justify-between">
-                                  <span className={`text-[10px] font-bold uppercase ${note.read ? 'text-gray-400' : 'text-dm-crimson'}`}>
+                              <div key={note.id} className={styles.adminNoteItem}>
+                                <div className={styles.adminNoteHeader}>
+                                  <span className={`${styles.notificationTypeBadge} ${note.read ? styles.notificationTypeRead : styles.notificationTypeUnread}`}>
                                     {formatNotificationType(note.type)}
                                   </span>
-                                  <span className="text-[10px] text-gray-400">{formatNotificationDate(note.createdAt)}</span>
+                                  <span className={styles.adminNoteDate}>{formatNotificationDate(note.createdAt)}</span>
                                 </div>
-                                <p className={`mt-1 ${note.read ? 'text-gray-500' : 'text-dm-dark font-semibold'}`}>
+                                <p className={`${styles.notificationMessage} ${note.read ? styles.notificationMessageRead : styles.notificationMessageUnread}`}>
                                   {note.message}
                                 </p>
-                                <div className="mt-2 flex items-center justify-between text-[10px] text-gray-400">
+                                <div className={styles.adminNoteFooter}>
                                   <span>{note.user?.email || 'Usuario sin email'}</span>
                                   {!note.read && (
-                                    <button className="text-[10px] font-bold text-gray-500" onClick={() => markNotificationRead(note.id)}>
+                                    <button className={styles.adminNoteAction} onClick={() => markNotificationRead(note.id)}>
                                       Marcar leído
                                     </button>
                                   )}
@@ -2191,10 +2207,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       {/* Section 1: Identidad & Legal */}
                       <section className={styles.createModalSection}>
                           <h3 className={styles.createModalSectionTitle}>
-                              <Store size={16} className="text-dm-crimson" /> 1. Identidad & Legal
+                              <Store size={16} className={styles.adminSectionIcon} /> 1. Identidad & Legal
                           </h3>
                           <div className={styles.createModalGridTwo}>
-                              <div className="md:col-span-2">
+                              <div className={styles.createModalSpanTwo}>
                                   <label className={styles.createModalLabel}>Nombre de Fantasía (Público) *</label>
                                   <input 
                                       type="text" required value={formData.name}
@@ -2227,15 +2243,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       {/* Section 2: Dirección Física */}
                       <section className={styles.createModalSection}>
                           <h3 className={styles.createModalSectionTitle}>
-                              <MapPin size={16} className="text-dm-crimson" /> 2. Dirección Física
+                              <MapPin size={16} className={styles.adminSectionIcon} /> 2. Dirección Física
                           </h3>
-                          <div className="space-y-4">
-                               <div className="relative">
+                          <div className={styles.createModalStack}>
+                               <div className={styles.createModalField}>
                                     <label className={styles.createModalLabel}>Buscador Google Maps (Simulado)</label>
                                     <AddressAutocomplete onSelect={handleAddressSelect} />
                                </div>
                                <div className={styles.createModalGridThree}>
-                                    <div className="md:col-span-2">
+                                    <div className={styles.createModalSpanTwo}>
                                         <label className={styles.createModalLabel}>Calle</label>
                                         <input 
                                             type="text" value={formData.street}
@@ -2282,13 +2298,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       {/* Section 3: Condiciones de Venta */}
                       <section className={styles.createModalSection}>
                           <h3 className={styles.createModalSectionTitle}>
-                              <CreditCard size={16} className="text-dm-crimson" /> 3. Condiciones de Venta
+                              <CreditCard size={16} className={styles.adminSectionIcon} /> 3. Condiciones de Venta
                           </h3>
                           <div className={styles.createModalGridTwo}>
                               <div>
                                   <label className={styles.createModalLabel}>Monto Mínimo de Compra ($)</label>
-                                  <div className="relative">
-                                      <span className="absolute left-3 top-3 text-gray-400 font-bold">$</span>
+                                  <div className={styles.createModalField}>
+                                      <span className={styles.adminPricePrefix}>$</span>
                                       <input 
                                           type="number" value={formData.minimumPurchase}
                                           onChange={(e) => setFormData({...formData, minimumPurchase: parseInt(e.target.value) || 0})}
@@ -2298,16 +2314,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               </div>
                               <div>
                                   <label className={styles.createModalLabel}>Formas de Pago Aceptadas</label>
-                                  <div className="grid grid-cols-2 gap-2">
+                                  <div className={styles.adminPaymentGrid}>
                                       {PAYMENT_OPTIONS.map(method => (
-                                          <label key={method} className="flex items-center gap-2 text-xs cursor-pointer group">
+                                          <label key={method} className={`${styles.adminPaymentOption} group`}>
                                               <input 
                                                   type="checkbox" 
                                                   checked={formData.paymentMethods.includes(method)}
                                                   onChange={() => togglePaymentMethod(method)}
-                                                  className="w-4 h-4 rounded border-gray-300 text-dm-crimson focus:ring-dm-crimson"
+                                                  className={styles.adminPaymentInput}
                                               />
-                                              <span className="text-gray-600 group-hover:text-dm-dark transition-colors">{method}</span>
+                                              <span className={styles.adminPaymentLabel}>{method}</span>
                                           </label>
                                       ))}
                                   </div>
@@ -2318,10 +2334,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       {/* Section 4: Contacto Administrativo & Cuenta */}
                       <section className={styles.createModalSection}>
                           <h3 className={styles.createModalSectionTitle}>
-                              <User size={16} className="text-dm-crimson" /> 4. Contacto & Cuenta
+                              <User size={16} className={styles.adminSectionIcon} /> 4. Contacto & Cuenta
                           </h3>
                           <div className={styles.createModalGridTwo}>
-                              <div className="md:col-span-2">
+                              <div className={styles.createModalSpanTwo}>
                                   <label className={styles.createModalLabel}>Email administrativo (inicio de sesión) *</label>
                                   <input 
                                       type="email" required value={formData.email}
@@ -2332,8 +2348,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               </div>
                               <div>
                                   <label className={styles.createModalLabel}>Contraseña Inicial *</label>
-                                  <div className="relative">
-                                      <Lock size={14} className="absolute left-3 top-3.5 text-gray-300" />
+                                  <div className={styles.createModalField}>
+                                      <Lock size={14} className={styles.adminLockIcon} />
                                       <input 
                                           type="password" required value={formData.password}
                                           onChange={(e) => setFormData({...formData, password: e.target.value})}
@@ -2407,7 +2423,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               type="submit" 
                               className={styles.createModalSubmit}
                           >
-                              <Save size={20} className="mr-2" /> Dar de Alta Tienda
+                              <Save size={20} className={styles.buttonIcon} /> Dar de Alta Tienda
                           </Button>
                       </div>
                   </form>
@@ -2610,7 +2626,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           className={styles.editModalSubmit}
                           onClick={handleEditShopSave}
                       >
-                          <Save size={18} className="mr-2" /> Guardar cambios
+                          <Save size={18} className={styles.buttonIcon} /> Guardar cambios
                       </Button>
                   </div>
               </div>

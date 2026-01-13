@@ -118,6 +118,26 @@
   @apply text-[11px] font-bold uppercase px-2 py-1 rounded-full border;
 }
 
+.statusToneActive {
+  @apply bg-green-50 text-green-700 border-green-200;
+}
+
+.statusTonePending {
+  @apply bg-yellow-50 text-yellow-700 border-yellow-200;
+}
+
+.statusToneSuspended {
+  @apply bg-red-50 text-red-700 border-red-200;
+}
+
+.statusToneHidden {
+  @apply bg-gray-100 text-gray-600 border-gray-200;
+}
+
+.statusToneBanned {
+  @apply bg-red-100 text-red-700 border-red-300;
+}
+
 .statusConfirmed {
   @apply text-[10px] font-bold uppercase text-gray-400;
 }
@@ -172,6 +192,10 @@
 
 .quotaCircleLabel {
   @apply block text-[10px] text-gray-400 uppercase;
+}
+
+.quotaCenter {
+  @apply text-center;
 }
 
 .quotaBody {
@@ -250,6 +274,14 @@
   @apply font-bold flex items-center justify-center gap-1;
 }
 
+.planHintUpgradeBlue {
+  @apply text-blue-600;
+}
+
+.planHintUpgradePurple {
+  @apply text-purple-600;
+}
+
 .planTitle {
   @apply font-bold text-dm-dark text-lg flex items-center gap-2;
 }
@@ -312,6 +344,10 @@
 
 .reelsPanel {
   @apply bg-white p-6 rounded-xl border border-gray-100 shadow-sm;
+}
+
+.reelsPanelFit {
+  @apply h-fit;
 }
 
 .reelsPanelTitle {
@@ -410,6 +446,10 @@
   @apply space-y-4;
 }
 
+.socialsGroupSpaced {
+  @apply pt-4;
+}
+
 .socialsGroupTitle {
   @apply font-bold text-dm-dark flex items-center gap-2 border-b pb-2;
 }
@@ -470,6 +510,10 @@
   @apply mt-3 flex items-center gap-4;
 }
 
+.profileSummaryBody {
+  @apply flex-1;
+}
+
 .profileName {
   @apply font-serif text-lg text-dm-dark;
 }
@@ -522,12 +566,36 @@
   @apply grid grid-cols-1 md:grid-cols-3 gap-4;
 }
 
+.profileField {
+  @apply block;
+}
+
+.profileFieldSpanTwo {
+  @apply block md:col-span-2;
+}
+
+.profileFieldSpanThree {
+  @apply block md:col-span-3;
+}
+
+.profileFieldWide {
+  @apply md:col-span-3 mb-2 relative;
+}
+
+.profileFieldRelative {
+  @apply relative mt-1;
+}
+
 .profileGridPayments {
   @apply grid grid-cols-2 gap-2;
 }
 
 .profileCheckboxItem {
   @apply flex items-center space-x-2 text-sm cursor-pointer;
+}
+
+.profileCheckboxInput {
+  @apply rounded border-gray-300 text-dm-crimson focus:ring-dm-crimson;
 }
 
 .profileInputLabel {
@@ -582,6 +650,14 @@
   @apply bg-gray-50 p-4 rounded-lg border border-gray-100 flex justify-between items-center;
 }
 
+.modalRowTitle {
+  @apply font-bold text-dm-dark;
+}
+
+.modalRowPrice {
+  @apply font-bold text-green-600;
+}
+
 .modalNote {
   @apply text-[10px] text-center text-gray-400;
 }
@@ -610,6 +686,42 @@
   @apply mt-6 flex gap-3;
 }
 
+.modalIconGreen {
+  @apply bg-green-100 text-green-600;
+}
+
+.modalIconCrimson {
+  @apply bg-pink-100 text-dm-crimson;
+}
+
+.modalConfirmButtonGreen {
+  @apply w-full bg-green-600 hover:bg-green-700 border-none text-white;
+}
+
+.modalConfirmButtonCrimson {
+  @apply w-full bg-dm-crimson hover:bg-red-700 border-none text-white;
+}
+
+.modalHeaderRow {
+  @apply flex justify-between items-center mb-6;
+}
+
+.modalGridTwo {
+  @apply grid grid-cols-2 gap-4;
+}
+
+.modalFooter {
+  @apply pt-4;
+}
+
+.modalActionButton {
+  @apply flex-1;
+}
+
+.modalActionPrimary {
+  @apply flex-1 bg-dm-crimson hover:bg-red-700 border-none text-white;
+}
+
 .streamsSection {
   @apply max-w-6xl space-y-6 animate-in fade-in;
 }
@@ -628,6 +740,70 @@
 
 .streamsHeaderRight {
   @apply flex flex-col items-end gap-2;
+}
+
+.streamsActionWrap {
+  @apply relative;
+}
+
+.streamsActionDisabled {
+  @apply opacity-50 cursor-not-allowed bg-gray-400;
+}
+
+.streamsTableHeadRight {
+  @apply text-right;
+}
+
+.streamsTableCellRight {
+  @apply text-right;
+}
+
+.streamsInfoStack {
+  @apply flex flex-col;
+}
+
+.platformBadge {
+  @apply text-[11px] font-bold px-2 py-1 rounded border;
+}
+
+.platformInstagram {
+  @apply border-pink-200 text-pink-600 bg-pink-50;
+}
+
+.platformTiktok {
+  @apply border-gray-800 text-gray-900 bg-gray-100;
+}
+
+.platformDefault {
+  @apply border-blue-200 text-blue-600 bg-blue-50;
+}
+
+.ratingRow {
+  @apply flex items-center gap-1;
+}
+
+.ratingStarActive {
+  @apply fill-yellow-400 text-yellow-400;
+}
+
+.ratingStarInactive {
+  @apply text-gray-300;
+}
+
+.iconButton {
+  @apply p-1.5 rounded;
+}
+
+.iconButtonDisabled {
+  @apply text-gray-300 cursor-not-allowed;
+}
+
+.iconButtonEdit {
+  @apply text-gray-400 hover:text-blue-600 hover:bg-blue-50;
+}
+
+.iconButtonDelete {
+  @apply text-gray-400 hover:text-red-600 hover:bg-red-50;
 }
 
 .streamsQuotaNote {
@@ -732,4 +908,296 @@
 
 .streamsTableEmpty {
   @apply p-8 text-center text-gray-400 text-sm;
+}
+
+.mobileBody {
+  @apply flex-1;
+}
+
+.primaryActionButton {
+  @apply bg-dm-crimson text-white;
+}
+
+.penaltyIcon {
+  @apply text-red-600 shrink-0;
+}
+
+.buttonIcon {
+  @apply mr-2;
+}
+
+.buttonIconSm {
+  @apply mr-1;
+}
+
+.buttonFull {
+  @apply w-full;
+}
+
+.quotaCircleValueNegative {
+  @apply text-red-500;
+}
+
+.quotaCircleValueNormal {
+  @apply text-dm-dark;
+}
+
+.quotaExtraIcon {
+  @apply text-green-500;
+}
+
+.planBody {
+  @apply flex-1 flex flex-col justify-center items-center text-center space-y-4;
+}
+
+.planBadgeMaxima {
+  @apply bg-purple-100 text-purple-700;
+}
+
+.planBadgeAlta {
+  @apply bg-blue-100 text-blue-700;
+}
+
+.planBadgeStandard {
+  @apply bg-gray-200 text-gray-600;
+}
+
+.planUpgradeButton {
+  @apply w-full mt-4 text-xs;
+}
+
+.infoGrid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+
+.infoCard {
+  @apply bg-white p-5 rounded-xl border border-gray-100 shadow-sm;
+}
+
+.infoCardTitle {
+  @apply font-bold text-dm-dark text-sm uppercase tracking-wide mb-3;
+}
+
+.infoCardStack {
+  @apply space-y-2;
+}
+
+.infoCardList {
+  @apply space-y-2 text-xs text-gray-500;
+}
+
+.infoRow {
+  @apply flex justify-between;
+}
+
+.infoValue {
+  @apply font-bold text-dm-dark;
+}
+
+.infoValuePositive {
+  @apply font-bold text-green-600;
+}
+
+.infoWarning {
+  @apply mt-3 text-[11px] text-yellow-600;
+}
+
+.infoDanger {
+  @apply mt-3 text-[11px] text-red-500;
+}
+
+.infoLink {
+  @apply mt-3 text-[11px] font-bold underline;
+}
+
+.infoLinkActive {
+  @apply text-dm-crimson;
+}
+
+.infoLinkDisabled {
+  @apply text-gray-300;
+}
+
+.notificationCard {
+  @apply bg-white p-6 rounded-xl border border-gray-100 shadow-sm;
+}
+
+.notificationHeader {
+  @apply flex items-center justify-between;
+}
+
+.notificationTitle {
+  @apply font-bold text-dm-dark text-lg flex items-center gap-2;
+}
+
+.notificationCount {
+  @apply flex items-center gap-3 text-[10px] text-gray-400;
+}
+
+.notificationAction {
+  @apply text-[10px] font-bold text-dm-crimson;
+}
+
+.notificationEmpty {
+  @apply mt-3 text-xs text-gray-400;
+}
+
+.notificationList {
+  @apply mt-4 space-y-3 max-h-44 overflow-y-auto pr-1;
+}
+
+.notificationItem {
+  @apply flex items-start justify-between gap-3 rounded-lg border border-gray-100 p-3 text-xs;
+}
+
+.notificationBody {
+  @apply flex-1;
+}
+
+.notificationMessage {
+  @apply text-xs;
+}
+
+.notificationMessageRead {
+  @apply text-gray-500;
+}
+
+.notificationMessageUnread {
+  @apply text-dm-dark font-semibold;
+}
+
+.notificationMeta {
+  @apply text-[10px] text-gray-400;
+}
+
+.notificationReadAction {
+  @apply text-[10px] font-bold text-gray-400 hover:text-dm-crimson;
+}
+
+.historyCard {
+  @apply bg-white p-6 rounded-xl border border-gray-100 shadow-sm;
+}
+
+.historyHeader {
+  @apply flex items-center justify-between;
+}
+
+.historyTitle {
+  @apply font-bold text-dm-dark text-lg flex items-center gap-2;
+}
+
+.historyCount {
+  @apply text-[10px] text-gray-400;
+}
+
+.historyEmpty {
+  @apply mt-3 text-xs text-gray-400;
+}
+
+.historyList {
+  @apply mt-4 space-y-3;
+}
+
+.historyItem {
+  @apply flex items-center justify-between rounded-lg border border-gray-100 p-3 text-xs;
+}
+
+.historyItemTitle {
+  @apply font-bold text-dm-dark;
+}
+
+.historyItemMeta {
+  @apply text-[10px] text-gray-400;
+}
+
+.historyStatusApproved {
+  @apply text-green-600;
+}
+
+.historyStatusRejected {
+  @apply text-red-600;
+}
+
+.historyStatusPending {
+  @apply text-yellow-600;
+}
+
+.historyStatus {
+  @apply text-[10px] font-bold;
+}
+
+.profileSocialIcon {
+  @apply w-8 h-8 rounded-full flex items-center justify-center;
+}
+
+.profileSocialInstagram {
+  @apply bg-pink-100 text-pink-600;
+}
+
+.profileSocialTiktok {
+  @apply bg-black text-white;
+}
+
+.profileSocialTiktokLabel {
+  @apply font-serif italic font-bold text-xs;
+}
+
+.profileSocialFacebook {
+  @apply bg-blue-600 text-white;
+}
+
+.profileSocialYoutube {
+  @apply bg-red-600 text-white;
+}
+
+.profileSocialWeb {
+  @apply bg-gray-200 text-gray-600;
+}
+
+.streamsTooltip {
+  @apply absolute right-0 bottom-full mb-2 w-64 bg-black text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50;
+}
+
+.streamsRatingRowText {
+  @apply text-xs font-bold text-gray-700;
+}
+
+.streamsRatingCount {
+  @apply text-xs text-gray-400;
+}
+
+.streamsActionConfirm {
+  @apply bg-green-500 hover:bg-green-600 text-white text-[10px] px-2 h-7;
+}
+
+.streamsStatusLive {
+  @apply bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full animate-pulse;
+}
+
+.streamsStatusUpcoming {
+  @apply bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full;
+}
+
+.streamsStatusMissed {
+  @apply bg-orange-100 text-orange-600 text-[10px] font-bold px-2 py-1 rounded-full;
+}
+
+.streamsStatusCancelled {
+  @apply bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full;
+}
+
+.streamsStatusBanned {
+  @apply bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full;
+}
+
+.streamsStatusPending {
+  @apply bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-1 rounded-full;
+}
+
+.streamsStatusFinished {
+  @apply bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-full;
+}
+
+.profilePricePrefix {
+  @apply absolute left-3 top-2 text-gray-500;
 }

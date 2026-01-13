@@ -44,7 +44,7 @@ export const StreamCard: React.FC<StreamCardProps> = ({
   
   const reminderSet = user.reminders.includes(stream.id);
   const isLiked = user.likes.includes(stream.id);
-  const reminderBlockedLabel = user.isLoggedIn ? 'Solo clientes' : 'Inicia sesion';
+  const reminderBlockedLabel = user.isLoggedIn ? 'Solo clientes' : 'Iniciá sesión';
   
   // Shop Rating Display
   const shopRating = stream.shop.ratingAverage || 5.0;

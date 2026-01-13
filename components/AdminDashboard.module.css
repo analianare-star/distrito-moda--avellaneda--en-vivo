@@ -122,6 +122,698 @@
   @apply text-xs text-gray-400;
 }
 
+.inboxWrap {
+  @apply space-y-4;
+}
+
+.listItem {
+  @apply p-3 space-y-2;
+}
+
+.listRow {
+  @apply flex items-center justify-between;
+}
+
+.listTitle {
+  @apply text-sm font-bold text-dm-dark;
+}
+
+.listMeta {
+  @apply text-[11px] text-gray-600;
+}
+
+.listMetaUpper {
+  @apply text-[11px] text-gray-600 uppercase;
+}
+
+.listStatus {
+  @apply text-[11px] font-bold text-gray-600;
+}
+
+.listAlert {
+  @apply text-red-600 font-bold flex items-center gap-1;
+}
+
+.listActions {
+  @apply flex flex-wrap gap-2 pt-2;
+}
+
+.listActionsRight {
+  @apply flex justify-end gap-2;
+}
+
+.statusBadge {
+  @apply text-[11px] px-2 py-1 rounded;
+}
+
+.statusBadgeLive {
+  @apply bg-red-100 text-red-600;
+}
+
+.statusBadgeMuted {
+  @apply bg-gray-100 text-gray-500;
+}
+
+.visibilityButton {
+  @apply px-3 py-1.5 border rounded text-xs font-bold flex items-center gap-2 transition-colors;
+}
+
+.visibilityOn {
+  @apply text-gray-600 hover:bg-gray-100;
+}
+
+.visibilityOff {
+  @apply bg-gray-100 text-gray-400;
+}
+
+.actionSuccess {
+  @apply px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold flex items-center gap-2;
+}
+
+.actionDanger {
+  @apply px-3 py-1.5 border border-red-200 bg-red-50 text-red-600 rounded text-xs font-bold flex items-center gap-2;
+}
+
+.actionDangerGhost {
+  @apply px-3 py-1.5 border border-red-200 bg-white text-red-600 rounded text-xs font-bold flex items-center gap-2;
+}
+
+.actionNeutral {
+  @apply px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold flex items-center gap-2;
+}
+
+.actionInfo {
+  @apply px-3 py-1.5 border border-blue-200 bg-blue-50 text-blue-600 rounded text-xs font-bold flex items-center gap-2;
+}
+
+.actionWarn {
+  @apply px-3 py-1.5 border border-orange-200 bg-orange-50 text-orange-600 rounded text-xs font-bold flex items-center gap-2;
+}
+
+.actionIndigo {
+  @apply text-xs border px-2 py-1 rounded bg-indigo-50 text-indigo-600 border-indigo-200;
+}
+
+.actionOutline {
+  @apply text-xs border px-2 py-1 rounded bg-white text-gray-600 border-gray-200;
+}
+
+.actionSuccessHover {
+  @apply px-3 py-1.5 border border-green-200 bg-green-50 text-green-700 rounded text-xs font-bold flex items-center gap-2 hover:bg-green-100 transition-colors shadow-sm;
+}
+
+.actionDangerHover {
+  @apply px-3 py-1.5 border border-red-200 bg-red-50 text-red-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-red-100 transition-colors shadow-sm;
+}
+
+.actionDangerGhostHover {
+  @apply px-3 py-1.5 border border-red-200 bg-white text-red-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-red-50 transition-colors shadow-sm;
+}
+
+.actionNeutralHover {
+  @apply px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm;
+}
+
+.skeletonItem {
+  @apply p-3 space-y-2 animate-pulse;
+}
+
+.skeletonLineLg {
+  @apply h-4 w-40 bg-gray-200 rounded;
+}
+
+.skeletonLineMd {
+  @apply h-3 w-28 bg-gray-100 rounded;
+}
+
+.skeletonLineFull {
+  @apply h-3 w-full bg-gray-100 rounded;
+}
+
+.skeletonRow {
+  @apply animate-pulse;
+}
+
+.skeletonCell {
+  @apply px-6 py-4;
+}
+
+.skeletonBlockLg {
+  @apply h-3 w-40 bg-gray-200 rounded;
+}
+
+.skeletonBlockMd {
+  @apply mt-2 h-2 w-24 bg-gray-100 rounded;
+}
+
+.skeletonBlockSm {
+  @apply h-3 w-12 bg-gray-200 rounded;
+}
+
+.skeletonBlockWide {
+  @apply h-3 w-32 bg-gray-100 rounded;
+}
+
+.skeletonBlockButton {
+  @apply h-7 w-24 bg-gray-100 rounded inline-block;
+}
+
+.adminPrimaryButton {
+  @apply bg-dm-crimson hover:bg-red-700 border-none text-white shadow-lg shadow-dm-crimson/20;
+}
+
+.adminOutlineButton {
+  @apply border-gray-200 text-gray-600;
+}
+
+.buttonIcon {
+  @apply mr-2;
+}
+
+.reelRow {
+  @apply p-3 space-y-2;
+}
+
+.reelHeader {
+  @apply flex items-center justify-between;
+}
+
+.reelShop {
+  @apply flex items-center gap-2;
+}
+
+.reelAvatar {
+  @apply w-8 h-8 rounded-full bg-gray-100 overflow-hidden;
+}
+
+.reelAvatarImg {
+  @apply w-full h-full object-cover;
+}
+
+.reelShopName {
+  @apply text-sm font-bold text-dm-dark;
+}
+
+.reelDate {
+  @apply text-[11px] text-gray-500;
+}
+
+.reelPlatform {
+  @apply text-[11px] text-gray-500;
+}
+
+.reelStats {
+  @apply flex items-center justify-between text-xs;
+}
+
+.reelViews {
+  @apply text-[11px] text-gray-600;
+}
+
+.reelFooter {
+  @apply flex items-center justify-between;
+}
+
+.reelExtra {
+  @apply text-[11px] bg-yellow-50 text-yellow-600 px-1 rounded border border-yellow-200;
+}
+
+.adminCard {
+  @apply bg-white rounded-xl shadow-sm border p-6 space-y-4;
+}
+
+.adminCardHeader {
+  @apply flex items-center justify-between;
+}
+
+.adminCardTitle {
+  @apply font-bold text-dm-dark;
+}
+
+.adminCardSubtitle {
+  @apply text-xs text-gray-500;
+}
+
+.adminCardStack {
+  @apply flex flex-col gap-2;
+}
+
+.adminField {
+  @apply w-full p-2 border border-gray-200 rounded text-xs;
+}
+
+.adminFieldWhite {
+  @apply w-full p-2 border border-gray-200 rounded text-xs bg-white;
+}
+
+.adminListStack {
+  @apply space-y-3;
+}
+
+.adminEmpty {
+  @apply text-xs text-gray-400 border border-dashed border-gray-200 rounded-lg p-4;
+}
+
+.adminRequestItem {
+  @apply border border-gray-100 rounded-lg p-3 text-xs;
+}
+
+.adminRequestHeader {
+  @apply flex items-center justify-between;
+}
+
+.adminRequestTitle {
+  @apply font-bold text-dm-dark;
+}
+
+.adminRequestMeta {
+  @apply text-[10px] text-gray-500 uppercase;
+}
+
+.adminRequestFooter {
+  @apply mt-2 flex items-center justify-between;
+}
+
+.adminRequestQty {
+  @apply text-gray-500;
+}
+
+.adminRequestQtyValue {
+  @apply font-bold text-dm-dark;
+}
+
+.adminRequestActions {
+  @apply flex gap-2;
+}
+
+.adminActionReject {
+  @apply text-[10px] px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50;
+}
+
+.adminActionApprove {
+  @apply text-[10px] px-2 py-1 rounded border border-green-200 text-green-600 hover:bg-green-50;
+}
+
+.adminForm {
+  @apply space-y-3;
+}
+
+.adminInput {
+  @apply w-full p-2 border rounded text-sm bg-white;
+}
+
+.adminToggleRow {
+  @apply flex items-center justify-between;
+}
+
+.adminToggleLabel {
+  @apply flex items-center gap-2 text-sm font-bold text-gray-600;
+}
+
+.adminToggleInput {
+  @apply w-4 h-4;
+}
+
+.adminSystemBadge {
+  @apply text-[10px] font-bold text-dm-crimson;
+}
+
+.adminPulseRow {
+  @apply mt-4 space-y-2;
+}
+
+.adminPulseLineSm {
+  @apply h-3 w-32 rounded bg-gray-100 animate-pulse;
+}
+
+.adminPulseLineMd {
+  @apply h-3 w-48 rounded bg-gray-100 animate-pulse;
+}
+
+.adminPulseLineLg {
+  @apply h-3 w-40 rounded bg-gray-100 animate-pulse;
+}
+
+.adminInfoGrid {
+  @apply mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs;
+}
+
+.adminInfoCard {
+  @apply rounded-lg border border-gray-100 p-3;
+}
+
+.adminInfoLabel {
+  @apply text-[10px] uppercase tracking-widest text-gray-400;
+}
+
+.adminInfoValue {
+  @apply text-[10px] text-gray-400;
+}
+
+.adminInfoFooter {
+  @apply md:col-span-3 text-[10px] text-gray-400;
+}
+
+.adminEmptyText {
+  @apply mt-4 text-xs text-gray-400;
+}
+
+.adminActionBadge {
+  @apply text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5;
+}
+
+.adminActionButton {
+  @apply mt-4 w-full;
+}
+
+.adminActionNote {
+  @apply mt-3 text-xs text-gray-500;
+}
+
+.adminTagRow {
+  @apply mt-4 flex flex-wrap items-center gap-2;
+}
+
+.adminTag {
+  @apply rounded-lg border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-600;
+}
+
+.adminTagHighlight {
+  @apply text-[10px] font-bold text-dm-crimson;
+}
+
+.adminNoteList {
+  @apply mt-4 max-h-44 space-y-3 overflow-y-auto pr-1;
+}
+
+.adminNoteSkeleton {
+  @apply rounded-lg border border-gray-100 p-3 text-[11px] animate-pulse;
+}
+
+.adminNoteSkeletonLineSm {
+  @apply h-2 w-20 bg-gray-200 rounded;
+}
+
+.adminNoteSkeletonLineMd {
+  @apply mt-2 h-3 w-40 bg-gray-100 rounded;
+}
+
+.adminNoteSkeletonLineXs {
+  @apply mt-2 h-2 w-24 bg-gray-100 rounded;
+}
+
+.adminNoteEmpty {
+  @apply text-xs text-gray-400;
+}
+
+.adminNoteItem {
+  @apply rounded-lg border border-gray-100 p-3 text-[11px] text-gray-600;
+}
+
+.adminNoteHeader {
+  @apply flex items-center justify-between;
+}
+
+.adminNoteDate {
+  @apply text-[10px] text-gray-400;
+}
+
+.adminNoteFooter {
+  @apply mt-2 flex items-center justify-between text-[10px] text-gray-400;
+}
+
+.adminNoteAction {
+  @apply text-[10px] font-bold text-gray-500;
+}
+
+.statsIconLive {
+  @apply text-red-500;
+}
+
+.statsIconWarning {
+  @apply text-orange-500;
+}
+
+.statsIconMuted {
+  @apply text-gray-500;
+}
+
+.statsIconAccent {
+  @apply text-dm-crimson;
+}
+
+.listRowSmall {
+  @apply text-xs;
+}
+
+.reportTitle {
+  @apply text-xs font-bold;
+}
+
+.reportMeta {
+  @apply text-[10px] text-gray-400;
+}
+
+.reportStatus {
+  @apply text-xs font-bold;
+}
+
+.reportReason {
+  @apply text-[10px] text-gray-500;
+}
+
+.tableActions {
+  @apply flex justify-end gap-2;
+}
+
+.shopFilterButton {
+  @apply text-xs font-bold px-3 py-2 rounded-full border;
+}
+
+.shopFilterActive {
+  @apply bg-yellow-50 text-yellow-700 border-yellow-200;
+}
+
+.shopFilterInactive {
+  @apply bg-white text-gray-500 border-gray-200;
+}
+
+.shopCard {
+  @apply p-3 space-y-2;
+}
+
+.shopHeader {
+  @apply flex items-center justify-between;
+}
+
+.shopName {
+  @apply text-sm font-bold text-dm-dark;
+}
+
+.shopPlan {
+  @apply text-[11px] text-gray-600;
+}
+
+.shopStatusBadge {
+  @apply text-[11px] px-2 py-1 rounded-full font-bold;
+}
+
+.shopStatusActive {
+  @apply bg-green-50 text-green-600;
+}
+
+.shopStatusPending {
+  @apply bg-yellow-50 text-yellow-700;
+}
+
+.shopStatusSuspended {
+  @apply bg-orange-50 text-orange-600;
+}
+
+.shopStatusBlocked {
+  @apply bg-red-50 text-red-600;
+}
+
+.integrityBadge {
+  @apply text-[11px] px-2 py-1 rounded-full font-bold;
+}
+
+.integrityComplete {
+  @apply bg-green-50 text-green-600;
+}
+
+.integrityMinimal {
+  @apply bg-yellow-50 text-yellow-600;
+}
+
+.integrityMissing {
+  @apply bg-red-50 text-red-600;
+}
+
+.penaltyButton {
+  @apply text-[11px] font-bold px-2 py-1 rounded border;
+}
+
+.penaltyActive {
+  @apply bg-red-50 border-red-200 text-red-600;
+}
+
+.penaltyInactive {
+  @apply border-gray-200;
+}
+
+.tinyButton {
+  @apply text-xs border px-2 py-1 rounded;
+}
+
+.tinySuccess {
+  @apply bg-green-50 text-green-700 border-green-200;
+}
+
+.tinyDanger {
+  @apply bg-red-50 text-red-600 border-red-200;
+}
+
+.tinyNeutral {
+  @apply bg-gray-50 text-gray-600 border-gray-200;
+}
+
+.tinyWarn {
+  @apply bg-orange-50 text-orange-600 border-orange-200;
+}
+
+.tinyInfo {
+  @apply bg-blue-50 text-blue-600 border-blue-200;
+}
+
+.tinyIndigo {
+  @apply bg-indigo-50 text-indigo-600 border-indigo-200;
+}
+
+.tinyOutline {
+  @apply bg-white text-gray-600 border-gray-200;
+}
+
+.reelStatusBadge {
+  @apply text-[11px] px-2 py-1 rounded font-bold;
+}
+
+.reelStatusActive {
+  @apply bg-green-50 text-green-700;
+}
+
+.reelStatusExpired {
+  @apply bg-gray-100 text-gray-500;
+}
+
+.reelStatusHidden {
+  @apply bg-red-50 text-red-600;
+}
+
+.reelToggleButton {
+  @apply text-xs border px-2 py-1 rounded;
+}
+
+.reelToggleOn {
+  @apply bg-green-50 text-green-700 border-green-200;
+}
+
+.reelToggleOff {
+  @apply bg-red-50 text-red-600 border-red-200;
+}
+
+.purchaseStatusBadge {
+  @apply text-[10px] font-bold rounded-full px-2 py-0.5 border;
+}
+
+.purchaseApproved {
+  @apply bg-green-50 text-green-700 border-green-200;
+}
+
+.purchaseRejected {
+  @apply bg-red-50 text-red-600 border-red-200;
+}
+
+.purchasePending {
+  @apply bg-yellow-50 text-yellow-700 border-yellow-200;
+}
+
+.adminUpdateButton {
+  @apply text-[10px] font-bold text-dm-crimson;
+}
+
+.systemState {
+  @apply mt-1 font-bold;
+}
+
+.systemStateOn {
+  @apply text-green-700;
+}
+
+.systemStateOff {
+  @apply text-gray-500;
+}
+
+.notificationFilterSelect {
+  @apply rounded-lg border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-600;
+}
+
+.notificationRefreshButton {
+  @apply text-[10px] font-bold text-dm-crimson;
+}
+
+.notificationTypeBadge {
+  @apply text-[10px] font-bold uppercase;
+}
+
+.notificationTypeUnread {
+  @apply text-dm-crimson;
+}
+
+.notificationTypeRead {
+  @apply text-gray-400;
+}
+
+.notificationMessage {
+  @apply mt-1;
+}
+
+.notificationMessageUnread {
+  @apply text-dm-dark font-semibold;
+}
+
+.notificationMessageRead {
+  @apply text-gray-500;
+}
+
+.adminSectionIcon {
+  @apply text-dm-crimson;
+}
+
+.adminPricePrefix {
+  @apply absolute left-3 top-3 text-gray-400 font-bold;
+}
+
+.adminPaymentGrid {
+  @apply grid grid-cols-2 gap-2;
+}
+
+.adminPaymentOption {
+  @apply flex items-center gap-2 text-xs cursor-pointer;
+}
+
+.adminPaymentInput {
+  @apply w-4 h-4 rounded border-gray-300 text-dm-crimson focus:ring-dm-crimson;
+}
+
+.adminPaymentLabel {
+  @apply text-gray-600 group-hover:text-dm-dark transition-colors;
+}
+
+.adminLockIcon {
+  @apply absolute left-3 top-3.5 text-gray-300;
+}
+
 .sectionHeader {
   @apply flex items-center justify-between;
 }
@@ -182,12 +874,40 @@
   @apply px-6 py-3 text-xs font-bold text-gray-500;
 }
 
+.tableHeadCellRight {
+  @apply text-right;
+}
+
 .tableBody {
   @apply divide-y;
 }
 
 .tableCell {
   @apply px-6 py-4;
+}
+
+.tableCellRight {
+  @apply text-right;
+}
+
+.tableTitle {
+  @apply font-bold text-sm;
+}
+
+.tableMeta {
+  @apply text-xs text-gray-500;
+}
+
+.tableStatus {
+  @apply text-[10px] px-1 rounded;
+}
+
+.tableStatusLive {
+  @apply bg-red-100 text-red-600;
+}
+
+.tableStatusMuted {
+  @apply bg-gray-100;
 }
 
 .emptyText {
@@ -256,6 +976,18 @@
 
 .createModalGridTwo {
   @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.createModalSpanTwo {
+  @apply md:col-span-2;
+}
+
+.createModalStack {
+  @apply space-y-4;
+}
+
+.createModalField {
+  @apply relative;
 }
 
 .createModalGridThree {

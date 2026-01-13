@@ -235,11 +235,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
       BANNED: 'Bloqueada',
   };
   const statusTones: Record<string, string> = {
-      ACTIVE: 'bg-green-50 text-green-700 border-green-200',
-      PENDING_VERIFICATION: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-      AGENDA_SUSPENDED: 'bg-red-50 text-red-700 border-red-200',
-      HIDDEN: 'bg-gray-100 text-gray-600 border-gray-200',
-      BANNED: 'bg-red-100 text-red-700 border-red-300',
+      ACTIVE: styles.statusToneActive,
+      PENDING_VERIFICATION: styles.statusTonePending,
+      AGENDA_SUSPENDED: styles.statusToneSuspended,
+      HIDDEN: styles.statusToneHidden,
+      BANNED: styles.statusToneBanned,
   };
   const statusLabel = statusLabels[shopStatus] || 'Activa';
   const statusTone = statusTones[shopStatus] || statusTones.ACTIVE;
@@ -585,7 +585,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     size={56}
                     seed={currentShop.id || currentShop.name}
                   />
-                  <div className="flex-1">
+                  <div className={styles.mobileBody}>
                       <p className={styles.mobileLabel}>Tienda</p>
                       <h2 className={styles.mobileTitle}>{currentShop.name}</h2>
                       <p className={styles.mobilePlan}>{currentShop.plan}</p>
@@ -636,7 +636,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           </div>
                           <div className={styles.statusActions}>
                               {canAcceptShop && (
-                                  <Button size="sm" onClick={handleAcceptShop} className="bg-dm-crimson text-white">
+                                  <Button size="sm" onClick={handleAcceptShop} className={styles.primaryActionButton}>
                                       Confirmar datos
                                   </Button>
                               )}
@@ -653,7 +653,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   {/* PENALTY ALERT */}
                   {(isPenalized || shopStatus !== 'ACTIVE') && (
                       <div className={styles.penaltyAlert}>
-                          <AlertOctagon className="text-red-600 shrink-0" />
+                          <AlertOctagon className={styles.penaltyIcon} />
                           <div>
                               <h3 className={styles.penaltyTitle}>{shopStatus === 'PENDING_VERIFICATION' ? 'Cuenta en Verificacion' : 'Agenda Restringida'}</h3>
                               <p className={styles.penaltyText}>
@@ -685,15 +685,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                   disabled={isAgendaSuspended || isPreview}
                                   className={styles.quotaBuyButton}
                               >
-                                  <ShoppingCart size={16} className="mr-2"/> Comprar Extras
+                                  <ShoppingCart size={16} className={styles.buttonIcon}/> Comprar Extras
                               </Button>
                           </div>
 
                           <div className={styles.quotaBody}>
                               {/* Circle Chart */}
                               <div className={styles.quotaCircle}>
-                                  <div className="text-center">
-                                      <span className={`${styles.quotaCircleValue} ${availableQuota > 0 ? 'text-dm-dark' : 'text-red-500'}`}>{isNaN(availableQuota) ? 0 : availableQuota}</span>
+                                  <div className={styles.quotaCenter}>
+                                      <span className={`${styles.quotaCircleValue} ${availableQuota > 0 ? styles.quotaCircleValueNormal : styles.quotaCircleValueNegative}`}>{isNaN(availableQuota) ? 0 : availableQuota}</span>
                                       <span className={styles.quotaCircleLabel}>Disp.</span>
                                   </div>
                               </div>
@@ -704,7 +704,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                       <span className={styles.quotaValue}>{baseQuota}</span>
                                   </div>
                                   <div className={styles.quotaRow}>
-                                      <span className={styles.quotaExtraLabel}><Plus size={12} className="text-green-500"/> Cupos Extras</span>
+                                      <span className={styles.quotaExtraLabel}><Plus size={12} className={styles.quotaExtraIcon}/> Cupos Extras</span>
                                       <span className={styles.quotaValuePositive}>{extraQuota}</span>
                                   </div>
                                   <div className={styles.quotaRowLast}>
@@ -734,11 +734,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                 <p className={styles.planSubtitle}>Nivel de visibilidad actual</p>
                            </div>
                            
-                           <div className="flex-1 flex flex-col justify-center items-center text-center space-y-4">
+                           <div className={styles.planBody}>
                                 <span className={`${styles.planBadge} ${
-                                    isMaxima ? 'bg-purple-100 text-purple-700' :
-                                    isAlta ? 'bg-blue-100 text-blue-700' :
-                                    'bg-gray-200 text-gray-600'
+                                    isMaxima ? styles.planBadgeMaxima :
+                                    isAlta ? styles.planBadgeAlta :
+                                    styles.planBadgeStandard
                                 }`}>
                                     Plan {currentShop.plan}
                                 </span>
@@ -746,7 +746,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                 {isStandard && (
                                     <div className={styles.planHint}>
                                         <p className={styles.planHintTitle}>Estás en el plan básico.</p>
-                                        <p className={`${styles.planHintUpgrade} text-blue-600`}>
+                                        <p className={`${styles.planHintUpgrade} ${styles.planHintUpgradeBlue}`}>
                                             <ArrowUpCircle size={14}/> Pásate a ALTA
                                         </p>
                                     </div>
@@ -754,7 +754,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                 {isAlta && (
                                     <div className={styles.planHint}>
                                         <p className={styles.planHintTitle}>Tienes buena visibilidad.</p>
-                                        <p className={`${styles.planHintUpgrade} text-purple-600`}>
+                                        <p className={`${styles.planHintUpgrade} ${styles.planHintUpgradePurple}`}>
                                             <ArrowUpCircle size={14}/> Pásate a MÁXIMA
                                         </p>
                                     </div>
@@ -768,24 +768,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
                            </div>
 
                            {!isMaxima && (
-                               <Button variant="secondary" size="sm" onClick={openPlanPage} className="w-full mt-4 text-xs">
+                               <Button variant="secondary" size="sm" onClick={openPlanPage} className={styles.planUpgradeButton}>
                                    Mejorar mi Plan
                                </Button>
                            )}
                       </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                          <h3 className="font-bold text-dm-dark text-sm uppercase tracking-wide mb-3">Acciones rápidas</h3>
-                          <div className="space-y-2">
-                              <Button size="sm" className="w-full" onClick={handleCreateClick} disabled={!canSchedule || isPreview}>
-                                  <Plus size={14} className="mr-2"/> Agendar vivo
+                  <div className={styles.infoGrid}>
+                      <div className={styles.infoCard}>
+                          <h3 className={styles.infoCardTitle}>Acciones rápidas</h3>
+                          <div className={styles.infoCardStack}>
+                              <Button size="sm" className={styles.buttonFull} onClick={handleCreateClick} disabled={!canSchedule || isPreview}>
+                                  <Plus size={14} className={styles.buttonIcon}/> Agendar vivo
                               </Button>
                               <Button
                                   size="sm"
                                   variant="outline"
-                                  className="w-full"
+                                  className={styles.buttonFull}
                                   onClick={() => {
                                       if (blockPreviewAction()) return;
                                       if (blockPreviewAction()) return;
@@ -793,40 +793,40 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                   }}
                                   disabled={isAgendaSuspended || isPreview}
                               >
-                                  <ShoppingCart size={14} className="mr-2"/> Comprar cupo
+                                  <ShoppingCart size={14} className={styles.buttonIcon}/> Comprar cupo
                               </Button>
-                              <Button size="sm" variant="outline" className="w-full" onClick={() => setTab('REELS')}>
-                                  <Film size={14} className="mr-2"/> Subir historia
+                              <Button size="sm" variant="outline" className={styles.buttonFull} onClick={() => setTab('REELS')}>
+                                  <Film size={14} className={styles.buttonIcon}/> Subir historia
                               </Button>
-                              <Button size="sm" variant="outline" className="w-full" onClick={() => setTab('PERFIL')}>
-                                  <Store size={14} className="mr-2"/> Editar perfil
+                              <Button size="sm" variant="outline" className={styles.buttonFull} onClick={() => setTab('PERFIL')}>
+                                  <Store size={14} className={styles.buttonIcon}/> Editar perfil
                               </Button>
                           </div>
                           {!canSchedule && (
-                              <p className="mt-3 text-[11px] text-red-500">{getRestrictionMessage()}</p>
+                              <p className={styles.infoDanger}>{getRestrictionMessage()}</p>
                           )}
                       </div>
-                      <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                          <h3 className="font-bold text-dm-dark text-sm uppercase tracking-wide mb-3">Agenda actual</h3>
-                          <div className="space-y-2 text-xs text-gray-500">
-                              <div className="flex justify-between"><span>En vivo</span><span className="font-bold text-dm-dark">{liveCount}</span></div>
-                              <div className="flex justify-between"><span>Programados</span><span className="font-bold text-dm-dark">{upcomingCount}</span></div>
-                              <div className="flex justify-between"><span>Finalizados</span><span className="font-bold text-dm-dark">{finishedCount}</span></div>
-                              <div className="flex justify-between"><span>No realizados</span><span className="font-bold text-dm-dark">{missedCount}</span></div>
-                              <div className="flex justify-between"><span>Reprogramar</span><span className="font-bold text-dm-dark">{pendingReprogramCount}</span></div>
+                      <div className={styles.infoCard}>
+                          <h3 className={styles.infoCardTitle}>Agenda actual</h3>
+                          <div className={styles.infoCardList}>
+                              <div className={styles.infoRow}><span>En vivo</span><span className={styles.infoValue}>{liveCount}</span></div>
+                              <div className={styles.infoRow}><span>Programados</span><span className={styles.infoValue}>{upcomingCount}</span></div>
+                              <div className={styles.infoRow}><span>Finalizados</span><span className={styles.infoValue}>{finishedCount}</span></div>
+                              <div className={styles.infoRow}><span>No realizados</span><span className={styles.infoValue}>{missedCount}</span></div>
+                              <div className={styles.infoRow}><span>Reprogramar</span><span className={styles.infoValue}>{pendingReprogramCount}</span></div>
                           </div>
                           {pendingReprogramCount > 0 && (
-                              <p className="mt-3 text-[11px] text-yellow-600">
+                              <p className={styles.infoWarning}>
                                   Tenés {pendingReprogramCount} vivos pendientes de reprogramación.
                               </p>
                           )}
                       </div>
-                      <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                          <h3 className="font-bold text-dm-dark text-sm uppercase tracking-wide mb-3">Historias hoy</h3>
-                          <div className="space-y-2 text-xs text-gray-500">
-                              <div className="flex justify-between"><span>Plan disponible</span><span className="font-bold text-dm-dark">{availableReelPlan}</span></div>
-                              <div className="flex justify-between"><span>Extras comprados</span><span className="font-bold text-green-600">{reelsExtra}</span></div>
-                              <div className="flex justify-between"><span>Publicadas hoy</span><span className="font-bold text-dm-dark">{reelsToday}</span></div>
+                      <div className={styles.infoCard}>
+                          <h3 className={styles.infoCardTitle}>Historias hoy</h3>
+                          <div className={styles.infoCardList}>
+                              <div className={styles.infoRow}><span>Plan disponible</span><span className={styles.infoValue}>{availableReelPlan}</span></div>
+                              <div className={styles.infoRow}><span>Extras comprados</span><span className={styles.infoValuePositive}>{reelsExtra}</span></div>
+                              <div className={styles.infoRow}><span>Publicadas hoy</span><span className={styles.infoValue}>{reelsToday}</span></div>
                           </div>
                           <button
                               onClick={() => {
@@ -834,22 +834,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                   if (blockPreviewAction()) return;
                                   setShowBuyReelModal(true);
                               }}
-                              className={`mt-3 text-[11px] font-bold ${isPreview ? 'text-gray-300' : 'text-dm-crimson underline'}`}
+                              className={`${styles.infoLink} ${isPreview ? styles.infoLinkDisabled : styles.infoLinkActive}`}
                           >
                               Comprar extras
                           </button>
                       </div>
                   </div>
-                  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                      <div className="flex items-center justify-between">
-                          <h3 className="font-bold text-dm-dark text-lg flex items-center gap-2">
+                  <div className={styles.notificationCard}>
+                      <div className={styles.notificationHeader}>
+                          <h3 className={styles.notificationTitle}>
                               <AlertTriangle size={16} /> Notificaciones
                           </h3>
-                          <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                          <div className={styles.notificationCount}>
                               <span>{unreadNotifications.length} nuevas</span>
                               {unreadNotifications.length > 0 && onMarkAllNotificationsRead && (
                                   <button
-                                      className="text-[10px] font-bold text-dm-crimson"
+                                      className={styles.notificationAction}
                                       onClick={onMarkAllNotificationsRead}
                                   >
                                       Marcar todo
@@ -858,20 +858,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           </div>
                       </div>
                       {notifications.length === 0 ? (
-                          <p className="mt-3 text-xs text-gray-400">Sin notificaciones por ahora.</p>
+                          <p className={styles.notificationEmpty}>Sin notificaciones por ahora.</p>
                       ) : (
-                          <div className="mt-4 space-y-3 max-h-44 overflow-y-auto pr-1">
+                          <div className={styles.notificationList}>
                               {notifications.slice(0, 6).map((note) => (
-                                  <div key={note.id} className="flex items-start justify-between gap-3 rounded-lg border border-gray-100 p-3 text-xs">
-                                      <div className="flex-1">
-                                          <p className={`text-xs ${note.read ? 'text-gray-500' : 'text-dm-dark font-semibold'}`}>
+                                  <div key={note.id} className={styles.notificationItem}>
+                                      <div className={styles.notificationBody}>
+                                          <p className={`${styles.notificationMessage} ${note.read ? styles.notificationMessageRead : styles.notificationMessageUnread}`}>
                                               {note.message}
                                           </p>
-                                          <p className="text-[10px] text-gray-400">{formatNotificationDate(note.createdAt)}</p>
+                                          <p className={styles.notificationMeta}>{formatNotificationDate(note.createdAt)}</p>
                                       </div>
                                       {!note.read && onMarkNotificationRead && (
                                           <button
-                                              className="text-[10px] font-bold text-gray-400 hover:text-dm-crimson"
+                                              className={styles.notificationReadAction}
                                               onClick={() => onMarkNotificationRead(note.id)}
                                           >
                                               Leído
@@ -882,36 +882,36 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           </div>
                       )}
                   </div>
-                  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                      <div className="flex items-center justify-between">
-                          <h3 className="font-bold text-dm-dark text-lg flex items-center gap-2">
+                  <div className={styles.historyCard}>
+                      <div className={styles.historyHeader}>
+                          <h3 className={styles.historyTitle}>
                               <History size={16} /> Historial de compras
                           </h3>
-                          <span className="text-[10px] text-gray-400">{purchaseHistory.length} movimientos</span>
+                          <span className={styles.historyCount}>{purchaseHistory.length} movimientos</span>
                       </div>
                       {isPurchaseLoading ? (
-                          <p className="mt-3 text-xs text-gray-400">Cargando compras...</p>
+                          <p className={styles.historyEmpty}>Cargando compras...</p>
                       ) : purchaseHistory.length === 0 ? (
-                          <p className="mt-3 text-xs text-gray-400">Sin compras registradas todavía.</p>
+                          <p className={styles.historyEmpty}>Sin compras registradas todavía.</p>
                       ) : (
-                          <div className="mt-4 space-y-3">
+                          <div className={styles.historyList}>
                               {purchaseHistory.slice(0, 6).map((purchase) => {
                                   const statusLabel = purchaseStatusLabels[purchase.status] || purchase.status;
                                   const typeLabel = purchaseTypeLabels[purchase.type] || purchase.type;
                                   return (
-                                      <div key={purchase.purchaseId} className="flex items-center justify-between rounded-lg border border-gray-100 p-3 text-xs">
+                                      <div key={purchase.purchaseId} className={styles.historyItem}>
                                           <div>
-                                              <p className="font-bold text-dm-dark">{typeLabel}</p>
-                                              <p className="text-[10px] text-gray-400">
+                                              <p className={styles.historyItemTitle}>{typeLabel}</p>
+                                              <p className={styles.historyItemMeta}>
                                                   {formatPurchaseDate(purchase.createdAt)} • Cantidad {purchase.quantity}
                                               </p>
                                           </div>
-                                          <span className={`text-[10px] font-bold ${
+                                          <span className={`${styles.historyStatus} ${
                                               purchase.status === 'APPROVED'
-                                                  ? 'text-green-600'
+                                                  ? styles.historyStatusApproved
                                                   : purchase.status === 'REJECTED'
-                                                  ? 'text-red-600'
-                                                  : 'text-yellow-600'
+                                                  ? styles.historyStatusRejected
+                                                  : styles.historyStatusPending
                                           }`}>
                                               {statusLabel}
                                           </span>
@@ -957,7 +957,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <div className={styles.reelsGrid}>
                       
                       {/* UPLOAD FORM */}
-                      <div className={`${styles.reelsPanel} h-fit`}>
+                      <div className={`${styles.reelsPanel} ${styles.reelsPanelFit}`}>
                           <h3 className={styles.reelsPanelTitle}><Plus size={16}/> Subir Historia</h3>
                           <div className={styles.reelsForm}>
                               <div>
@@ -987,7 +987,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               <Button 
                                 onClick={handleUploadReel} 
                                 disabled={availableReelPlan === 0 && reelsExtra === 0}
-                                className="w-full"
+                                className={styles.buttonFull}
                               >
                                   Publicar Historia
                               </Button>
@@ -1084,27 +1084,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                    </div>
                                )})}
                            </div>
-                           <div className={`${styles.socialsGroup} pt-4`}>
+                           <div className={`${styles.socialsGroup} ${styles.socialsGroupSpaced}`}>
                                <h3 className={styles.socialsGroupTitle}><Globe size={18}/> Redes Sociales</h3>
                                <div className={styles.socialsGrid}>
                                    <label className={styles.socialsItem}>
-                                       <div className="w-8 h-8 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center"><Instagram size={16}/></div>
+                                       <div className={`${styles.profileSocialIcon} ${styles.profileSocialInstagram}`}><Instagram size={16}/></div>
                                        <input type="text" value={socials.instagram || ''} onChange={e => setSocials({...socials, instagram: e.target.value})} className={styles.socialsInput} placeholder="Usuario Instagram (sin @)" />
                                    </label>
                                    <label className={styles.socialsItem}>
-                                       <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center"><span className="font-serif italic font-bold text-xs">Tk</span></div>
+                                       <div className={`${styles.profileSocialIcon} ${styles.profileSocialTiktok}`}><span className={styles.profileSocialTiktokLabel}>Tk</span></div>
                                        <input type="text" value={socials.tiktok || ''} onChange={e => setSocials({...socials, tiktok: e.target.value})} className={styles.socialsInput} placeholder="Usuario TikTok (sin @)" />
                                    </label>
                                    <label className={styles.socialsItem}>
-                                       <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center"><Facebook size={16}/></div>
+                                       <div className={`${styles.profileSocialIcon} ${styles.profileSocialFacebook}`}><Facebook size={16}/></div>
                                        <input type="text" value={socials.facebook || ''} onChange={e => setSocials({...socials, facebook: e.target.value})} className={styles.socialsInput} placeholder="Página Facebook" />
                                    </label>
                                    <label className={styles.socialsItem}>
-                                       <div className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center"><Video size={16}/></div>
+                                       <div className={`${styles.profileSocialIcon} ${styles.profileSocialYoutube}`}><Video size={16}/></div>
                                        <input type="text" value={socials.youtube || ''} onChange={e => setSocials({...socials, youtube: e.target.value})} className={styles.socialsInput} placeholder="Canal YouTube" />
                                    </label>
                                    <label className={styles.socialsItem}>
-                                       <div className="w-8 h-8 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center"><ExternalLink size={16}/></div>
+                                       <div className={`${styles.profileSocialIcon} ${styles.profileSocialWeb}`}><ExternalLink size={16}/></div>
                                        <input
                                            type="text"
                                            value={shopForm.website || ''}
@@ -1116,7 +1116,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                </div>
                            </div>
                            <div className={styles.socialsActionRow}>
-                               <Button type="submit"><Save size={16} className="mr-2"/> Guardar Cambios</Button>
+                               <Button type="submit"><Save size={16} className={styles.buttonIcon}/> Guardar Cambios</Button>
                            </div>
                       </form>
                   </div>
@@ -1132,16 +1132,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           <p className={styles.streamsSubtitle}>Gestiona tu agenda y monitorea el rendimiento.</p>
                       </div>
                       <div className={styles.streamsHeaderRight}>
-                           <div className="relative group">
+                           <div className={`${styles.streamsActionWrap} group`}>
                                 <Button 
                                     onClick={handleCreateClick} 
                                     disabled={!canSchedule}
-                                    className={!canSchedule ? 'opacity-50 cursor-not-allowed bg-gray-400' : ''}
+                                    className={!canSchedule ? styles.streamsActionDisabled : ''}
                                 >
-                                    <Plus size={18} className="mr-2" /> Agendar Vivo
+                                    <Plus size={18} className={styles.buttonIcon} /> Agendar Vivo
                                 </Button>
                                 {!canSchedule && (
-                                    <div className="absolute right-0 bottom-full mb-2 w-64 bg-black text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                    <div className={styles.streamsTooltip}>
                                         {getRestrictionMessage()}
                                     </div>
                                 )}
@@ -1173,15 +1173,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                               {new Date(stream.fullDateISO).toLocaleDateString()} - {stream.scheduledTime} hs
                                           </p>
                                       </div>
-                                      <span className={`text-[11px] font-bold px-2 py-1 rounded-full ${
-                                          stream.status === StreamStatus.LIVE ? 'bg-red-100 text-red-600 animate-pulse' :
-                                          stream.status === StreamStatus.UPCOMING ? 'bg-blue-50 text-blue-600' :
-                                          stream.status === StreamStatus.MISSED ? 'bg-orange-100 text-orange-600' :
-                                          stream.status === StreamStatus.CANCELLED ? 'bg-gray-100 text-gray-600' :
-                                          stream.status === StreamStatus.BANNED ? 'bg-red-100 text-red-600' :
-                                          stream.status === StreamStatus.PENDING_REPROGRAMMATION ? 'bg-yellow-100 text-yellow-700' :
-                                          'bg-gray-100 text-gray-500'
-                                      }`}>
+                                      <span className={
+                                          stream.status === StreamStatus.LIVE ? styles.streamsStatusLive :
+                                          stream.status === StreamStatus.UPCOMING ? styles.streamsStatusUpcoming :
+                                          stream.status === StreamStatus.MISSED ? styles.streamsStatusMissed :
+                                          stream.status === StreamStatus.CANCELLED ? styles.streamsStatusCancelled :
+                                          stream.status === StreamStatus.BANNED ? styles.streamsStatusBanned :
+                                          stream.status === StreamStatus.PENDING_REPROGRAMMATION ? styles.streamsStatusPending :
+                                          styles.streamsStatusFinished
+                                      }>
                                           {stream.status === StreamStatus.UPCOMING ? 'PROGRAMADO' :
                                            stream.status === StreamStatus.LIVE ? 'EN VIVO' :
                                            stream.status === StreamStatus.MISSED ? 'NO REALIZADO' :
@@ -1192,27 +1192,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                       </span>
                                   </div>
                                   <div className={styles.streamsMobileMeta}>
-                                      <span className={`text-[11px] font-bold px-2 py-1 rounded border ${
-                                         stream.platform === 'Instagram' ? 'border-pink-200 text-pink-600 bg-pink-50' : 
-                                         stream.platform === 'TikTok' ? 'border-gray-800 text-gray-900 bg-gray-100' :
-                                         'border-blue-200 text-blue-600 bg-blue-50'
+                                      <span className={`${styles.platformBadge} ${
+                                         stream.platform === 'Instagram' ? styles.platformInstagram : 
+                                         stream.platform === 'TikTok' ? styles.platformTiktok :
+                                         styles.platformDefault
                                       }`}>
                                          {stream.platform}
                                       </span>
-                                      <div className="flex items-center gap-1">
-                                          <Star size={12} className={stream.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
-                                          <span className="text-xs font-bold text-gray-700">{stream.rating || '-'}</span>
+                                      <div className={styles.ratingRow}>
+                                          <Star size={12} className={stream.rating ? styles.ratingStarActive : styles.ratingStarInactive} />
+                                          <span className={styles.streamsRatingRowText}>{stream.rating || '-'}</span>
                                       </div>
                                   </div>
                                   <div className={styles.streamsMobileActions}>
                                       {stream.status === StreamStatus.LIVE && onExtendStream && stream.extensionCount < 3 && (
                                           <Button 
                                               size="sm" 
-                                              className="bg-green-500 hover:bg-green-600 text-white text-[10px] px-2 h-7"
+                                              className={styles.streamsActionConfirm}
                                               onClick={() => onExtendStream(stream.id)}
                                               title="Extender 30 minutos más"
                                           >
-                                              <RefreshCw size={10} className="mr-1"/> Continuamos
+                                              <RefreshCw size={10} className={styles.buttonIconSm}/> Continuamos
                                           </Button>
                                       )}
                                       {(stream.status === StreamStatus.UPCOMING || stream.status === StreamStatus.PENDING_REPROGRAMMATION) && (
@@ -1221,7 +1221,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                 onClick={() => openEditModal(stream)}
                                                 disabled={!canManageAgenda}
                                                 title={!canManageAgenda ? getRestrictionMessage() : 'Editar vivo'}
-                                                className={`p-1.5 rounded ${!canManageAgenda ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                                                className={`${styles.iconButton} ${!canManageAgenda ? styles.iconButtonDisabled : styles.iconButtonEdit}`}
                                             >
                                                 <Pencil size={14} />
                                             </button>
@@ -1237,7 +1237,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                 }}
                                                 disabled={!canManageAgenda}
                                                 title={!canManageAgenda ? getRestrictionMessage() : 'Cancelar vivo'}
-                                                className={`p-1.5 rounded ${!canManageAgenda ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'}`}
+                                                className={`${styles.iconButton} ${!canManageAgenda ? styles.iconButtonDisabled : styles.iconButtonDelete}`}
                                             >
                                                 <Trash2 size={14} />
                                             </button>
@@ -1257,14 +1257,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                       <th className={styles.streamsTableHeadCell}>Red Social</th>
                                       <th className={styles.streamsTableHeadCell}>Estado</th>
                                       <th className={styles.streamsTableHeadCell}>Calificación</th>
-                                      <th className={`${styles.streamsTableHeadCell} text-right`}>Acciones</th>
+                                      <th className={`${styles.streamsTableHeadCell} ${styles.streamsTableHeadRight}`}>Acciones</th>
                                   </tr>
                               </thead>
                               <tbody className={styles.streamsTableBody}>
                                   {myStreams.length > 0 ? myStreams.map(stream => (
                                       <tr key={stream.id} className={styles.streamsTableRow}>
                                           <td className={styles.streamsTableCell}>
-                                              <div className="flex flex-col">
+                                              <div className={styles.streamsInfoStack}>
                                                   <span className={styles.streamsInfoTitle}>{stream.title}</span>
                                                   <span className={styles.streamsInfoDate}>
                                                       {new Date(stream.fullDateISO).toLocaleDateString()} - {stream.scheduledTime} hs
@@ -1272,48 +1272,48 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                               </div>
                                           </td>
                                           <td className={styles.streamsTableCell}>
-                                              <span className={`text-[10px] font-bold px-2 py-1 rounded border ${
-                                                 stream.platform === 'Instagram' ? 'border-pink-200 text-pink-600 bg-pink-50' : 
-                                                 stream.platform === 'TikTok' ? 'border-gray-800 text-gray-900 bg-gray-100' :
-                                                 'border-blue-200 text-blue-600 bg-blue-50'
+                                              <span className={`${styles.platformBadge} ${
+                                                 stream.platform === 'Instagram' ? styles.platformInstagram : 
+                                                 stream.platform === 'TikTok' ? styles.platformTiktok :
+                                                 styles.platformDefault
                                               }`}>
                                                  {stream.platform}
                                               </span>
                                           </td>
                                           <td className={styles.streamsTableCell}>
                                                {stream.status === StreamStatus.LIVE ? (
-                                                   <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">EN VIVO</span>
+                                                   <span className={styles.streamsStatusLive}>EN VIVO</span>
                                                ) : stream.status === StreamStatus.UPCOMING ? (
-                                                   <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">PROGRAMADO</span>
+                                                   <span className={styles.streamsStatusUpcoming}>PROGRAMADO</span>
                                                ) : stream.status === StreamStatus.MISSED ? (
-                                                   <span className="bg-orange-100 text-orange-600 text-[10px] font-bold px-2 py-1 rounded-full">NO REALIZADO</span>
+                                                   <span className={styles.streamsStatusMissed}>NO REALIZADO</span>
                                                ) : stream.status === StreamStatus.CANCELLED ? (
-                                                   <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full">CANCELADO</span>
+                                                   <span className={styles.streamsStatusCancelled}>CANCELADO</span>
                                                ) : stream.status === StreamStatus.BANNED ? (
-                                                   <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full">BLOQUEADO</span>
+                                                   <span className={styles.streamsStatusBanned}>BLOQUEADO</span>
                                                ) : stream.status === StreamStatus.PENDING_REPROGRAMMATION ? (
-                                                   <span className="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-1 rounded-full">REPROGRAMAR</span>
+                                                   <span className={styles.streamsStatusPending}>REPROGRAMAR</span>
                                                ) : (
-                                                   <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-full">FINALIZADO</span>
+                                                   <span className={styles.streamsStatusFinished}>FINALIZADO</span>
                                                )}
                                           </td>
                                           <td className={styles.streamsTableCell}>
                                               <div className={styles.streamsRatingRow}>
-                                                  <Star size={14} className={stream.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
-                                                  <span className="text-sm font-bold text-gray-700">{stream.rating || '-'}</span>
-                                                  {stream.rating && <span className="text-xs text-gray-400">({Math.floor(Math.random() * 50) + 5})</span>}
+                                                  <Star size={14} className={stream.rating ? styles.ratingStarActive : styles.ratingStarInactive} />
+                                                  <span className={styles.streamsRatingRowText}>{stream.rating || '-'}</span>
+                                                  {stream.rating && <span className={styles.streamsRatingCount}>({Math.floor(Math.random() * 50) + 5})</span>}
                                               </div>
                                           </td>
-                                          <td className={`${styles.streamsTableCell} text-right`}>
+                                          <td className={`${styles.streamsTableCell} ${styles.streamsTableCellRight}`}>
                                               <div className={styles.streamsActionsRow}>
                                                   {stream.status === StreamStatus.LIVE && onExtendStream && stream.extensionCount < 3 && (
                                                       <Button 
                                                           size="sm" 
-                                                          className="bg-green-500 hover:bg-green-600 text-white text-[10px] px-2 h-7"
+                                                          className={styles.streamsActionConfirm}
                                                           onClick={() => onExtendStream(stream.id)}
                                                           title="Extender 30 minutos más"
                                                       >
-                                                          <RefreshCw size={10} className="mr-1"/> Continuamos
+                                                          <RefreshCw size={10} className={styles.buttonIconSm}/> Continuamos
                                                       </Button>
                                                   )}
                                                   {(stream.status === StreamStatus.UPCOMING || stream.status === StreamStatus.PENDING_REPROGRAMMATION) && (
@@ -1322,7 +1322,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                             onClick={() => openEditModal(stream)}
                                                             disabled={!canManageAgenda}
                                                             title={!canManageAgenda ? getRestrictionMessage() : 'Editar vivo'}
-                                                            className={`p-1.5 rounded ${!canManageAgenda ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                                                            className={`${styles.iconButton} ${!canManageAgenda ? styles.iconButtonDisabled : styles.iconButtonEdit}`}
                                                         >
                                                             <Pencil size={14} />
                                                         </button>
@@ -1338,7 +1338,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                             }}
                                                             disabled={!canManageAgenda}
                                                             title={!canManageAgenda ? getRestrictionMessage() : 'Cancelar vivo'}
-                                                            className={`p-1.5 rounded ${!canManageAgenda ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'}`}
+                                                            className={`${styles.iconButton} ${!canManageAgenda ? styles.iconButtonDisabled : styles.iconButtonDelete}`}
                                                         >
                                                             <Trash2 size={14} />
                                                         </button>
@@ -1375,7 +1375,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             size={64}
                             seed={currentShop.id || currentShop.name}
                           />
-                          <div className="flex-1">
+                          <div className={styles.profileSummaryBody}>
                               <p className={styles.profileName}>{currentShop.name}</p>
                               <p className={styles.profileAddress}>{currentShop.address || 'Dirección sin definir'}</p>
                               <p className={styles.profileMeta}>WhatsApp visibles: {publicWhatsappCount}</p>
@@ -1405,15 +1405,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <section className={styles.profileFormSection}>
                           <h3 className={styles.profileFormTitle}><Store size={18}/> Identidad & Legal</h3>
                           <div className={styles.profileGridTwo}>
-                              <label className="block">
+                              <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>Nombre de Fantasía</span>
                                   <input type="text" value={shopForm.name || ''} onChange={e => handleInputChange('name', e.target.value)} className={styles.profileInputMuted} />
                               </label>
-                              <label className="block">
+                              <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>Razón Social</span>
                                   <input type="text" value={shopForm.razonSocial || ''} onChange={e => handleInputChange('razonSocial', e.target.value)} className={styles.profileInput} />
                               </label>
-                              <label className="block">
+                              <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>CUIT</span>
                                   <input type="text" value={shopForm.cuit || ''} onChange={e => handleInputChange('cuit', e.target.value)} className={styles.profileInput} />
                               </label>
@@ -1422,31 +1422,31 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <section className={styles.profileFormSection}>
                           <h3 className={styles.profileFormTitle}><MapPin size={18}/> Dirección Física</h3>
                           <div className={styles.profileGridThree}>
-                              <div className="md:col-span-3 mb-2 relative">
+                              <div className={styles.profileFieldWide}>
                                   <label className={styles.profileInputLabel}>Buscador (Google Maps Simulado)</label>
                                   <AddressAutocomplete onSelect={handleAddressSelect} />
                               </div>
-                              <label className="block md:col-span-2">
+                              <label className={styles.profileFieldSpanTwo}>
                                   <span className={styles.profileInputLabel}>Calle</span>
                                   <input type="text" value={shopForm.addressDetails?.street || ''} onChange={e => handleAddressChange('street', e.target.value)} className={styles.profileInput} />
                               </label>
-                              <label className="block">
+                              <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>Número</span>
                                   <input type="text" value={shopForm.addressDetails?.number || ''} onChange={e => handleAddressChange('number', e.target.value)} className={styles.profileInput} />
                               </label>
-                              <label className="block">
+                              <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>Localidad / Barrio</span>
                                   <input type="text" value={shopForm.addressDetails?.city || ''} onChange={e => handleAddressChange('city', e.target.value)} className={styles.profileInput} />
                               </label>
-                              <label className="block">
+                              <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>Provincia</span>
                                   <input type="text" value={shopForm.addressDetails?.province || ''} onChange={e => handleAddressChange('province', e.target.value)} className={styles.profileInput} />
                               </label>
-                              <label className="block">
+                              <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>CP</span>
                                   <input type="text" value={shopForm.addressDetails?.zip || ''} onChange={e => handleAddressChange('zip', e.target.value)} className={styles.profileInput} />
                               </label>
-                              <label className="block md:col-span-3">
+                              <label className={styles.profileFieldSpanThree}>
                                   <span className={styles.profileInputLabel}>Link Google Maps</span>
                                   <input
                                       type="text"
@@ -1462,16 +1462,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           <h3 className={styles.profileFormTitle}><CreditCard size={18}/> Condiciones de Venta</h3>
                           <div className={styles.profileGridTwo}>
                               <div>
-                                  <label className="block mb-2">
+                                  <label className={styles.profileField}>
                                       <span className={styles.profileInputLabel}>Monto Mínimo de Compra ($)</span>
-                                      <div className="relative mt-1">
-                                          <span className="absolute left-3 top-2 text-gray-500">$</span>
+                                      <div className={styles.profileFieldRelative}>
+                                          <span className={styles.profilePricePrefix}>$</span>
                                           <input type="number" value={shopForm.minimumPurchase || ''} onChange={e => handleInputChange('minimumPurchase', parseInt(e.target.value))} className={`${styles.profileInput} pl-6`} />
                                       </div>
                                   </label>
                               </div>
                               <div>
-                                  <label className="block mb-2">
+                                  <label className={styles.profileField}>
                                       <span className={styles.profileInputLabel}>Formas de Pago Aceptadas</span>
                                   </label>
                                   <div className={styles.profileGridPayments}>
@@ -1481,7 +1481,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                 type="checkbox" 
                                                 checked={(shopForm.paymentMethods || []).includes(method)}
                                                 onChange={() => togglePaymentMethod(method)}
-                                                className="rounded border-gray-300 text-dm-crimson focus:ring-dm-crimson"
+                                                className={styles.profileCheckboxInput}
                                               />
                                               <span>{method}</span>
                                           </label>
@@ -1491,7 +1491,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           </div>
                       </section>
                       <div className={styles.profileActions}>
-                          <Button type="submit"><Save size={16} className="mr-2"/> Guardar Perfil</Button>
+                          <Button type="submit"><Save size={16} className={styles.buttonIcon}/> Guardar Perfil</Button>
                       </div>
                   </form>
               </div>
@@ -1505,7 +1505,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div className={styles.modalCard}>
                   <button onClick={() => setShowBuyModal(false)} className={styles.modalClose}><X size={20}/></button>
                   <div className={styles.modalHeader}>
-                      <div className={`${styles.modalIcon} bg-green-100 text-green-600`}>
+                      <div className={`${styles.modalIcon} ${styles.modalIconGreen}`}>
                           <DollarSign size={32} />
                       </div>
                       <h2 className={styles.modalTitle}>Comprar Cupo Extra</h2>
@@ -1514,10 +1514,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   
                   <div className={styles.modalForm}>
                       <div className={styles.modalRow}>
-                          <span className="font-bold text-dm-dark">1 Cupo de Vivo</span>
-                          <span className="font-bold text-green-600">$5.000</span>
+                          <span className={styles.modalRowTitle}>1 Cupo de Vivo</span>
+                          <span className={styles.modalRowPrice}>$5.000</span>
                       </div>
-                      <Button className="w-full bg-green-600 hover:bg-green-700 border-none text-white" onClick={handleBuyConfirm}>
+                      <Button className={styles.modalConfirmButtonGreen} onClick={handleBuyConfirm}>
                           Confirmar Compra
                       </Button>
                       <p className={styles.modalNote}>Pago seguro procesado por Mercado Pago</p>
@@ -1532,7 +1532,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div className={styles.modalCard}>
                   <button onClick={() => setShowBuyReelModal(false)} className={styles.modalClose}><X size={20}/></button>
                   <div className={styles.modalHeader}>
-                      <div className={`${styles.modalIcon} bg-pink-100 text-dm-crimson`}>
+                      <div className={`${styles.modalIcon} ${styles.modalIconCrimson}`}>
                           <Film size={32} />
                       </div>
                       <h2 className={styles.modalTitle}>Comprar Historias Extra</h2>
@@ -1541,10 +1541,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   
                   <div className={styles.modalForm}>
                       <div className={styles.modalRow}>
-                          <span className="font-bold text-dm-dark">Pack 5 Historias</span>
-                          <span className="font-bold text-green-600">$2.500</span>
+                          <span className={styles.modalRowTitle}>Pack 5 Historias</span>
+                          <span className={styles.modalRowPrice}>$2.500</span>
                       </div>
-                      <Button className="w-full bg-dm-crimson hover:bg-red-700 border-none text-white" onClick={async () => {
+                      <Button className={styles.modalConfirmButtonCrimson} onClick={async () => {
                           await handleBuyReelConfirm();
                           setShowBuyReelModal(false);
                       }}>
@@ -1560,11 +1560,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {showCreateModal && (
           <div className={styles.modalBackdrop}>
               <div className={`${styles.modalCard} ${styles.modalCardLarge}`}>
-                  <div className="flex justify-between items-center mb-6">
+                  <div className={styles.modalHeaderRow}>
                       <h2 className={styles.modalTitle}>
                           {editingStream ? 'Editar Vivo' : 'Agendar Nuevo Vivo'}
                       </h2>
-                      <button onClick={() => setShowCreateModal(false)}><X size={20}/></button>
+                      <button onClick={() => setShowCreateModal(false)} className={styles.modalClose}><X size={20}/></button>
                   </div>
                   
                   {!editingStream && (
@@ -1580,7 +1580,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           <input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} className={styles.modalInput} placeholder="Ej: Nueva Temporada..." />
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className={styles.modalGridTwo}>
                           <div>
                               <label className={styles.modalLabel}>Fecha</label>
                               <input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} className={styles.modalInput} />
@@ -1608,8 +1608,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           </select>
                       </div>
                       
-                      <div className="pt-4">
-                          <Button type="button" onClick={handleConfirmStream} className="w-full">
+                      <div className={styles.modalFooter}>
+                          <Button type="button" onClick={handleConfirmStream} className={styles.buttonFull}>
                               {editingStream ? 'Guardar Cambios' : 'Confirmar Agenda'}
                           </Button>
                       </div>
@@ -1625,11 +1625,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <h3 className={styles.modalTitle}>{confirmDialog.title}</h3>
                   <p className={styles.modalSubtitle}>{confirmDialog.message}</p>
                   <div className={styles.modalActions}>
-                      <Button variant="outline" className="flex-1" onClick={() => setConfirmDialog(null)}>
+                      <Button variant="outline" className={styles.modalActionButton} onClick={() => setConfirmDialog(null)}>
                           {confirmDialog.cancelLabel || 'Cancelar'}
                       </Button>
                       <Button
-                          className="flex-1 bg-dm-crimson hover:bg-red-700 border-none text-white"
+                          className={styles.modalActionPrimary}
                           onClick={() => {
                               const action = confirmDialog.onConfirm;
                               setConfirmDialog(null);

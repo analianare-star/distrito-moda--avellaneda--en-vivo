@@ -283,7 +283,7 @@ export const AccountDrawer: React.FC<AccountDrawerProps> = ({
                               className={styles.notificationSecondary}
                               onClick={() => onMarkNotificationRead(note.id)}
                             >
-                              Leido
+                              Leído
                             </button>
                           )}
                         </div>
@@ -299,7 +299,7 @@ export const AccountDrawer: React.FC<AccountDrawerProps> = ({
                 </p>
                 {reminderStreams.length === 0 ? (
                   <div className={styles.remindersEmpty}>
-                    No tenes recordatorios activos.
+                    No tenés recordatorios activos.
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -342,7 +342,7 @@ export const AccountDrawer: React.FC<AccountDrawerProps> = ({
           ) : (
             <div className={styles.guestCard}>
               <p className={styles.guestText}>
-                Inicia sesion para interactuar con tiendas.
+                Iniciá sesión para interactuar con tiendas.
               </p>
               <Button className="mt-4 w-full" onClick={onLogin}>
                 Ingresar

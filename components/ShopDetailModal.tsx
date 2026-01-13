@@ -225,7 +225,7 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                         <div className={styles.alertBox}>
                             <AlertOctagon size={32} className="mx-auto text-orange-400 mb-2" />
                             <p className={styles.alertTitle}>Solo clientes pueden ver la tarjeta</p>
-                            <p className={styles.alertText}>Inicia sesion con un perfil cliente.</p>
+                            <p className={styles.alertText}>Iniciá sesión con un perfil cliente.</p>
                         </div>
                     ) : canDownloadCard ? (
                         <>
