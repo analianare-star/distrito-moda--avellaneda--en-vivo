@@ -154,6 +154,14 @@
   @apply flex gap-4 pt-2;
 }
 
+.livePrimaryButton {
+  @apply bg-white text-dm-crimson hover:bg-gray-100 border-none font-bold shadow-lg shadow-white/10;
+}
+
+.liveSecondaryButton {
+  @apply border-white text-white hover:bg-white/10;
+}
+
 .liveMobileNav {
   @apply flex md:hidden justify-between mt-4 w-full;
 }

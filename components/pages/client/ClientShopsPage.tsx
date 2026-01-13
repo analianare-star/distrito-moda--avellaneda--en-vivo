@@ -2,6 +2,7 @@ import React from "react";
 import { Search } from "lucide-react";
 import { EmptyState } from "../../EmptyState";
 import { Shop } from "../../../types";
+import styles from "./ClientShopsPage.module.css";
 
 // ClientShopsPage muestra buscador y listado de tiendas.
 // ClientShopsPage renders shop search and list.
@@ -24,20 +25,20 @@ export const ClientShopsPage: React.FC<ClientShopsPageProps> = ({
 }) => {
   return (
     <section aria-label="Listado de tiendas">
-      <div className="mx-auto max-w-3xl px-4 pt-4 md:pt-6">
-        <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 shadow-sm">
-          <Search size={16} className="text-gray-400" />
+      <div className={styles.section}>
+        <div className={styles.searchBar}>
+          <Search size={16} className={styles.searchIcon} />
           <input
             type="search"
             value={shopQuery}
             onChange={(event) => onShopQueryChange(event.target.value)}
             placeholder="Buscar tiendas, zonas o rubros"
-            className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+            className={styles.searchInput}
           />
           {shopQuery && (
             <button
               onClick={onClearShopQuery}
-              className="text-[11px] font-semibold text-gray-400 hover:text-dm-crimson"
+              className={styles.clearButton}
             >
               Borrar
             </button>
@@ -45,14 +46,14 @@ export const ClientShopsPage: React.FC<ClientShopsPageProps> = ({
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-serif text-3xl text-dm-dark">Tiendas</h2>
-          <div className="text-sm font-sans text-gray-500">
+      <div className={styles.listWrap}>
+        <div className={styles.listHeader}>
+          <h2 className={styles.listTitle}>Tiendas</h2>
+          <div className={styles.listCount}>
             {filteredPublicShops.length} registradas
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className={styles.shopsGrid}>
           {filteredPublicShops.map((shop) => renderShopCard(shop))}
           {filteredPublicShops.length === 0 && (
             <EmptyState

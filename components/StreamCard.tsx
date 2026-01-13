@@ -4,6 +4,7 @@ import { Stream, StreamStatus, UserContext } from '../types';
 import { Button } from './Button';
 import { LogoBubble } from './LogoBubble';
 import { Instagram, Video, Flag, Clock, Heart, Share2, Check, Download, Star, MoreHorizontal, MessageCircle, UserPlus } from 'lucide-react';
+import styles from './StreamCard.module.css';
 
 interface StreamCardProps {
   stream: Stream;
@@ -92,35 +93,35 @@ export const StreamCard: React.FC<StreamCardProps> = ({
 
   return (
     <div 
-        className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full group"
+        className={`${styles.card} group`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
     >
       
       {/* 1. HEADER IMAGE & BADGES */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
+      <div className={styles.media}>
         {hasCoverImage ? (
           <img 
             src={coverImage} 
             alt={stream.title} 
             loading="lazy"
             decoding="async"
-            className={`w-full h-full object-cover transition-transform duration-700 ${isHovered ? 'scale-105' : 'scale-100'} ${isFinished ? 'grayscale' : ''}`}
+            className={`${styles.mediaImage} ${isHovered ? 'scale-105' : 'scale-100'} ${isFinished ? 'grayscale' : ''}`}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 text-[11px] font-semibold text-gray-500">
+          <div className={styles.mediaPlaceholder}>
             Sin portada
           </div>
         )}
         
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 opacity-60"></div>
+        <div className={styles.mediaGradient}></div>
 
         {/* Top Badges */}
-        <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
+        <div className={styles.topBadges}>
              {/* Shop Identity (Small) */}
              <div 
-                className="flex items-center gap-2 bg-white/90 backdrop-blur-sm pr-3 pl-1 py-1 rounded-full cursor-pointer hover:bg-white transition-colors"
+                className={styles.shopChip}
                 onClick={(e) => { e.stopPropagation(); onOpenShop(); }}
             >
                  <LogoBubble
@@ -130,35 +131,35 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                    seed={stream.shop.id || stream.shop.name}
                    className="shrink-0"
                  />
-                 <span className="text-[11px] font-bold text-dm-dark uppercase tracking-wide truncate max-w-[110px]">{stream.shop.name}</span>
+                 <span className={styles.shopName}>{stream.shop.name}</span>
              </div>
 
              {/* Rating */}
-             <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm px-2 py-1 rounded-full text-white">
+             <div className={styles.ratingChip}>
                  <Star size={10} className="fill-yellow-400 text-yellow-400" />
                  <span className="text-[11px] font-bold">{shopRating}</span>
              </div>
         </div>
 
         {/* Status Center/Bottom */}
-        <div className="absolute bottom-4 left-4 z-10">
+        <div className={styles.statusWrap}>
              {isLive ? (
-                 <div className="flex flex-col items-start gap-1">
-                    <span className="bg-dm-crimson text-white text-[11px] font-bold px-2 py-0.5 rounded-sm flex items-center gap-1 animate-pulse">
+                 <div className={styles.statusLive}>
+                    <span className={styles.statusLiveBadge}>
                         <span className="w-1.5 h-1.5 bg-white rounded-full"></span> EN VIVO
                     </span>
-                    <span className="text-white text-[11px] font-serif italic">Transmisión en curso</span>
+                    <span className={styles.statusLiveNote}>Transmisión en curso</span>
                  </div>
              ) : (
-                <div className="flex items-center gap-2 text-white">
-                    <div className={`p-1.5 rounded-full ${isMissed ? 'bg-orange-500' : isFinished ? 'bg-gray-500' : 'bg-white text-dm-dark'}`}>
+                <div className={styles.statusRow}>
+                    <div className={`${styles.statusIconWrap} ${isMissed ? 'bg-orange-500' : isFinished ? 'bg-gray-500' : 'bg-white text-dm-dark'}`}>
                         {isMissed ? <AlertTriangleIcon size={12}/> : isFinished ? <Check size={12}/> : <Clock size={12}/>}
                     </div>
                     <div>
-                        <p className="text-[11px] font-bold uppercase tracking-wider opacity-80">
+                        <p className={styles.statusLabel}>
                             {isMissed ? 'No Realizado' : isFinished ? 'Finalizado' : 'Próximo Vivo'}
                         </p>
-                        {!isFinished && !isMissed && <p className="text-[12px] font-bold shadow-black drop-shadow-md">{dateText}</p>}
+                        {!isFinished && !isMissed && <p className={styles.statusDate}>{dateText}</p>}
                     </div>
                 </div>
              )}
@@ -166,14 +167,14 @@ export const StreamCard: React.FC<StreamCardProps> = ({
       </div>
 
       {/* 2. BODY CONTENT */}
-      <div className="p-3 md:p-4 flex flex-col flex-1">
+      <div className={styles.body}>
         <div className="flex justify-between items-start mb-1">
             <div>
-                <h3 className="font-serif text-[17px] font-bold text-dm-dark leading-tight line-clamp-2" title={stream.title}>
+                <h3 className={styles.title} title={stream.title}>
                     {stream.title}
                 </h3>
-                <div className="flex items-center gap-2 mt-1.5">
-                     <span className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded border ${
+                <div className={styles.metaRow}>
+                     <span className={`${styles.platformBadge} ${
                          stream.platform === 'Instagram' ? 'border-pink-200 text-pink-600 bg-pink-50' : 
                          stream.platform === 'TikTok' ? 'border-gray-800 text-gray-900 bg-gray-100' :
                          'border-blue-200 text-blue-600 bg-blue-50'
@@ -185,7 +186,7 @@ export const StreamCard: React.FC<StreamCardProps> = ({
         </div>
 
         {/* 3. ACTION BAR */}
-        <div className="mt-auto pt-3 flex flex-col gap-2.5">
+        <div className={styles.actions}>
             
             {/* Primary Action Button */}
             {isLive ? (
@@ -221,7 +222,7 @@ export const StreamCard: React.FC<StreamCardProps> = ({
             )}
 
             {/* Secondary Actions Row */}
-            <div className="flex justify-between items-center border-t border-gray-100 pt-2.5">
+            <div className={`${styles.actionRow} border-t border-gray-100 pt-2.5`}>
                  <div className="flex gap-1">
                     <button 
                         onClick={() => canClientInteract && onLike && onLike(stream.id)} 

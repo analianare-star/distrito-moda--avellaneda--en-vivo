@@ -3,6 +3,7 @@ import { HeroSection } from "../../HeroSection";
 import { StreamCard } from "../../StreamCard";
 import { EmptyState } from "../../EmptyState";
 import { Reel, Shop, Stream, UserContext } from "../../../types";
+import styles from "./ClientHomePage.module.css";
 
 // ClientHomePage muestra home y agenda publica.
 // ClientHomePage renders home and public agenda.
@@ -44,7 +45,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
   onNotify,
 }) => {
   return (
-    <section className="max-w-7xl mx-auto px-4 py-10" aria-label="Contenido principal">
+    <section className={styles.section} aria-label="Contenido principal">
       <HeroSection
         activeFilter={activeFilter}
         onFilterChange={onFilterChange}
@@ -55,14 +56,14 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
         onOpenShop={onOpenShop}
       />
 
-      <div className="mt-10">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="font-serif text-3xl text-dm-dark">Agenda de Vivos</h2>
-          <div className="text-sm font-sans text-gray-500">
-            Mostrando: <span className="font-bold text-dm-crimson">{activeFilter}</span>
+      <div className={styles.schedule}>
+        <div className={styles.scheduleHeader}>
+          <h2 className={styles.scheduleTitle}>Agenda de Vivos</h2>
+          <div className={styles.scheduleFilter}>
+            Mostrando: <span className={styles.filterValue}>{activeFilter}</span>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className={styles.streamsGrid}>
           {filteredStreams.map((stream) => (
             <StreamCard
               key={stream.id}

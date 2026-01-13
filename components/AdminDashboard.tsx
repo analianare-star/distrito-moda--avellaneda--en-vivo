@@ -6,8 +6,10 @@ import { StreamStatus, DataIntegrityStatus, Stream, Shop, Reel } from '../types'
 import { api } from '../services/api';
 
 // AdminDashboard centralizes moderation, governance, and system operations.
+// AdminDashboard centraliza moderación, gobernanza y operaciones del sistema.
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { NoticeModal } from './NoticeModal';
+import styles from './AdminDashboard.module.css';
 
 type AdminTab = 'DASHBOARD' | 'AGENDA' | 'STREAMS' | 'SHOPS' | 'REELS' | 'REPORTS' | 'ADMIN';
 
@@ -810,22 +812,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col h-screen overflow-hidden">
-      <header className="bg-dm-dark text-white px-8 py-4 shadow-md z-10 shrink-0">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <h1 className="font-serif text-xl tracking-wide">Panel de Control ADMIN</h1>
-            <span className="text-xs bg-dm-crimson px-2 py-1 rounded">Superadmin</span>
+    <div className={styles.root}>
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
+            <h1 className={styles.headerTitle}>Panel de Control ADMIN</h1>
+            <span className={styles.headerBadge}>Superadmin</span>
         </div>
       </header>
 
-      <div className="flex flex-1 max-w-7xl mx-auto w-full overflow-hidden">
-        <aside className="w-64 bg-white border-r border-gray-200 hidden md:block shrink-0 h-full">
-            <nav className="p-4 space-y-1">
+      <div className={styles.content}>
+        <aside className={styles.sidebar}>
+            <nav className={styles.sidebarNav}>
                 {['DASHBOARD', 'AGENDA', 'STREAMS', 'SHOPS', 'REELS', 'REPORTS', 'ADMIN'].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => onTabChange(tab as AdminTab)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === tab ? 'bg-gray-100 text-dm-crimson' : 'text-dm-dark hover:bg-gray-50'}`}
+                        className={`${styles.sidebarButton} ${activeTab === tab ? styles.sidebarButtonActive : styles.sidebarButtonInactive}`}
                     >
                         {tab === 'DASHBOARD' ? <LayoutDashboard size={18} /> : tab === 'AGENDA' ? <Calendar size={18} /> : tab === 'STREAMS' ? <Radio size={18}/> : tab === 'SHOPS' ? <Store size={18}/> : tab === 'REELS' ? <Film size={18}/> : tab === 'REPORTS' ? <AlertTriangle size={18} /> : <ShoppingBag size={18}/>}
                         {tab === 'DASHBOARD' ? 'Resumen' : tab === 'AGENDA' ? 'Agenda' : tab === 'STREAMS' ? 'Vivos' : tab === 'SHOPS' ? 'Tiendas' : tab === 'REELS' ? 'Reels' : tab === 'REPORTS' ? 'Reportes' : 'Administrativo'}
@@ -834,14 +836,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </nav>
         </aside>
 
-        <main className="flex-1 p-8 overflow-y-auto">
-            <div className="md:hidden mb-4">
-                <div className="flex gap-2 overflow-x-auto no-scrollbar">
+        <main className={styles.main}>
+            <div className={styles.mobileTabs}>
+                <div className={styles.mobileTabList}>
                     {['DASHBOARD', 'AGENDA', 'STREAMS', 'SHOPS', 'REELS', 'REPORTS', 'ADMIN'].map(tab => (
                         <button 
                             key={tab}
                             onClick={() => onTabChange(tab as AdminTab)}
-                            className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === tab ? 'bg-dm-crimson text-white' : 'bg-gray-100 text-gray-500'}`}
+                            className={`${styles.mobileTabButton} ${activeTab === tab ? styles.mobileTabActive : styles.mobileTabInactive}`}
                         >
                             {tab === 'DASHBOARD' ? 'Resumen' : tab === 'AGENDA' ? 'Agenda' : tab === 'STREAMS' ? 'Vivos' : tab === 'SHOPS' ? 'Tiendas' : tab === 'REELS' ? 'Reels' : tab === 'REPORTS' ? 'Reportes' : 'Administrativo'}
                         </button>
@@ -849,40 +851,54 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
             </div>
             {activeTab === 'DASHBOARD' && (
-                <div className="space-y-8 animate-in fade-in">
-                    <h2 className="font-serif text-2xl text-dm-dark">Estado del Sistema</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-4 md:p-6 rounded-xl border flex justify-between">
-                            <div><p className="text-xs font-bold text-gray-400">EN VIVO</p><p className="text-3xl font-serif">{liveCount}</p></div>
+                <div className={styles.dashboardSection}>
+                    <h2 className={styles.dashboardTitle}>Estado del Sistema</h2>
+                    <div className={styles.statsGrid}>
+                        <div className={styles.statsCard}>
+                            <div>
+                              <p className={styles.statLabel}>EN VIVO</p>
+                              <p className={styles.statValue}>{liveCount}</p>
+                            </div>
                             <Radio className="text-red-500" />
                         </div>
-                        <div className="bg-white p-4 md:p-6 rounded-xl border flex justify-between">
-                            <div><p className="text-xs font-bold text-gray-400">INCUMPLIDOS</p><p className="text-3xl font-serif">{missedCount}</p></div>
+                        <div className={styles.statsCard}>
+                            <div>
+                              <p className={styles.statLabel}>INCUMPLIDOS</p>
+                              <p className={styles.statValue}>{missedCount}</p>
+                            </div>
                             <AlertTriangle className="text-orange-500" />
                         </div>
-                        <div className="bg-white p-4 md:p-6 rounded-xl border flex justify-between">
-                            <div><p className="text-xs font-bold text-gray-400">PENALIZADAS</p><p className="text-3xl font-serif">{penalizedShops}</p></div>
+                        <div className={styles.statsCard}>
+                            <div>
+                              <p className={styles.statLabel}>PENALIZADAS</p>
+                              <p className={styles.statValue}>{penalizedShops}</p>
+                            </div>
                             <AlertOctagon className="text-gray-500" />
                         </div>
-                        <div className="bg-white p-4 md:p-6 rounded-xl border flex justify-between">
-                            <div><p className="text-xs font-bold text-gray-400">REELS ACTIVOS</p><p className="text-3xl font-serif">{reels.filter(r => r.status === 'ACTIVE').length}</p></div>
+                        <div className={styles.statsCard}>
+                            <div>
+                              <p className={styles.statLabel}>REELS ACTIVOS</p>
+                              <p className={styles.statValue}>
+                                {reels.filter(r => r.status === 'ACTIVE').length}
+                              </p>
+                            </div>
                             <Film className="text-dm-crimson" />
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
+                        <div className={styles.sectionHeader}>
                             <div>
-                                <p className="text-xs font-bold tracking-widest text-gray-400">INBOX OPERATIVO</p>
-                                <p className="text-sm font-semibold text-dm-dark">Pendientes que requieren accion inmediata</p>
+                                <p className={styles.sectionLabel}>INBOX OPERATIVO</p>
+                                <p className={styles.sectionSub}>Pendientes que requieren accion inmediata</p>
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-white p-4 md:p-5 rounded-xl border">
-                                <div className="flex items-center justify-between">
+                        <div className={styles.inboxGrid}>
+                            <div className={styles.pendingCard}>
+                                <div className={styles.pendingHeader}>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-400">TIENDAS PENDIENTES</p>
-                                        <p className="text-lg font-bold text-dm-dark">{pendingShops.length}</p>
+                                        <p className={styles.statLabel}>TIENDAS PENDIENTES</p>
+                                        <p className={styles.pendingCount}>{pendingShops.length}</p>
                                     </div>
                                     <Button
                                         size="sm"
@@ -895,7 +911,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         Ver
                                     </Button>
                                 </div>
-                                <div className="mt-3 space-y-2">
+                                <div className={styles.pendingList}>
                                     {pendingShops.slice(0, 3).map((shop) => (
                                         <button
                                             key={shop.id}
@@ -903,76 +919,76 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 setShopFilter('PENDING_VERIFICATION');
                                                 onTabChange('SHOPS');
                                             }}
-                                            className="w-full rounded-lg border border-gray-100 px-3 py-2 text-left transition hover:bg-gray-50"
+                                            className={styles.pendingItem}
                                         >
-                                            <p className="text-xs font-bold text-dm-dark">{shop.name}</p>
-                                            <p className="text-[10px] text-gray-500">{shop.email || 'Sin email'}</p>
+                                            <p className={styles.pendingItemTitle}>{shop.name}</p>
+                                            <p className={styles.pendingItemMeta}>{shop.email || 'Sin email'}</p>
                                         </button>
                                     ))}
                                     {pendingShops.length === 0 && (
-                                        <p className="text-xs text-gray-400">Sin pendientes por aprobar.</p>
+                                        <p className={styles.pendingEmpty}>Sin pendientes por aprobar.</p>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="bg-white p-4 md:p-5 rounded-xl border">
-                                <div className="flex items-center justify-between">
+                            <div className={styles.pendingCard}>
+                                <div className={styles.pendingHeader}>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-400">REPORTES ABIERTOS</p>
-                                        <p className="text-lg font-bold text-dm-dark">{openReports.length}</p>
+                                        <p className={styles.statLabel}>REPORTES ABIERTOS</p>
+                                        <p className={styles.pendingCount}>{openReports.length}</p>
                                     </div>
                                     <Button size="sm" variant="outline" onClick={() => onTabChange('REPORTS')}>
                                         Ver
                                     </Button>
                                 </div>
-                                <div className="mt-3 space-y-2">
+                                <div className={styles.pendingList}>
                                     {openReports.slice(0, 3).map((report) => (
                                         <button
                                             key={report.id}
                                             onClick={() => onTabChange('REPORTS')}
-                                            className="w-full rounded-lg border border-gray-100 px-3 py-2 text-left transition hover:bg-gray-50"
+                                            className={styles.pendingItem}
                                         >
-                                            <p className="text-xs font-bold text-dm-dark">
+                                            <p className={styles.pendingItemTitle}>
                                                 {report?.stream?.title || 'Vivo sin titulo'}
                                             </p>
-                                            <p className="text-[10px] text-gray-500">
+                                            <p className={styles.pendingItemMeta}>
                                                 {report?.stream?.shop?.name || 'Sin tienda'}
                                             </p>
                                         </button>
                                     ))}
                                     {openReports.length === 0 && (
-                                        <p className="text-xs text-gray-400">Sin reportes abiertos.</p>
+                                        <p className={styles.pendingEmpty}>Sin reportes abiertos.</p>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="bg-white p-4 md:p-5 rounded-xl border">
-                                <div className="flex items-center justify-between">
+                            <div className={styles.pendingCard}>
+                                <div className={styles.pendingHeader}>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-400">COMPRAS PENDIENTES</p>
-                                        <p className="text-lg font-bold text-dm-dark">{pendingPurchases.length}</p>
+                                        <p className={styles.statLabel}>COMPRAS PENDIENTES</p>
+                                        <p className={styles.pendingCount}>{pendingPurchases.length}</p>
                                     </div>
                                     <Button size="sm" variant="outline" onClick={() => onTabChange('ADMIN')}>
                                         Ver
                                     </Button>
                                 </div>
-                                <div className="mt-3 space-y-2">
+                                <div className={styles.pendingList}>
                                     {pendingPurchases.slice(0, 3).map((purchase) => (
                                         <button
                                             key={purchase.purchaseId || purchase.id}
                                             onClick={() => onTabChange('ADMIN')}
-                                            className="w-full rounded-lg border border-gray-100 px-3 py-2 text-left transition hover:bg-gray-50"
+                                            className={styles.pendingItem}
                                         >
-                                            <p className="text-xs font-bold text-dm-dark">
+                                            <p className={styles.pendingItemTitle}>
                                                 {purchase?.shop?.name || 'Tienda sin nombre'}
                                             </p>
-                                            <p className="text-[10px] text-gray-500">
+                                            <p className={styles.pendingItemMeta}>
                                                 {purchase.type || 'PACK'} · {purchase.quantity || 0} cupos
                                             </p>
                                         </button>
                                     ))}
                                     {pendingPurchases.length === 0 && (
-                                        <p className="text-xs text-gray-400">Sin compras pendientes.</p>
+                                        <p className={styles.pendingEmpty}>Sin compras pendientes.</p>
                                     )}
                                 </div>
                             </div>
@@ -982,20 +998,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
 
             {activeTab === 'AGENDA' && (
-                <div className="space-y-6 animate-in fade-in">
-                    <h2 className="font-serif text-2xl text-dm-dark">Agenda Global</h2>
-                    <div className="flex flex-col md:flex-row gap-3">
+                <div className={styles.section}>
+                    <h2 className={styles.sectionTitle}>Agenda Global</h2>
+                    <div className={styles.sectionFilters}>
                         <input
                             type="text"
                             placeholder="Buscar tienda..."
                             value={agendaQuery}
                             onChange={(e) => setAgendaQuery(e.target.value)}
-                            className="flex-1 p-3 border border-gray-200 rounded-lg text-sm"
+                            className={styles.sectionInput}
                         />
                         <select
                             value={agendaStatus}
                             onChange={(e) => setAgendaStatus(e.target.value as any)}
-                            className="p-3 border border-gray-200 rounded-lg text-sm bg-white"
+                            className={styles.sectionSelect}
                         >
                             <option value="ALL">Todos los estados</option>
                             <option value={StreamStatus.LIVE}>En vivo</option>
@@ -1008,8 +1024,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </select>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                        <div className="md:hidden divide-y">
+                    <div className={styles.tableCard}>
+                        <div className={styles.tableMobile}>
                             {filteredAgendaStreams.length > 0 ? (
                                 filteredAgendaStreams.map((stream) => (
                                     <div key={stream.id} className="p-3 space-y-2">
@@ -1024,34 +1040,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     </div>
                                 ))
                             ) : (
-                                <div className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados</div>
+                                <div className={styles.emptyText}>Sin resultados</div>
                             )}
                         </div>
-                        <div className="hidden md:block">
-                            <table className="w-full text-left">
-                                <thead className="bg-gray-50 border-b">
+                        <div className={styles.tableDesktop}>
+                            <table className={styles.table}>
+                                <thead className={styles.tableHead}>
                                     <tr>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Tienda</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Fecha</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Plataforma</th>
+                                        <th className={styles.tableHeadCell}>Tienda</th>
+                                        <th className={styles.tableHeadCell}>Fecha</th>
+                                        <th className={styles.tableHeadCell}>Estado</th>
+                                        <th className={styles.tableHeadCell}>Plataforma</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y">
+                                <tbody className={styles.tableBody}>
                                     {filteredAgendaStreams.length > 0 ? (
                                         filteredAgendaStreams.map(stream => (
                                             <tr key={stream.id}>
-                                                <td className="px-6 py-4 text-sm font-bold">{stream.shop?.name || 'Sin tienda'}</td>
-                                                <td className="px-6 py-4 text-xs text-gray-500">
+                                                <td className={`${styles.tableCell} text-sm font-bold`}>{stream.shop?.name || 'Sin tienda'}</td>
+                                                <td className={`${styles.tableCell} text-xs text-gray-500`}>
                                                     {new Date(stream.fullDateISO).toLocaleDateString()} {stream.scheduledTime} hs
                                                 </td>
-                                                <td className="px-6 py-4 text-xs font-bold">{formatStreamStatus(stream.status)}</td>
-                                                <td className="px-6 py-4 text-xs">{stream.platform}</td>
+                                                <td className={`${styles.tableCell} text-xs font-bold`}>{formatStreamStatus(stream.status)}</td>
+                                                <td className={`${styles.tableCell} text-xs`}>{stream.platform}</td>
                                             </tr>
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={4} className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados</td>
+                                            <td colSpan={4} className={styles.emptyText}>Sin resultados</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -1062,20 +1078,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
 
             {activeTab === 'STREAMS' && (
-                 <div className="space-y-6 animate-in fade-in">
-                    <h2 className="font-serif text-2xl text-dm-dark">Gestión de Vivos</h2>
-                    <div className="flex flex-col md:flex-row gap-3">
+                 <div className={styles.section}>
+                    <h2 className={styles.sectionTitle}>Gestión de Vivos</h2>
+                    <div className={styles.sectionFilters}>
                         <input
                             type="text"
                             placeholder="Buscar vivo o tienda..."
                             value={streamQuery}
                             onChange={(e) => setStreamQuery(e.target.value)}
-                            className="flex-1 p-3 border border-gray-200 rounded-lg text-sm"
+                            className={styles.sectionInput}
                         />
                         <select
                             value={streamStatusFilter}
                             onChange={(e) => setStreamStatusFilter(e.target.value as any)}
-                            className="p-3 border border-gray-200 rounded-lg text-sm bg-white"
+                            className={styles.sectionSelect}
                         >
                             <option value="ALL">Todos los estados</option>
                             <option value={StreamStatus.LIVE}>En vivo</option>
@@ -1087,8 +1103,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <option value={StreamStatus.PENDING_REPROGRAMMATION}>Reprogramación pendiente</option>
                         </select>
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                        <div className="md:hidden divide-y">
+                    <div className={styles.tableCard}>
+                        <div className={styles.tableMobile}>
                             {filteredStreams.length > 0 ? (
                               filteredStreams.map((stream) => (
                                 <div key={stream.id} className="p-3 space-y-2">
@@ -1184,31 +1200,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 </div>
                               ))
                             ) : (
-                              <div className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados.</div>
+                              <div className={styles.emptyText}>Sin resultados.</div>
                             )}
                         </div>
-                        <div className="hidden md:block">
-                            <table className="w-full text-left">
-                                <thead className="bg-gray-50 border-b">
+                        <div className={styles.tableDesktop}>
+                            <table className={styles.table}>
+                                <thead className={styles.tableHead}>
                                     <tr>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Info</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Reportes</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
+                                        <th className={styles.tableHeadCell}>Info</th>
+                                        <th className={styles.tableHeadCell}>Reportes</th>
+                                        <th className={`${styles.tableHeadCell} text-right`}>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y">
+                                <tbody className={styles.tableBody}>
                                     {filteredStreams.length > 0 ? (
                                         filteredStreams.map(stream => (
                                         <tr key={stream.id}>
-                                            <td className="px-6 py-4">
+                                            <td className={styles.tableCell}>
                                                 <p className="font-bold text-sm">{stream.title}</p>
                                                 <p className="text-xs text-gray-500">{stream.shop.name}</p>
                                                 <span className={`text-[10px] px-1 rounded ${stream.status === 'LIVE' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}>{formatStreamStatus(stream.status)}</span>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className={styles.tableCell}>
                                                 {stream.reportCount > 0 ? <span className="text-red-600 font-bold flex items-center gap-1"><AlertTriangle size={12}/> {stream.reportCount}</span> : '-'}
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className={styles.tableCell}>
                                                 <div className="flex justify-end gap-2">
                                                     <button 
                                                         onClick={() => toggleVisibility(stream.id)} 
@@ -1294,7 +1310,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={3} className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados.</td>
+                                            <td colSpan={3} className={styles.emptyText}>Sin resultados.</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -1305,20 +1321,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
 
             {activeTab === 'REPORTS' && (
-                <div className="space-y-6 animate-in fade-in">
-                    <h2 className="font-serif text-2xl text-dm-dark">Reportes</h2>
-                    <div className="flex flex-col md:flex-row gap-3">
+                <div className={styles.section}>
+                    <h2 className={styles.sectionTitle}>Reportes</h2>
+                    <div className={styles.sectionFilters}>
                         <input
                             type="text"
                             placeholder="Buscar vivo o tienda..."
                             value={reportQuery}
                             onChange={(e) => setReportQuery(e.target.value)}
-                            className="flex-1 p-3 border border-gray-200 rounded-lg text-sm"
+                            className={styles.sectionInput}
                         />
                         <select
                             value={reportStatusFilter}
                             onChange={(e) => setReportStatusFilter(e.target.value as any)}
-                            className="p-3 border border-gray-200 rounded-lg text-sm bg-white"
+                            className={styles.sectionSelect}
                         >
                             <option value="ALL">Todos</option>
                             <option value="OPEN">Abiertos</option>
@@ -1326,8 +1342,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <option value="DISMISSED">Rechazados</option>
                         </select>
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                        <div className="md:hidden divide-y">
+                    <div className={styles.tableCard}>
+                        <div className={styles.tableMobile}>
                             {reportsLoading ? (
                                 Array.from({ length: 4 }).map((_, index) => (
                                     <div key={index} className="p-3 space-y-2 animate-pulse">
@@ -1397,20 +1413,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     </div>
                                 ))
                             ) : (
-                                <div className="px-6 py-6 text-center text-xs text-gray-400">Sin reportes abiertos.</div>
+                                <div className={styles.emptyText}>Sin reportes abiertos.</div>
                             )}
                         </div>
-                        <div className="hidden md:block">
-                            <table className="w-full text-left">
-                                <thead className="bg-gray-50 border-b">
+                        <div className={styles.tableDesktop}>
+                            <table className={styles.table}>
+                                <thead className={styles.tableHead}>
                                     <tr>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Vivo</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Motivo</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
+                                        <th className={styles.tableHeadCell}>Vivo</th>
+                                        <th className={styles.tableHeadCell}>Estado</th>
+                                        <th className={styles.tableHeadCell}>Motivo</th>
+                                        <th className={`${styles.tableHeadCell} text-right`}>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y">
+                                <tbody className={styles.tableBody}>
                                     {reportsLoading ? (
                                         Array.from({ length: 6 }).map((_, index) => (
                                             <tr key={index} className="animate-pulse">
@@ -1432,15 +1448,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     ) : filteredReports.length > 0 ? (
                                         filteredReports.map((report) => (
                                             <tr key={report.id}>
-                                                <td className="px-6 py-4">
+                                                <td className={styles.tableCell}>
                                                     <p className="text-xs font-bold">{report?.stream?.title || report.streamId}</p>
                                                     <p className="text-[10px] text-gray-400">{report?.stream?.shop?.name || 'Sin tienda'}</p>
                                                 </td>
-                                                <td className="px-6 py-4 text-xs font-bold">{formatReportStatus(report.status)}</td>
-                                                <td className="px-6 py-4">
+                                                <td className={`${styles.tableCell} text-xs font-bold`}>{formatReportStatus(report.status)}</td>
+                                                <td className={styles.tableCell}>
                                                     <p className="text-[10px] text-gray-500">{report.reason || 'Sin motivo'}</p>
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
+                                                <td className={`${styles.tableCell} text-right`}>
                                                     <div className="flex justify-end gap-2">
                                                         <Button
                                                             size="sm"
@@ -1493,7 +1509,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={4} className="px-6 py-6 text-center text-xs text-gray-400">Sin reportes abiertos.</td>
+                                            <td colSpan={4} className={styles.emptyText}>Sin reportes abiertos.</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -1504,10 +1520,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
 
             {activeTab === 'SHOPS' && (
-                 <div className="space-y-6 animate-in fade-in">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                        <h2 className="font-serif text-2xl text-dm-dark">Tiendas</h2>
-                        <div className="flex flex-wrap items-center gap-3">
+                 <div className={styles.section}>
+                    <div className={styles.shopsHeader}>
+                        <h2 className={styles.sectionTitle}>Tiendas</h2>
+                        <div className={styles.shopsActions}>
                             <button
                                 onClick={() => setShopFilter(shopFilter === 'PENDING_VERIFICATION' ? 'ALL' : 'PENDING_VERIFICATION')}
                                 className={`text-xs font-bold px-3 py-2 rounded-full border ${shopFilter === 'PENDING_VERIFICATION' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-white text-gray-500 border-gray-200'}`}
@@ -1526,18 +1542,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </Button>
                         </div>
                     </div>
-                    <div className="flex flex-col md:flex-row gap-3">
+                    <div className={styles.sectionFilters}>
                         <input
                             type="text"
                             placeholder="Buscar tienda..."
                             value={shopQuery}
                             onChange={(e) => setShopQuery(e.target.value)}
-                            className="flex-1 p-3 border border-gray-200 rounded-lg text-sm"
+                            className={styles.sectionInput}
                         />
                         <select
                             value={shopFilter}
                             onChange={(e) => setShopFilter(e.target.value as any)}
-                            className="p-3 border border-gray-200 rounded-lg text-sm bg-white"
+                            className={styles.sectionSelect}
                         >
                             <option value="ALL">Todos los estados</option>
                             <option value="PENDING_VERIFICATION">Pendientes</option>
@@ -1547,8 +1563,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <option value="BANNED">Bloqueadas</option>
                         </select>
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                        <div className="md:hidden divide-y">
+                    <div className={styles.tableCard}>
+                        <div className={styles.tableMobile}>
                             {filteredShops.length > 0 ? (
                               filteredShops.map((shop) => {
                                 const status = shop.status || 'ACTIVE';
@@ -1632,30 +1648,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 );
                               })
                             ) : (
-                              <div className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados.</div>
+                              <div className={styles.emptyText}>Sin resultados.</div>
                             )}
                         </div>
-                        <div className="hidden md:block">
-                            <table className="w-full text-left">
-                                <thead className="bg-gray-50 border-b">
+                        <div className={styles.tableDesktop}>
+                            <table className={styles.table}>
+                                <thead className={styles.tableHead}>
                                     <tr>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Tienda</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Plan</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Integridad</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Penalización</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
+                                        <th className={styles.tableHeadCell}>Tienda</th>
+                                        <th className={styles.tableHeadCell}>Plan</th>
+                                        <th className={styles.tableHeadCell}>Estado</th>
+                                        <th className={styles.tableHeadCell}>Integridad</th>
+                                        <th className={styles.tableHeadCell}>Penalización</th>
+                                        <th className={`${styles.tableHeadCell} text-right`}>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y">
+                                <tbody className={styles.tableBody}>
                                     {filteredShops.length > 0 ? (
                                       filteredShops.map(shop => {
                                         const status = shop.status || 'ACTIVE';
                                         return (
                                         <tr key={shop.id}>
-                                            <td className="px-6 py-4 font-bold text-sm">{shop.name}</td>
-                                            <td className="px-6 py-4 text-xs">{shop.plan}</td>
-                                            <td className="px-6 py-4">
+                                            <td className={`${styles.tableCell} font-bold text-sm`}>{shop.name}</td>
+                                            <td className={`${styles.tableCell} text-xs`}>{shop.plan}</td>
+                                            <td className={styles.tableCell}>
                                                 <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
                                                     status === 'ACTIVE' ? 'bg-green-50 text-green-600' :
                                                     status === 'PENDING_VERIFICATION' ? 'bg-yellow-50 text-yellow-700' :
@@ -1663,19 +1679,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     'bg-red-50 text-red-600'
                                                 }`}>{formatShopStatus(status)}</span>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className={styles.tableCell}>
                                                 <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
                                                     shop.dataIntegrity === 'COMPLETE' ? 'bg-green-50 text-green-600' :
                                                     shop.dataIntegrity === 'MINIMAL' ? 'bg-yellow-50 text-yellow-600' :
                                                     'bg-red-50 text-red-600'
                                                 }`}>{formatIntegrity(shop.dataIntegrity)}</span>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className={styles.tableCell}>
                                                 <button onClick={() => togglePenalty(shop.id)} className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded border ${shop.isPenalized ? 'bg-red-50 border-red-200 text-red-600' : 'border-gray-200'}`}>
                                                     {shop.isPenalized ? 'ACTIVA' : 'No'}
                                                 </button>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className={`${styles.tableCell} text-right`}>
                                                 <div className="flex justify-end gap-2">
                                                     {status === 'PENDING_VERIFICATION' && (
                                                         <>
@@ -1728,22 +1744,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         </tr>
                                       )})
                                     ) : (
-                                      <tr>
-                                          <td colSpan={6} className="px-6 py-6 text-center text-xs text-gray-400">Sin resultados.</td>
-                                      </tr>
+                                        <tr>
+                                          <td colSpan={6} className={styles.emptyText}>Sin resultados.</td>
+                                        </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                 </div>
+                </div>
             )}
 
             {activeTab === 'REELS' && (
-                <div className="space-y-6 animate-in fade-in">
-                    <h2 className="font-serif text-2xl text-dm-dark">Control de Reels</h2>
-                    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                        <div className="md:hidden divide-y">
+                <div className={styles.section}>
+                    <h2 className={styles.sectionTitle}>Control de Reels</h2>
+                    <div className={styles.tableCard}>
+                        <div className={styles.tableMobile}>
                             {reels.map((reel) => (
                                 <div key={reel.id} className="p-3 space-y-2">
                                     <div className="flex items-center justify-between">
@@ -1782,21 +1798,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 </div>
                             ))}
                         </div>
-                        <div className="hidden md:block">
-                            <table className="w-full text-left">
-                                <thead className="bg-gray-50 border-b">
+                        <div className={styles.tableDesktop}>
+                            <table className={styles.table}>
+                                <thead className={styles.tableHead}>
                                     <tr>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Tienda</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Plataforma</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Estado</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500">Vistas</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 text-right">Acciones</th>
+                                        <th className={styles.tableHeadCell}>Tienda</th>
+                                        <th className={styles.tableHeadCell}>Plataforma</th>
+                                        <th className={styles.tableHeadCell}>Estado</th>
+                                        <th className={styles.tableHeadCell}>Vistas</th>
+                                        <th className={`${styles.tableHeadCell} text-right`}>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y">
+                                <tbody className={styles.tableBody}>
                                     {reels.map(reel => (
                                         <tr key={reel.id}>
-                                            <td className="px-6 py-4">
+                                            <td className={styles.tableCell}>
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden"><img src={reel.shopLogo} alt={reel.shopName} loading="lazy" decoding="async" className="w-full h-full object-cover"/></div>
                                                     <div>
@@ -1805,8 +1821,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-xs">{reel.platform}</td>
-                                            <td className="px-6 py-4">
+                                            <td className={`${styles.tableCell} text-xs`}>{reel.platform}</td>
+                                            <td className={styles.tableCell}>
                                                 <span className={`text-[10px] px-2 py-1 rounded font-bold ${
                                                     reel.status === 'ACTIVE' ? 'bg-green-50 text-green-700' :
                                                     reel.status === 'EXPIRED' ? 'bg-gray-100 text-gray-500' :
@@ -1816,8 +1832,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 </span>
                                                 {reel.origin === 'EXTRA' && <span className="ml-2 text-[10px] bg-yellow-50 text-yellow-600 px-1 rounded border border-yellow-200">EXTRA</span>}
                                             </td>
-                                            <td className="px-6 py-4 text-xs">{reel.views || 0}</td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className={`${styles.tableCell} text-xs`}>{reel.views || 0}</td>
+                                            <td className={`${styles.tableCell} text-right`}>
                                                 <button 
                                                     onClick={() => toggleReelHide(reel)}
                                                     className={`text-xs border px-2 py-1 rounded ${reel.status === 'HIDDEN' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}
@@ -1835,9 +1851,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
 
             {activeTab === 'ADMIN' && (
-                <div className="space-y-6 animate-in fade-in">
-                    <h2 className="font-serif text-2xl text-dm-dark">Administrativo</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className={styles.section}>
+                    <h2 className={styles.sectionTitle}>Administrativo</h2>
+                    <div className={styles.adminGrid}>
                         <div className="bg-white rounded-xl shadow-sm border p-6 space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="font-bold text-dm-dark">Solicitudes de Compra</h3>
@@ -2149,114 +2165,114 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Modal: Crear Nueva Tienda (Expanded to include full business requirements) */}
       {isCreateModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[92vh]">
+          <div className={styles.createModalBackdrop}>
+              <div className={styles.createModalCard}>
                   
                   {/* Modal Header */}
-                  <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-dm-crimson rounded-lg text-white">
+                  <div className={styles.createModalHeader}>
+                      <div className={styles.createModalHeaderLeft}>
+                        <div className={styles.createModalHeaderIcon}>
                             <Plus size={24} />
                         </div>
                         <div>
-                            <h2 className="font-serif text-2xl text-dm-dark font-bold leading-tight">Alta de Nueva Tienda</h2>
-                            <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Registro Administrativo</p>
-                            <p className="text-[10px] text-gray-400 mt-1">Estado inicial: PENDING_VERIFICATION</p>
+                            <h2 className={styles.createModalHeaderTitle}>Alta de Nueva Tienda</h2>
+                            <p className={styles.createModalHeaderSubtitle}>Registro Administrativo</p>
+                            <p className={styles.createModalHeaderMeta}>Estado inicial: PENDING_VERIFICATION</p>
                         </div>
                       </div>
-                      <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:text-dm-dark p-2 rounded-full hover:bg-white shadow-sm transition-all">
+                      <button onClick={() => setIsCreateModalOpen(false)} className={styles.createModalClose}>
                           <X size={24} />
                       </button>
                   </div>
 
                   {/* Modal Body / Form */}
-                  <form onSubmit={handleCreateShop} className="p-8 space-y-8 overflow-y-auto no-scrollbar">
+                  <form onSubmit={handleCreateShop} className={styles.createModalForm}>
                       
                       {/* Section 1: Identidad & Legal */}
-                      <section className="space-y-4">
-                          <h3 className="flex items-center gap-2 text-xs font-bold text-dm-dark uppercase tracking-[0.2em] border-b pb-2 border-gray-100">
+                      <section className={styles.createModalSection}>
+                          <h3 className={styles.createModalSectionTitle}>
                               <Store size={16} className="text-dm-crimson" /> 1. Identidad & Legal
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className={styles.createModalGridTwo}>
                               <div className="md:col-span-2">
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nombre de Fantasía (Público) *</label>
+                                  <label className={styles.createModalLabel}>Nombre de Fantasía (Público) *</label>
                                   <input 
                                       type="text" required value={formData.name}
                                       onChange={(e) => setFormData({...formData, name: e.target.value})}
                                       placeholder="Ej: Las Marianas"
-                                      className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-dm-crimson/5 focus:border-dm-crimson outline-none transition-all"
+                                      className={styles.createModalInput}
                                   />
                               </div>
                               <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Razón Social *</label>
+                                  <label className={styles.createModalLabel}>Razón Social *</label>
                                   <input 
                                       type="text" required value={formData.razonSocial}
                                       onChange={(e) => setFormData({...formData, razonSocial: e.target.value})}
                                       placeholder="Nombre legal completo"
-                                      className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-dm-crimson/5 focus:border-dm-crimson outline-none transition-all"
+                                      className={styles.createModalInput}
                                   />
                               </div>
                               <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">CUIT *</label>
+                                  <label className={styles.createModalLabel}>CUIT *</label>
                                   <input 
                                       type="text" required value={formData.cuit}
                                       onChange={(e) => setFormData({...formData, cuit: e.target.value})}
                                       placeholder="30-XXXXXXXX-X"
-                                      className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-dm-crimson/5 focus:border-dm-crimson outline-none transition-all"
+                                      className={styles.createModalInput}
                                   />
                               </div>
                           </div>
                       </section>
 
                       {/* Section 2: Dirección Física */}
-                      <section className="space-y-4">
-                          <h3 className="flex items-center gap-2 text-xs font-bold text-dm-dark uppercase tracking-[0.2em] border-b pb-2 border-gray-100">
+                      <section className={styles.createModalSection}>
+                          <h3 className={styles.createModalSectionTitle}>
                               <MapPin size={16} className="text-dm-crimson" /> 2. Dirección Física
                           </h3>
                           <div className="space-y-4">
                                <div className="relative">
-                                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Buscador Google Maps (Simulado)</label>
+                                    <label className={styles.createModalLabel}>Buscador Google Maps (Simulado)</label>
                                     <AddressAutocomplete onSelect={handleAddressSelect} />
                                </div>
-                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                               <div className={styles.createModalGridThree}>
                                     <div className="md:col-span-2">
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Calle</label>
+                                        <label className={styles.createModalLabel}>Calle</label>
                                         <input 
                                             type="text" value={formData.street}
                                             onChange={(e) => setFormData({...formData, street: e.target.value})}
-                                            className="w-full p-3 border border-gray-200 rounded-xl text-sm bg-gray-50"
+                                            className={`${styles.createModalInput} bg-gray-50`}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Número</label>
+                                        <label className={styles.createModalLabel}>Número</label>
                                         <input 
                                             type="text" value={formData.number}
                                             onChange={(e) => setFormData({...formData, number: e.target.value})}
-                                            className="w-full p-3 border border-gray-200 rounded-xl text-sm bg-gray-50"
+                                            className={`${styles.createModalInput} bg-gray-50`}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Localidad / Barrio</label>
+                                        <label className={styles.createModalLabel}>Localidad / Barrio</label>
                                         <input 
                                             type="text" value={formData.city}
                                             onChange={(e) => setFormData({...formData, city: e.target.value})}
-                                            className="w-full p-3 border border-gray-200 rounded-xl text-sm bg-gray-50"
+                                            className={`${styles.createModalInput} bg-gray-50`}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Provincia</label>
+                                        <label className={styles.createModalLabel}>Provincia</label>
                                         <input 
                                             type="text" value={formData.province}
                                             onChange={(e) => setFormData({...formData, province: e.target.value})}
-                                            className="w-full p-3 border border-gray-200 rounded-xl text-sm bg-gray-50"
+                                            className={`${styles.createModalInput} bg-gray-50`}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">CP</label>
+                                        <label className={styles.createModalLabel}>CP</label>
                                         <input 
                                             type="text" value={formData.zip}
                                             onChange={(e) => setFormData({...formData, zip: e.target.value})}
-                                            className="w-full p-3 border border-gray-200 rounded-xl text-sm bg-gray-50"
+                                            className={`${styles.createModalInput} bg-gray-50`}
                                         />
                                     </div>
                                </div>
@@ -2264,24 +2280,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </section>
 
                       {/* Section 3: Condiciones de Venta */}
-                      <section className="space-y-4">
-                          <h3 className="flex items-center gap-2 text-xs font-bold text-dm-dark uppercase tracking-[0.2em] border-b pb-2 border-gray-100">
+                      <section className={styles.createModalSection}>
+                          <h3 className={styles.createModalSectionTitle}>
                               <CreditCard size={16} className="text-dm-crimson" /> 3. Condiciones de Venta
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className={styles.createModalGridTwo}>
                               <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Monto Mínimo de Compra ($)</label>
+                                  <label className={styles.createModalLabel}>Monto Mínimo de Compra ($)</label>
                                   <div className="relative">
                                       <span className="absolute left-3 top-3 text-gray-400 font-bold">$</span>
                                       <input 
                                           type="number" value={formData.minimumPurchase}
                                           onChange={(e) => setFormData({...formData, minimumPurchase: parseInt(e.target.value) || 0})}
-                                          className="w-full pl-8 p-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-4 focus:ring-dm-crimson/5 transition-all"
+                                          className={`${styles.createModalInput} pl-8`}
                                       />
                                   </div>
                               </div>
                               <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-2">Formas de Pago Aceptadas</label>
+                                  <label className={styles.createModalLabel}>Formas de Pago Aceptadas</label>
                                   <div className="grid grid-cols-2 gap-2">
                                       {PAYMENT_OPTIONS.map(method => (
                                           <label key={method} className="flex items-center gap-2 text-xs cursor-pointer group">
@@ -2300,37 +2316,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </section>
 
                       {/* Section 4: Contacto Administrativo & Cuenta */}
-                      <section className="space-y-4">
-                          <h3 className="flex items-center gap-2 text-xs font-bold text-dm-dark uppercase tracking-[0.2em] border-b pb-2 border-gray-100">
+                      <section className={styles.createModalSection}>
+                          <h3 className={styles.createModalSectionTitle}>
                               <User size={16} className="text-dm-crimson" /> 4. Contacto & Cuenta
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className={styles.createModalGridTwo}>
                               <div className="md:col-span-2">
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Email administrativo (inicio de sesión) *</label>
+                                  <label className={styles.createModalLabel}>Email administrativo (inicio de sesión) *</label>
                                   <input 
                                       type="email" required value={formData.email}
                                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                                       placeholder="admin@tienda.com"
-                                      className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-4 focus:ring-dm-crimson/5 transition-all"
+                                      className={styles.createModalInput}
                                   />
                               </div>
                               <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Contraseña Inicial *</label>
+                                  <label className={styles.createModalLabel}>Contraseña Inicial *</label>
                                   <div className="relative">
                                       <Lock size={14} className="absolute left-3 top-3.5 text-gray-300" />
                                       <input 
                                           type="password" required value={formData.password}
                                           onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                          className="w-full pl-10 p-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-4 focus:ring-dm-crimson/5 transition-all"
+                                          className={`${styles.createModalInput} pl-10`}
                                       />
                                   </div>
                               </div>
                               <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Plan de Suscripción</label>
+                                  <label className={styles.createModalLabel}>Plan de Suscripción</label>
                                   <select 
                                       value={formData.plan}
                                       onChange={(e) => setFormData({...formData, plan: e.target.value as any})}
-                                      className="w-full p-3 border border-gray-200 rounded-xl text-sm bg-gray-50 outline-none focus:ring-4 focus:ring-dm-crimson/5 transition-all font-bold text-dm-dark"
+                                      className={`${styles.createModalSelect} font-bold text-dm-dark bg-gray-50`}
                                   >
                                       <option value="BASIC">ESTÁNDAR (BASIC)</option>
                                       <option value="PREMIUM">ALTA VISIBILIDAD (PREMIUM)</option>
@@ -2341,39 +2357,55 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </section>
 
                       {/* Section 5: Configuración Técnica (Oculta/Dashboard) */}
-                      <section className="space-y-4 pt-4 border-t border-gray-100">
-                          <h3 className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">
+                      <section className={styles.createModalDivider}>
+                          <h3 className={styles.createModalDividerTitle}>
                               Configuración de Cuotas Iniciales
                           </h3>
-                          <div className="grid grid-cols-3 gap-4">
+                          <div className={styles.createModalGridThree}>
                                <div>
-                                  <label className="block text-[9px] font-bold text-gray-400 uppercase mb-1">Logo URL</label>
-                                  <input type="text" value={formData.logoUrl} onChange={(e) => setFormData({...formData, logoUrl: e.target.value})} className="w-full p-2 border border-gray-100 rounded-lg text-[10px]" placeholder="https://..." />
+                                  <label className={styles.createModalTinyLabel}>Logo URL</label>
+                                  <input
+                                    type="text"
+                                    value={formData.logoUrl}
+                                    onChange={(e) => setFormData({...formData, logoUrl: e.target.value})}
+                                    className={styles.createModalTinyInput}
+                                    placeholder="https://..."
+                                  />
                                </div>
                                <div>
-                                  <label className="block text-[9px] font-bold text-gray-400 uppercase mb-1">Cupos Vivos</label>
-                                  <input type="number" value={formData.streamQuota} onChange={(e) => setFormData({...formData, streamQuota: parseInt(e.target.value) || 0})} className="w-full p-2 border border-gray-100 rounded-lg text-[10px]" />
+                                  <label className={styles.createModalTinyLabel}>Cupos Vivos</label>
+                                  <input
+                                    type="number"
+                                    value={formData.streamQuota}
+                                    onChange={(e) => setFormData({...formData, streamQuota: parseInt(e.target.value) || 0})}
+                                    className={styles.createModalTinyInput}
+                                  />
                                </div>
                                <div>
-                                  <label className="block text-[9px] font-bold text-gray-400 uppercase mb-1">Cupos Reels</label>
-                                  <input type="number" value={formData.reelQuota} onChange={(e) => setFormData({...formData, reelQuota: parseInt(e.target.value) || 0})} className="w-full p-2 border border-gray-100 rounded-lg text-[10px]" />
+                                  <label className={styles.createModalTinyLabel}>Cupos Reels</label>
+                                  <input
+                                    type="number"
+                                    value={formData.reelQuota}
+                                    onChange={(e) => setFormData({...formData, reelQuota: parseInt(e.target.value) || 0})}
+                                    className={styles.createModalTinyInput}
+                                  />
                                </div>
                           </div>
                       </section>
 
                       {/* Form Actions */}
-                      <div className="pt-4 flex gap-4">
-                          <Button 
-                              type="button" 
-                              variant="outline" 
-                              className="flex-1 h-14 rounded-xl border-gray-200 text-gray-500 hover:bg-gray-50"
-                              onClick={() => setIsCreateModalOpen(false)}
+                      <div className={styles.createModalFooter}>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={styles.createModalCancel}
+                            onClick={() => setIsCreateModalOpen(false)}
                           >
                               Cancelar
                           </Button>
                           <Button 
                               type="submit" 
-                              className="flex-[2] h-14 bg-dm-crimson hover:bg-red-700 text-white border-none rounded-xl shadow-xl shadow-dm-crimson/20 text-lg"
+                              className={styles.createModalSubmit}
                           >
                               <Save size={20} className="mr-2" /> Dar de Alta Tienda
                           </Button>
@@ -2384,198 +2416,198 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       )}
 
       {editShop && (
-          <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto p-6 relative">
-                  <button onClick={() => setEditShop(null)} className="absolute top-3 right-3 text-gray-400 hover:text-dm-dark">
+          <div className={styles.editModalBackdrop}>
+              <div className={styles.editModalCard}>
+                  <button onClick={() => setEditShop(null)} className={styles.editModalClose}>
                       <X size={18} />
                   </button>
-                  <div className="mb-4">
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">Editar tienda</p>
-                      <h2 className="font-serif text-xl text-dm-dark font-bold">Datos y redes</h2>
+                  <div className={styles.editModalHeader}>
+                      <p className={styles.editModalKicker}>Editar tienda</p>
+                      <h2 className={styles.editModalTitle}>Datos y redes</h2>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className={styles.editModalGridTwo}>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nombre</label>
+                          <label className={styles.editModalLabel}>Nombre</label>
                           <input
                               type="text"
                               value={editForm.name}
                               onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Razón social</label>
+                          <label className={styles.editModalLabel}>Razón social</label>
                           <input
                               type="text"
                               value={editForm.razonSocial}
                               onChange={(e) => setEditForm({ ...editForm, razonSocial: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Email</label>
+                          <label className={styles.editModalLabel}>Email</label>
                           <input
                               type="email"
                               value={editForm.email}
                               onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">CUIT</label>
+                          <label className={styles.editModalLabel}>CUIT</label>
                           <input
                               type="text"
                               value={editForm.cuit}
                               onChange={(e) => setEditForm({ ...editForm, cuit: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                           />
                       </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                  <div className={styles.editModalGridTwoSpaced}>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Instagram</label>
+                          <label className={styles.editModalLabel}>Instagram</label>
                           <input
                               type="text"
                               value={editForm.instagram}
                               onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                               placeholder="usuario (sin @)"
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">TikTok</label>
+                          <label className={styles.editModalLabel}>TikTok</label>
                           <input
                               type="text"
                               value={editForm.tiktok}
                               onChange={(e) => setEditForm({ ...editForm, tiktok: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                               placeholder="usuario (sin @)"
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Facebook</label>
+                          <label className={styles.editModalLabel}>Facebook</label>
                           <input
                               type="text"
                               value={editForm.facebook}
                               onChange={(e) => setEditForm({ ...editForm, facebook: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                               placeholder="página"
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">YouTube</label>
+                          <label className={styles.editModalLabel}>YouTube</label>
                           <input
                               type="text"
                               value={editForm.youtube}
                               onChange={(e) => setEditForm({ ...editForm, youtube: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                               placeholder="canal"
                           />
                       </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                  <div className={styles.editModalGridTwoSpaced}>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">WhatsApp principal</label>
+                          <label className={styles.editModalLabel}>WhatsApp principal</label>
                           <input
                               type="text"
                               value={editForm.whatsapp}
                               onChange={(e) => setEditForm({ ...editForm, whatsapp: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                               placeholder="+54..."
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Sitio web</label>
+                          <label className={styles.editModalLabel}>Sitio web</label>
                           <input
                               type="text"
                               value={editForm.website}
                               onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                               placeholder="https://..."
                           />
                       </div>
-                      <div className="md:col-span-2">
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Logo URL</label>
+                      <div className={styles.editModalGridSingle}>
+                          <label className={styles.editModalLabel}>Logo URL</label>
                           <input
                               type="text"
                               value={editForm.logoUrl}
                               onChange={(e) => setEditForm({ ...editForm, logoUrl: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                               placeholder="https://..."
                           />
                       </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                  <div className={styles.editModalGridTwoSpaced}>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Calle</label>
+                          <label className={styles.editModalLabel}>Calle</label>
                           <input
                               type="text"
                               value={editForm.street}
                               onChange={(e) => setEditForm({ ...editForm, street: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Número</label>
+                          <label className={styles.editModalLabel}>Número</label>
                           <input
                               type="text"
                               value={editForm.number}
                               onChange={(e) => setEditForm({ ...editForm, number: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Ciudad</label>
+                          <label className={styles.editModalLabel}>Ciudad</label>
                           <input
                               type="text"
                               value={editForm.city}
                               onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Provincia</label>
+                          <label className={styles.editModalLabel}>Provincia</label>
                           <input
                               type="text"
                               value={editForm.province}
                               onChange={(e) => setEditForm({ ...editForm, province: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">CP</label>
+                          <label className={styles.editModalLabel}>CP</label>
                           <input
                               type="text"
                               value={editForm.zip}
                               onChange={(e) => setEditForm({ ...editForm, zip: e.target.value })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                           />
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Mínimo de compra</label>
+                          <label className={styles.editModalLabel}>Mínimo de compra</label>
                           <input
                               type="number"
                               value={editForm.minimumPurchase}
                               onChange={(e) => setEditForm({ ...editForm, minimumPurchase: parseInt(e.target.value) || 0 })}
-                              className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50"
+                              className={styles.editModalInput}
                           />
                       </div>
                   </div>
 
-                  <div className="flex gap-3 mt-5">
+                  <div className={styles.editModalActions}>
                       <Button
                           variant="outline"
-                          className="flex-1 h-11 rounded-xl border-gray-200 text-gray-500 hover:bg-gray-50"
+                          className={styles.editModalCancel}
                           onClick={() => setEditShop(null)}
                       >
                           Cancelar
                       </Button>
                       <Button
-                          className="flex-[2] h-11 bg-dm-crimson hover:bg-red-700 text-white border-none rounded-xl shadow-xl shadow-dm-crimson/20"
+                          className={styles.editModalSubmit}
                           onClick={handleEditShopSave}
                       >
                           <Save size={18} className="mr-2" /> Guardar cambios
@@ -2586,26 +2618,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       )}
 
       {confirmDialog && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative">
+          <div className={styles.dialogBackdrop}>
+              <div className={styles.dialogCard}>
                   <button
                       onClick={() => setConfirmDialog(null)}
-                      className="absolute top-3 right-3 text-gray-400 hover:text-dm-dark"
+                      className={styles.dialogClose}
                   >
                       <X size={18} />
                   </button>
-                  <h3 className="font-serif text-xl text-dm-dark">{confirmDialog.title}</h3>
-                  <p className="mt-2 text-xs text-gray-500">{confirmDialog.message}</p>
-                  <div className="mt-6 flex gap-3">
+                  <h3 className={styles.dialogTitle}>{confirmDialog.title}</h3>
+                  <p className={styles.dialogMessage}>{confirmDialog.message}</p>
+                  <div className={styles.dialogActions}>
                       <Button
                           variant="outline"
-                          className="flex-1"
+                          className={styles.dialogButton}
                           onClick={() => setConfirmDialog(null)}
                       >
                           {confirmDialog.cancelLabel || 'Cancelar'}
                       </Button>
                       <Button
-                          className="flex-1 bg-dm-crimson hover:bg-red-700 text-white border-none"
+                          className={styles.dialogButtonPrimary}
                           onClick={async () => {
                               const action = confirmDialog.onConfirm;
                               setConfirmDialog(null);
@@ -2620,17 +2652,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       )}
 
       {inputDialog && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative">
+          <div className={styles.dialogBackdrop}>
+              <div className={styles.dialogCard}>
                   <button
                       onClick={() => setInputDialog(null)}
-                      className="absolute top-3 right-3 text-gray-400 hover:text-dm-dark"
+                      className={styles.dialogClose}
                   >
                       <X size={18} />
                   </button>
-                  <h3 className="font-serif text-xl text-dm-dark">{inputDialog.title}</h3>
-                  <p className="mt-2 text-xs text-gray-500">{inputDialog.message}</p>
-                  <div className="mt-4 space-y-3">
+                  <h3 className={styles.dialogTitle}>{inputDialog.title}</h3>
+                  <p className={styles.dialogMessage}>{inputDialog.message}</p>
+                  <div className={styles.dialogForm}>
                       {inputDialog.placeholders.map((placeholder, idx) => (
                           <input
                               key={placeholder + idx}
@@ -2641,20 +2673,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                   setInputValues(next);
                               }}
                               placeholder={placeholder}
-                              className="w-full rounded-lg border border-gray-200 p-2 text-sm"
+                              className={styles.dialogInput}
                           />
                       ))}
                   </div>
-                  <div className="mt-6 flex gap-3">
+                  <div className={styles.dialogActions}>
                       <Button
                           variant="outline"
-                          className="flex-1"
+                          className={styles.dialogButton}
                           onClick={() => setInputDialog(null)}
                       >
                           {inputDialog.cancelLabel || 'Cancelar'}
                       </Button>
                       <Button
-                          className="flex-1 bg-dm-crimson hover:bg-red-700 text-white border-none"
+                          className={styles.dialogButtonPrimary}
                           onClick={async () => {
                               const action = inputDialog.onConfirm;
                               const values = inputValues;

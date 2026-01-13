@@ -1,0 +1,735 @@
+.root {
+  @apply min-h-screen bg-gray-50 flex flex-col md:flex-row;
+}
+
+.sidebar {
+  @apply hidden md:flex w-64 bg-white border-r border-gray-200 flex-shrink-0 z-10 flex-col;
+}
+
+.sidebarHeader {
+  @apply p-6 border-b border-gray-100 text-center;
+}
+
+.sidebarLogoWrap {
+  @apply mx-auto mb-3 flex justify-center;
+}
+
+.sidebarTitle {
+  @apply font-serif text-lg font-bold text-dm-dark leading-tight;
+}
+
+.sidebarPlan {
+  @apply text-xs text-gray-500 mt-1 uppercase tracking-wider;
+}
+
+.sidebarStatus {
+  @apply mt-2 inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border;
+}
+
+.sidebarNav {
+  @apply p-4 space-y-1 flex-1;
+}
+
+.navButton {
+  @apply w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors;
+}
+
+.navButtonActive {
+  @apply bg-dm-crimson/5 text-dm-crimson;
+}
+
+.navButtonInactive {
+  @apply text-gray-500 hover:bg-gray-50;
+}
+
+.main {
+  @apply flex-1 p-5 md:p-8 overflow-y-auto;
+}
+
+.mobileHeader {
+  @apply md:hidden mb-6;
+}
+
+.mobileCard {
+  @apply bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-4 shadow-sm;
+}
+
+.mobileLabel {
+  @apply text-xs text-gray-400 uppercase tracking-widest;
+}
+
+.mobileTitle {
+  @apply font-serif text-xl text-dm-dark;
+}
+
+.mobilePlan {
+  @apply text-[11px] text-gray-500 uppercase tracking-wider;
+}
+
+.mobileStatus {
+  @apply text-[10px] font-bold uppercase px-2 py-1 rounded-full border;
+}
+
+.mobileActions {
+  @apply mt-4 grid grid-cols-2 gap-3;
+}
+
+.mobileActionButton {
+  @apply rounded-full border border-gray-200 bg-white py-2 text-xs font-bold text-gray-600;
+}
+
+.summarySection {
+  @apply max-w-5xl space-y-6 animate-in fade-in;
+}
+
+.summaryHeader {
+  @apply flex flex-col gap-1;
+}
+
+.summaryTitle {
+  @apply font-serif text-3xl text-dm-dark;
+}
+
+.summarySubtitle {
+  @apply text-gray-500 text-sm mt-1;
+}
+
+.statusPanel {
+  @apply bg-white p-5 rounded-xl border border-gray-100 shadow-sm;
+}
+
+.statusRow {
+  @apply flex flex-col gap-3 md:flex-row md:items-center md:justify-between;
+}
+
+.statusLabel {
+  @apply text-xs text-gray-400 uppercase tracking-widest;
+}
+
+.statusMessage {
+  @apply mt-2 text-xs text-gray-500 max-w-xl;
+}
+
+.statusTags {
+  @apply mt-2 flex flex-wrap items-center gap-2;
+}
+
+.statusTag {
+  @apply text-[11px] font-bold uppercase px-2 py-1 rounded-full border;
+}
+
+.statusConfirmed {
+  @apply text-[10px] font-bold uppercase text-gray-400;
+}
+
+.statusActions {
+  @apply flex flex-wrap gap-2;
+}
+
+.penaltyAlert {
+  @apply bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm flex items-start gap-4;
+}
+
+.penaltyTitle {
+  @apply font-bold text-red-800;
+}
+
+.penaltyText {
+  @apply text-sm text-red-700 mt-1;
+}
+
+.penaltyReason {
+  @apply mt-2 text-xs font-mono bg-white/50 p-2 rounded;
+}
+
+.cardsGrid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+
+.quotaCard {
+  @apply bg-white p-6 rounded-xl border border-gray-100 shadow-sm md:col-span-2 relative overflow-hidden;
+}
+
+.quotaHeader {
+  @apply flex justify-between items-start mb-6;
+}
+
+.quotaTitle {
+  @apply font-bold text-dm-dark text-lg;
+}
+
+.quotaSubtitle {
+  @apply text-xs text-gray-500;
+}
+
+.quotaCircle {
+  @apply relative w-24 h-24 rounded-full border-8 border-gray-100 flex items-center justify-center;
+}
+
+.quotaCircleValue {
+  @apply text-2xl font-bold;
+}
+
+.quotaCircleLabel {
+  @apply block text-[10px] text-gray-400 uppercase;
+}
+
+.quotaBody {
+  @apply flex items-center gap-8;
+}
+
+.quotaDetails {
+  @apply space-y-3 flex-1;
+}
+
+.quotaLabel {
+  @apply text-gray-500;
+}
+
+.quotaExtraLabel {
+  @apply text-gray-500 flex items-center gap-1;
+}
+
+.quotaValue {
+  @apply font-bold;
+}
+
+.quotaValuePositive {
+  @apply font-bold text-green-600;
+}
+
+.quotaValueNegative {
+  @apply font-bold text-dm-crimson;
+}
+
+.quotaWarningTitle {
+  @apply font-bold;
+}
+
+.quotaWarningText {
+  @apply mt-1;
+}
+
+.quotaBuyButton {
+  @apply bg-green-600 hover:bg-green-700 border-none text-white shadow-green-200;
+}
+
+.quotaRow {
+  @apply flex justify-between items-center text-sm border-b border-gray-50 pb-2;
+}
+
+.quotaRowLast {
+  @apply flex justify-between items-center text-sm;
+}
+
+.quotaWarning {
+  @apply mt-3 rounded-lg border border-red-100 bg-red-50 p-3 text-xs text-red-700;
+}
+
+.planCard {
+  @apply bg-gradient-to-b from-white to-gray-50 p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col;
+}
+
+.planHeader {
+  @apply mb-4;
+}
+
+.planBadge {
+  @apply text-sm font-bold px-3 py-1 rounded-full uppercase tracking-widest;
+}
+
+.planHint {
+  @apply text-xs text-gray-500;
+}
+
+.planHintTitle {
+  @apply mb-2;
+}
+
+.planHintUpgrade {
+  @apply font-bold flex items-center justify-center gap-1;
+}
+
+.planTitle {
+  @apply font-bold text-dm-dark text-lg flex items-center gap-2;
+}
+
+.planSubtitle {
+  @apply text-xs text-gray-500;
+}
+
+.reelsSection {
+  @apply max-w-4xl space-y-6 animate-in fade-in;
+}
+
+.reelsHeader {
+  @apply flex justify-between items-end;
+}
+
+.reelsTitle {
+  @apply font-serif text-3xl text-dm-dark;
+}
+
+.reelsSubtitle {
+  @apply text-gray-500 text-sm mt-1;
+}
+
+.reelsStats {
+  @apply text-right;
+}
+
+.reelsStatLine {
+  @apply text-xs text-gray-500;
+}
+
+.reelsStatValue {
+  @apply font-bold;
+}
+
+.reelsStatValuePositive {
+  @apply font-bold text-green-600;
+}
+
+.reelsBuyLink {
+  @apply text-[10px] font-bold mt-1 underline;
+}
+
+.reelsBuyLinkDisabled {
+  @apply text-gray-300;
+}
+
+.reelsBuyLinkActive {
+  @apply text-dm-crimson;
+}
+
+.reelsWarning {
+  @apply text-[10px] text-red-500 mt-2;
+}
+
+.reelsGrid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+.reelsPanel {
+  @apply bg-white p-6 rounded-xl border border-gray-100 shadow-sm;
+}
+
+.reelsPanelTitle {
+  @apply font-bold text-dm-dark mb-4 border-b pb-2 flex items-center gap-2;
+}
+
+.reelsForm {
+  @apply space-y-4;
+}
+
+.reelsLabel {
+  @apply block text-xs font-bold text-gray-500 mb-1;
+}
+
+.reelsInput {
+  @apply w-full p-2 border rounded text-sm;
+}
+
+.reelsSelect {
+  @apply w-full p-2 border rounded text-sm bg-gray-50;
+}
+
+.reelsDisabledNote {
+  @apply text-xs text-red-500 text-center;
+}
+
+.reelsList {
+  @apply space-y-3;
+}
+
+.reelsEmpty {
+  @apply text-sm text-gray-400 text-center py-4;
+}
+
+.reelsItem {
+  @apply flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-100;
+}
+
+.reelsItemInfo {
+  @apply overflow-hidden;
+}
+
+.reelsItemTitle {
+  @apply text-xs font-bold truncate w-40;
+}
+
+.reelsItemMeta {
+  @apply text-[10px] text-gray-500;
+}
+
+.reelsItemBadge {
+  @apply text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded font-bold;
+}
+
+.reelsExpiredWrap {
+  @apply mt-6 pt-4 border-t border-gray-100 opacity-60;
+}
+
+.reelsExpiredTitle {
+  @apply text-xs font-bold text-gray-500 mb-2;
+}
+
+.reelsExpiredRow {
+  @apply flex justify-between text-[10px] text-gray-400 py-1;
+}
+
+.reelsExpiredLink {
+  @apply truncate w-40;
+}
+
+.socialsSection {
+  @apply max-w-3xl space-y-6 animate-in fade-in;
+}
+
+.socialsHeader {
+  @apply space-y-1;
+}
+
+.socialsTitle {
+  @apply font-serif text-3xl text-dm-dark;
+}
+
+.socialsSubtitle {
+  @apply text-gray-500 text-sm mt-1;
+}
+
+.socialsCard {
+  @apply bg-white p-8 rounded-xl border border-gray-100 shadow-sm;
+}
+
+.socialsForm {
+  @apply space-y-6;
+}
+
+.socialsGroup {
+  @apply space-y-4;
+}
+
+.socialsGroupTitle {
+  @apply font-bold text-dm-dark flex items-center gap-2 border-b pb-2;
+}
+
+.socialsRow {
+  @apply flex gap-2 items-center;
+}
+
+.socialsRowDisabled {
+  @apply opacity-50;
+}
+
+.socialsSelect {
+  @apply w-1/3 p-2 border rounded text-xs bg-gray-50;
+}
+
+.socialsInput {
+  @apply flex-1 p-2 border rounded text-sm;
+}
+
+.socialsGrid {
+  @apply grid grid-cols-1 gap-4;
+}
+
+.socialsItem {
+  @apply flex items-center gap-3;
+}
+
+.socialsActionRow {
+  @apply flex justify-end pt-4;
+}
+
+.profileSection {
+  @apply max-w-3xl space-y-8 animate-in fade-in;
+}
+
+.profileHeader {
+  @apply space-y-1;
+}
+
+.profileTitle {
+  @apply font-serif text-3xl text-dm-dark;
+}
+
+.profileSubtitle {
+  @apply text-gray-500 text-sm mt-1;
+}
+
+.profileCard {
+  @apply bg-white p-5 rounded-xl border border-gray-100 shadow-sm;
+}
+
+.profileLabel {
+  @apply text-xs text-gray-400 uppercase tracking-widest;
+}
+
+.profileSummary {
+  @apply mt-3 flex items-center gap-4;
+}
+
+.profileName {
+  @apply font-serif text-lg text-dm-dark;
+}
+
+.profileAddress {
+  @apply text-xs text-gray-500;
+}
+
+.profileMeta {
+  @apply text-[11px] text-gray-400;
+}
+
+.profileBadge {
+  @apply text-[10px] font-bold uppercase px-2 py-1 rounded-full border;
+}
+
+.profileTags {
+  @apply mt-3 flex flex-wrap gap-2 text-[11px] text-gray-500;
+}
+
+.profileTag {
+  @apply rounded-full border border-gray-200 px-2 py-1;
+}
+
+.profileLinks {
+  @apply mt-4 flex flex-wrap gap-2;
+}
+
+.profileMapsLink {
+  @apply inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-[11px] font-bold text-gray-600 hover:bg-gray-50;
+}
+
+.profileForm {
+  @apply space-y-8;
+}
+
+.profileFormSection {
+  @apply bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4;
+}
+
+.profileFormTitle {
+  @apply font-bold text-dm-dark flex items-center gap-2 border-b pb-2;
+}
+
+.profileGridTwo {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.profileGridThree {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
+
+.profileGridPayments {
+  @apply grid grid-cols-2 gap-2;
+}
+
+.profileCheckboxItem {
+  @apply flex items-center space-x-2 text-sm cursor-pointer;
+}
+
+.profileInputLabel {
+  @apply text-xs font-bold text-gray-500;
+}
+
+.profileInput {
+  @apply w-full mt-1 p-2 border border-gray-200 rounded text-sm;
+}
+
+.profileInputMuted {
+  @apply w-full mt-1 p-2 border border-gray-200 rounded text-sm bg-gray-50;
+}
+
+.profileActions {
+  @apply flex justify-end pt-4;
+}
+
+.modalBackdrop {
+  @apply fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4;
+}
+
+.modalCard {
+  @apply bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 relative animate-in zoom-in-95;
+}
+
+.modalCardLarge {
+  @apply max-w-md;
+}
+
+.modalClose {
+  @apply absolute top-4 right-4 text-gray-400 hover:text-dm-dark;
+}
+
+.modalHeader {
+  @apply text-center mb-6;
+}
+
+.modalIcon {
+  @apply w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4;
+}
+
+.modalTitle {
+  @apply font-serif text-2xl text-dm-dark;
+}
+
+.modalSubtitle {
+  @apply text-sm text-gray-500 mt-2;
+}
+
+.modalRow {
+  @apply bg-gray-50 p-4 rounded-lg border border-gray-100 flex justify-between items-center;
+}
+
+.modalNote {
+  @apply text-[10px] text-center text-gray-400;
+}
+
+.modalInfo {
+  @apply bg-blue-50 text-blue-700 text-xs p-3 rounded mb-4 flex items-center gap-2;
+}
+
+.modalForm {
+  @apply space-y-4;
+}
+
+.modalLabel {
+  @apply block text-xs font-bold text-gray-500 mb-1;
+}
+
+.modalInput {
+  @apply w-full p-2 border rounded-md text-sm;
+}
+
+.modalSelect {
+  @apply w-full p-2 border rounded-md text-sm bg-white;
+}
+
+.modalActions {
+  @apply mt-6 flex gap-3;
+}
+
+.streamsSection {
+  @apply max-w-6xl space-y-6 animate-in fade-in;
+}
+
+.streamsHeader {
+  @apply flex justify-between items-end;
+}
+
+.streamsTitle {
+  @apply font-serif text-3xl text-dm-dark;
+}
+
+.streamsSubtitle {
+  @apply text-gray-500 text-sm mt-1;
+}
+
+.streamsHeaderRight {
+  @apply flex flex-col items-end gap-2;
+}
+
+.streamsQuotaNote {
+  @apply text-[10px] text-gray-400;
+}
+
+.streamsRules {
+  @apply rounded-xl border border-gray-100 bg-white p-4 text-xs text-gray-500;
+}
+
+.streamsRulesRow {
+  @apply flex flex-wrap items-center gap-2;
+}
+
+.streamsRulesLabel {
+  @apply font-bold text-dm-dark;
+}
+
+.streamsRulesWarning {
+  @apply font-bold text-yellow-600;
+}
+
+.streamsCard {
+  @apply bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden;
+}
+
+.streamsMobileList {
+  @apply md:hidden divide-y;
+}
+
+.streamsMobileItem {
+  @apply p-3 space-y-2;
+}
+
+.streamsMobileHeader {
+  @apply flex items-start justify-between;
+}
+
+.streamsMobileTitle {
+  @apply text-sm font-bold text-dm-dark;
+}
+
+.streamsMobileDate {
+  @apply text-[11px] text-gray-600;
+}
+
+.streamsMobileMeta {
+  @apply flex items-center justify-between text-[11px] text-gray-600;
+}
+
+.streamsMobileActions {
+  @apply flex flex-wrap gap-2 pt-2;
+}
+
+.streamsMobileEmpty {
+  @apply p-8 text-center text-gray-400 text-sm;
+}
+
+.streamsDesktopTable {
+  @apply hidden md:block;
+}
+
+.streamsTable {
+  @apply w-full text-left;
+}
+
+.streamsTableHead {
+  @apply bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 font-bold;
+}
+
+.streamsTableHeadCell {
+  @apply px-6 py-4;
+}
+
+.streamsTableBody {
+  @apply divide-y divide-gray-50;
+}
+
+.streamsTableRow {
+  @apply hover:bg-gray-50/50 transition-colors;
+}
+
+.streamsTableCell {
+  @apply px-6 py-4;
+}
+
+.streamsInfoTitle {
+  @apply font-bold text-dm-dark text-sm;
+}
+
+.streamsInfoDate {
+  @apply text-xs text-gray-500;
+}
+
+.streamsRatingRow {
+  @apply flex items-center gap-1;
+}
+
+.streamsActionsRow {
+  @apply flex justify-end items-center gap-2;
+}
+
+.streamsTableEmpty {
+  @apply p-8 text-center text-gray-400 text-sm;
+}

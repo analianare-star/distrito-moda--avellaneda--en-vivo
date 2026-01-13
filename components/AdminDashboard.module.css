@@ -1,0 +1,407 @@
+.root {
+  @apply min-h-screen bg-gray-50 flex flex-col h-screen overflow-hidden;
+}
+
+.header {
+  @apply bg-dm-dark text-white px-8 py-4 shadow-md z-10 shrink-0;
+}
+
+.headerInner {
+  @apply max-w-7xl mx-auto flex items-center justify-between;
+}
+
+.headerTitle {
+  @apply font-serif text-xl tracking-wide;
+}
+
+.headerBadge {
+  @apply text-xs bg-dm-crimson px-2 py-1 rounded;
+}
+
+.content {
+  @apply flex flex-1 max-w-7xl mx-auto w-full overflow-hidden;
+}
+
+.sidebar {
+  @apply w-64 bg-white border-r border-gray-200 hidden md:block shrink-0 h-full;
+}
+
+.sidebarNav {
+  @apply p-4 space-y-1;
+}
+
+.sidebarButton {
+  @apply w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors;
+}
+
+.sidebarButtonActive {
+  @apply bg-gray-100 text-dm-crimson;
+}
+
+.sidebarButtonInactive {
+  @apply text-dm-dark hover:bg-gray-50;
+}
+
+.main {
+  @apply flex-1 p-8 overflow-y-auto;
+}
+
+.mobileTabs {
+  @apply md:hidden mb-4;
+}
+
+.mobileTabList {
+  @apply flex gap-2 overflow-x-auto no-scrollbar;
+}
+
+.mobileTabButton {
+  @apply px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors;
+}
+
+.mobileTabActive {
+  @apply bg-dm-crimson text-white;
+}
+
+.mobileTabInactive {
+  @apply bg-gray-100 text-gray-500;
+}
+
+.dashboardSection {
+  @apply space-y-8 animate-in fade-in;
+}
+
+.dashboardTitle {
+  @apply font-serif text-2xl text-dm-dark;
+}
+
+.statsGrid {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+}
+
+.statsCard {
+  @apply bg-white p-4 md:p-6 rounded-xl border flex justify-between;
+}
+
+.statLabel {
+  @apply text-xs font-bold text-gray-400;
+}
+
+.statValue {
+  @apply text-3xl font-serif;
+}
+
+.pendingCard {
+  @apply bg-white p-4 md:p-5 rounded-xl border;
+}
+
+.pendingHeader {
+  @apply flex items-center justify-between;
+}
+
+.pendingCount {
+  @apply text-lg font-bold text-dm-dark;
+}
+
+.pendingList {
+  @apply mt-3 space-y-2;
+}
+
+.pendingItem {
+  @apply w-full rounded-lg border border-gray-100 px-3 py-2 text-left transition hover:bg-gray-50;
+}
+
+.pendingItemTitle {
+  @apply text-xs font-bold text-dm-dark;
+}
+
+.pendingItemMeta {
+  @apply text-[10px] text-gray-500;
+}
+
+.pendingEmpty {
+  @apply text-xs text-gray-400;
+}
+
+.sectionHeader {
+  @apply flex items-center justify-between;
+}
+
+.sectionLabel {
+  @apply text-xs font-bold tracking-widest text-gray-400;
+}
+
+.sectionSub {
+  @apply text-sm font-semibold text-dm-dark;
+}
+
+.inboxGrid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
+
+.section {
+  @apply space-y-6 animate-in fade-in;
+}
+
+.sectionTitle {
+  @apply font-serif text-2xl text-dm-dark;
+}
+
+.sectionFilters {
+  @apply flex flex-col md:flex-row gap-3;
+}
+
+.sectionInput {
+  @apply flex-1 p-3 border border-gray-200 rounded-lg text-sm;
+}
+
+.sectionSelect {
+  @apply p-3 border border-gray-200 rounded-lg text-sm bg-white;
+}
+
+.tableCard {
+  @apply bg-white rounded-xl shadow-sm border overflow-hidden;
+}
+
+.tableMobile {
+  @apply md:hidden divide-y;
+}
+
+.tableDesktop {
+  @apply hidden md:block;
+}
+
+.table {
+  @apply w-full text-left;
+}
+
+.tableHead {
+  @apply bg-gray-50 border-b;
+}
+
+.tableHeadCell {
+  @apply px-6 py-3 text-xs font-bold text-gray-500;
+}
+
+.tableBody {
+  @apply divide-y;
+}
+
+.tableCell {
+  @apply px-6 py-4;
+}
+
+.emptyText {
+  @apply px-6 py-6 text-center text-xs text-gray-400;
+}
+
+.shopsHeader {
+  @apply flex flex-col md:flex-row md:items-center md:justify-between gap-3;
+}
+
+.shopsActions {
+  @apply flex flex-wrap items-center gap-3;
+}
+
+.adminGrid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+.createModalBackdrop {
+  @apply fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-300;
+}
+
+.createModalCard {
+  @apply bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[92vh];
+}
+
+.createModalHeader {
+  @apply p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50;
+}
+
+.createModalHeaderLeft {
+  @apply flex items-center gap-3;
+}
+
+.createModalHeaderIcon {
+  @apply p-2 bg-dm-crimson rounded-lg text-white;
+}
+
+.createModalHeaderTitle {
+  @apply font-serif text-2xl text-dm-dark font-bold leading-tight;
+}
+
+.createModalHeaderSubtitle {
+  @apply text-xs text-gray-500 uppercase tracking-widest font-bold;
+}
+
+.createModalHeaderMeta {
+  @apply text-[10px] text-gray-400 mt-1;
+}
+
+.createModalClose {
+  @apply text-gray-400 hover:text-dm-dark p-2 rounded-full hover:bg-white shadow-sm transition-all;
+}
+
+.createModalForm {
+  @apply p-8 space-y-8 overflow-y-auto no-scrollbar;
+}
+
+.createModalSection {
+  @apply space-y-4;
+}
+
+.createModalSectionTitle {
+  @apply flex items-center gap-2 text-xs font-bold text-dm-dark uppercase tracking-[0.2em] border-b pb-2 border-gray-100;
+}
+
+.createModalGridTwo {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.createModalGridThree {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
+
+.createModalLabel {
+  @apply block text-[10px] font-bold text-gray-400 uppercase mb-1;
+}
+
+.createModalInput {
+  @apply w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-dm-crimson/5 focus:border-dm-crimson outline-none transition-all;
+}
+
+.createModalSelect {
+  @apply w-full p-3 border border-gray-200 rounded-xl text-sm bg-white focus:ring-4 focus:ring-dm-crimson/5 focus:border-dm-crimson outline-none transition-all;
+}
+
+.createModalTextArea {
+  @apply w-full p-3 border border-gray-200 rounded-xl text-sm resize-none focus:ring-4 focus:ring-dm-crimson/5 focus:border-dm-crimson outline-none transition-all;
+}
+
+.createModalHelper {
+  @apply text-[10px] text-gray-400;
+}
+
+.createModalFooter {
+  @apply flex justify-end gap-3 pt-2;
+}
+
+.createModalDivider {
+  @apply space-y-4 pt-4 border-t border-gray-100;
+}
+
+.createModalDividerTitle {
+  @apply flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-4;
+}
+
+.createModalTinyLabel {
+  @apply block text-[9px] font-bold text-gray-400 uppercase mb-1;
+}
+
+.createModalTinyInput {
+  @apply w-full p-2 border border-gray-100 rounded-lg text-[10px];
+}
+
+.createModalCancel {
+  @apply flex-1 h-14 rounded-xl border-gray-200 text-gray-500 hover:bg-gray-50;
+}
+
+.createModalSubmit {
+  @apply flex-[2] h-14 bg-dm-crimson hover:bg-red-700 text-white border-none rounded-xl shadow-xl shadow-dm-crimson/20 text-lg;
+}
+
+.editModalBackdrop {
+  @apply fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in;
+}
+
+.editModalCard {
+  @apply bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto p-6 relative;
+}
+
+.editModalClose {
+  @apply absolute top-3 right-3 text-gray-400 hover:text-dm-dark;
+}
+
+.editModalHeader {
+  @apply mb-4;
+}
+
+.editModalKicker {
+  @apply text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold;
+}
+
+.editModalTitle {
+  @apply font-serif text-xl text-dm-dark font-bold;
+}
+
+.editModalGridTwo {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-3;
+}
+
+.editModalGridTwoSpaced {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-3 mt-4;
+}
+
+.editModalLabel {
+  @apply block text-[10px] font-bold text-gray-400 uppercase mb-1;
+}
+
+.editModalInput {
+  @apply w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50;
+}
+
+.editModalGridSingle {
+  @apply md:col-span-2;
+}
+
+.editModalActions {
+  @apply flex gap-3 mt-5;
+}
+
+.editModalCancel {
+  @apply flex-1 h-11 rounded-xl border-gray-200 text-gray-500 hover:bg-gray-50;
+}
+
+.editModalSubmit {
+  @apply flex-[2] h-11 bg-dm-crimson hover:bg-red-700 text-white border-none rounded-xl shadow-xl shadow-dm-crimson/20;
+}
+
+.dialogBackdrop {
+  @apply fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in;
+}
+
+.dialogCard {
+  @apply bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative;
+}
+
+.dialogClose {
+  @apply absolute top-3 right-3 text-gray-400 hover:text-dm-dark;
+}
+
+.dialogTitle {
+  @apply font-serif text-xl text-dm-dark;
+}
+
+.dialogMessage {
+  @apply mt-2 text-xs text-gray-500;
+}
+
+.dialogActions {
+  @apply mt-6 flex gap-3;
+}
+
+.dialogButton {
+  @apply flex-1;
+}
+
+.dialogButtonPrimary {
+  @apply flex-1 bg-dm-crimson hover:bg-red-700 text-white border-none;
+}
+
+.dialogForm {
+  @apply mt-4 space-y-3;
+}
+
+.dialogInput {
+  @apply w-full rounded-lg border border-gray-200 p-2 text-sm;
+}

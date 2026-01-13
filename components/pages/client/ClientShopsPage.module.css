@@ -1,0 +1,39 @@
+.section {
+  @apply mx-auto max-w-3xl px-4 pt-4 md:pt-6;
+}
+
+.searchBar {
+  @apply flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 shadow-sm;
+}
+
+.searchIcon {
+  @apply text-gray-400;
+}
+
+.searchInput {
+  @apply w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400;
+}
+
+.clearButton {
+  @apply text-[11px] font-semibold text-gray-400 hover:text-dm-crimson;
+}
+
+.listWrap {
+  @apply mx-auto max-w-7xl px-4 py-10;
+}
+
+.listHeader {
+  @apply mb-6 flex items-center justify-between;
+}
+
+.listTitle {
+  @apply font-serif text-3xl text-dm-dark;
+}
+
+.listCount {
+  @apply text-sm font-sans text-gray-500;
+}
+
+.shopsGrid {
+  @apply grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4;
+}

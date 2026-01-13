@@ -1,6 +1,7 @@
 import React from "react";
 import { EmptyState } from "../../EmptyState";
 import { Shop, Stream } from "../../../types";
+import styles from "./ClientSavedPage.module.css";
 
 // ClientSavedPage muestra favoritos y recordatorios.
 // ClientSavedPage renders favorites and reminders.
@@ -32,35 +33,31 @@ export const ClientSavedPage: React.FC<ClientSavedPageProps> = ({
   onOpenCalendarInvite,
 }) => {
   return (
-    <section className="max-w-7xl mx-auto px-4 py-10" aria-label="Favoritos y recordatorios">
-      <div className="flex items-center justify-between mb-8">
+    <section className={styles.section} aria-label="Favoritos y recordatorios">
+      <div className={styles.header}>
         <div>
-          <h2 className="font-serif text-3xl text-dm-dark">
+          <h2 className={styles.title}>
             {savedTab === "FAVORITES" ? "Favoritos" : "Recordatorios"}
           </h2>
-          <p className="text-sm font-sans text-gray-500">
+          <p className={styles.subtitle}>
             {savedTab === "FAVORITES"
               ? `${filteredFavoriteShops.length} tiendas guardadas`
               : `${reminderStreams.length} recordatorios activos`}
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-full border border-gray-100 bg-white p-1 text-[11px] font-bold">
+        <div className={styles.toggleGroup}>
           <button
             onClick={() => onSetSavedTab("FAVORITES")}
-            className={`rounded-full px-3 py-1 ${
-              savedTab === "FAVORITES"
-                ? "bg-dm-crimson text-white"
-                : "text-gray-400"
+            className={`${styles.toggleButton} ${
+              savedTab === "FAVORITES" ? styles.toggleActive : styles.toggleInactive
             }`}
           >
             Favoritos
           </button>
           <button
             onClick={() => onSetSavedTab("REMINDERS")}
-            className={`rounded-full px-3 py-1 ${
-              savedTab === "REMINDERS"
-                ? "bg-dm-crimson text-white"
-                : "text-gray-400"
+            className={`${styles.toggleButton} ${
+              savedTab === "REMINDERS" ? styles.toggleActive : styles.toggleInactive
             }`}
           >
             Recordatorios
@@ -69,7 +66,7 @@ export const ClientSavedPage: React.FC<ClientSavedPageProps> = ({
       </div>
 
       {savedTab === "FAVORITES" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className={styles.gridFavorites}>
           {filteredFavoriteShops.map((shop) => renderShopCard(shop))}
           {filteredFavoriteShops.length === 0 && (
             <EmptyState
@@ -95,40 +92,40 @@ export const ClientSavedPage: React.FC<ClientSavedPageProps> = ({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={styles.gridReminders}>
           {reminderStreams.map((stream) => (
             <div
               key={stream.id}
-              className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm"
+              className={styles.reminderCard}
             >
-              <p className="text-xs text-gray-500">
+              <p className={styles.reminderDate}>
                 {new Date(stream.fullDateISO).toLocaleString("es-AR", {
                   dateStyle: "short",
                   timeStyle: "short",
                 })}
               </p>
-              <p className="mt-2 text-sm font-bold text-dm-dark">
+              <p className={styles.reminderTitle}>
                 {stream.title}
               </p>
-              <p className="text-[11px] text-gray-500">
+              <p className={styles.reminderShop}>
                 {stream.shop?.name || "Tienda"}
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className={styles.reminderActions}>
                 <button
                   onClick={() => onOpenShop(stream.shop)}
-                  className="rounded-full border border-gray-200 px-3 py-1 text-[11px] font-bold text-gray-500 hover:text-dm-dark"
+                  className={styles.actionButton}
                 >
                   Ver tienda
                 </button>
                 <button
                   onClick={() => onToggleReminder(stream.id)}
-                  className="rounded-full border border-gray-200 px-3 py-1 text-[11px] font-bold text-gray-500 hover:text-dm-dark"
+                  className={styles.actionButton}
                 >
                   Quitar
                 </button>
                 <button
                   onClick={() => onOpenCalendarInvite(stream)}
-                  className="rounded-full border border-gray-200 px-3 py-1 text-[11px] font-bold text-gray-500 hover:text-dm-dark"
+                  className={styles.actionButton}
                 >
                   Calendario
                 </button>

@@ -172,14 +172,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                               <Button 
                                 variant="primary" 
                                 size="lg" 
-                                className="bg-white text-dm-crimson hover:bg-gray-100 border-none font-bold shadow-lg shadow-white/10"
+                                className={styles.livePrimaryButton}
                                 onClick={() => window.open(activeStream.url, '_blank')}
                               >
                                   Entrar al Vivo
                               </Button>
                               <Button
                                 variant="outline"
-                                className="border-white text-white hover:bg-white/10"
+                                className={styles.liveSecondaryButton}
                                 onClick={() => onOpenShop(activeStream.shop)}
                               >
                                   Ver Perfil

@@ -19,6 +19,8 @@ import { AppFooterNav } from "./components/layout/AppFooterNav";
 import { AccountDrawer } from "./components/layout/AccountDrawer";
 import { AdminPreviewBanner } from "./components/layout/AdminPreviewBanner";
 import { AuthModal } from "./components/layout/AuthModal";
+import { ClientLayout } from "./components/layout/ClientLayout";
+import { AdminLayout } from "./components/layout/AdminLayout";
 import { ShopCard } from "./components/ShopCard";
 import { ResetView } from "./components/layout/ResetView";
 import { ClientView } from "./components/views/ClientView";
@@ -1800,112 +1802,136 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
-      <AppHeader
-        brandLogo={BRAND_LOGO}
-        bottomNavItems={bottomNavItems}
-        activeBottomNav={activeBottomNav}
-        isDesktopMenuOpen={isDesktopMenuOpen}
-        onToggleDesktopMenu={() => setIsDesktopMenuOpen((prev) => !prev)}
-        onCloseDesktopMenu={() => setIsDesktopMenuOpen(false)}
-        userName={user.isLoggedIn ? user.name || "Cliente" : "Invitado"}
-        isLoggedIn={user.isLoggedIn}
-        onLogout={handleToggleClientLogin}
-      />
-
-      <AuthModal
-        isOpen={
-          effectiveViewMode === "CLIENT" && !user.isLoggedIn && showLoginPrompt
-        }
-        loginStep={loginStep}
-        clientEmailMode={clientEmailMode}
-        loginEmail={loginEmail}
-        loginPassword={loginPassword}
-        loginError={loginError}
-        loginBusy={loginBusy}
-        resetBusy={resetBusy}
-        onClose={handleContinueAsGuest}
-        onContinueAsGuest={handleContinueAsGuest}
-        onOpenAudienceSelection={openAudienceSelection}
-        onEmailLogin={handleEmailLogin}
-        onEmailRegister={handleEmailRegister}
-        onGoogleLogin={handleGoogleLogin}
-        onPasswordReset={handlePasswordReset}
-        onSetLoginStep={setLoginStep}
-        onSetLoginMode={setLoginMode}
-        onSetLoginAudience={setLoginAudience}
-        onSetClientEmailMode={setClientEmailMode}
-        onSetLoginEmail={setLoginEmail}
-        onSetLoginPassword={setLoginPassword}
-        onSetLoginError={setLoginError}
-      />
-
-      <AppFooterNav items={bottomNavItems} activeId={activeBottomNav} />
-
-      {adminPreview && (
-        <AdminPreviewBanner
-          mode={adminPreview.mode === "MERCHANT" ? "MERCHANT" : "CLIENT"}
-          shopName={adminPreview.mode === "MERCHANT" ? previewShop?.name : undefined}
-          onExit={stopAdminPreview}
-        />
-      )}
-
-      <main
-        className={`${
-          adminPreview ? "pt-24" : "pt-16"
-        } pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12`}
-      >
-        <Routes>
-          <Route
-            path="/admin/*"
-            element={
-              canAccessAdminRoute ? (
-          <AdminView
-            streams={allStreams}
-            setStreams={setAllStreams}
-            shops={allShops}
-            setShops={setAllShops}
-            onRefreshData={refreshData}
-            activeTab={adminTab}
-            onTabChange={syncAdminTab}
-            onPreviewClient={startAdminPreviewClient}
-            onPreviewShop={startAdminPreviewShop}
-            onShopUpdate={handleShopUpdate}
-          />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/tienda/*"
-            element={
-              canAccessShopRoute ? (
-                <MerchantView
-                  currentShop={currentShop}
+      <Routes>
+        <Route
+          path="/admin/*"
+          element={
+            canAccessAdminRoute ? (
+              <AdminLayout
+                header={
+                  <AppHeader
+                    brandLogo={BRAND_LOGO}
+                    bottomNavItems={bottomNavItems}
+                    activeBottomNav={activeBottomNav}
+                    isDesktopMenuOpen={isDesktopMenuOpen}
+                    onToggleDesktopMenu={() =>
+                      setIsDesktopMenuOpen((prev) => !prev)
+                    }
+                    onCloseDesktopMenu={() => setIsDesktopMenuOpen(false)}
+                    userName={user.isLoggedIn ? user.name || "Admin" : "Admin"}
+                    isLoggedIn={user.isLoggedIn}
+                    onLogout={handleToggleClientLogin}
+                  />
+                }
+                footer={
+                  <AppFooterNav
+                    items={bottomNavItems}
+                    activeId={activeBottomNav}
+                  />
+                }
+              >
+                <AdminView
                   streams={allStreams}
-                  onStreamCreate={handleStreamCreate}
-                  onStreamUpdate={handleStreamUpdate}
-                  onStreamDelete={handleStreamDelete}
-                  onShopUpdate={handleShopUpdate}
-                  onExtendStream={handleExtendStream}
-                  onBuyQuota={handleBuyQuota}
-                  onReelChange={refreshData}
+                  setStreams={setAllStreams}
+                  shops={allShops}
+                  setShops={setAllShops}
                   onRefreshData={refreshData}
-                  activeTab={merchantTab}
-                  onTabChange={syncMerchantTab}
-                  notifications={notifications}
-                  onMarkNotificationRead={handleMarkNotificationRead}
-                  onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
-                  isPreview={Boolean(adminPreview)}
+                  activeTab={adminTab}
+                  onTabChange={syncAdminTab}
+                  onPreviewClient={startAdminPreviewClient}
+                  onPreviewShop={startAdminPreviewShop}
+                  onShopUpdate={handleShopUpdate}
                 />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/*"
-            element={
+              </AdminLayout>
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="/tienda/*"
+          element={
+            canAccessShopRoute ? (
+              <MerchantView
+                currentShop={currentShop}
+                streams={allStreams}
+                onStreamCreate={handleStreamCreate}
+                onStreamUpdate={handleStreamUpdate}
+                onStreamDelete={handleStreamDelete}
+                onShopUpdate={handleShopUpdate}
+                onExtendStream={handleExtendStream}
+                onBuyQuota={handleBuyQuota}
+                onReelChange={refreshData}
+                onRefreshData={refreshData}
+                activeTab={merchantTab}
+                onTabChange={syncMerchantTab}
+                notifications={notifications}
+                onMarkNotificationRead={handleMarkNotificationRead}
+                onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+                isPreview={Boolean(adminPreview)}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="/*"
+          element={
+            <ClientLayout
+              header={
+                <AppHeader
+                  brandLogo={BRAND_LOGO}
+                  bottomNavItems={bottomNavItems}
+                  activeBottomNav={activeBottomNav}
+                  isDesktopMenuOpen={isDesktopMenuOpen}
+                  onToggleDesktopMenu={() => setIsDesktopMenuOpen((prev) => !prev)}
+                  onCloseDesktopMenu={() => setIsDesktopMenuOpen(false)}
+                  userName={user.isLoggedIn ? user.name || "Cliente" : "Invitado"}
+                  isLoggedIn={user.isLoggedIn}
+                  onLogout={handleToggleClientLogin}
+                />
+              }
+              authModal={
+                <AuthModal
+                  isOpen={
+                    effectiveViewMode === "CLIENT" && !user.isLoggedIn && showLoginPrompt
+                  }
+                  loginStep={loginStep}
+                  clientEmailMode={clientEmailMode}
+                  loginEmail={loginEmail}
+                  loginPassword={loginPassword}
+                  loginError={loginError}
+                  loginBusy={loginBusy}
+                  resetBusy={resetBusy}
+                  onClose={handleContinueAsGuest}
+                  onContinueAsGuest={handleContinueAsGuest}
+                  onOpenAudienceSelection={openAudienceSelection}
+                  onEmailLogin={handleEmailLogin}
+                  onEmailRegister={handleEmailRegister}
+                  onGoogleLogin={handleGoogleLogin}
+                  onPasswordReset={handlePasswordReset}
+                  onSetLoginStep={setLoginStep}
+                  onSetLoginMode={setLoginMode}
+                  onSetLoginAudience={setLoginAudience}
+                  onSetClientEmailMode={setClientEmailMode}
+                  onSetLoginEmail={setLoginEmail}
+                  onSetLoginPassword={setLoginPassword}
+                  onSetLoginError={setLoginError}
+                />
+              }
+              footer={<AppFooterNav items={bottomNavItems} activeId={activeBottomNav} />}
+              previewBanner={
+                adminPreview ? (
+                  <AdminPreviewBanner
+                    mode={adminPreview.mode === "MERCHANT" ? "MERCHANT" : "CLIENT"}
+                    shopName={adminPreview.mode === "MERCHANT" ? previewShop?.name : undefined}
+                    onExit={stopAdminPreview}
+                  />
+                ) : null
+              }
+              isPreview={Boolean(adminPreview)}
+            >
               <ClientView
                 activeBottomNav={activeBottomNav}
                 activeFilter={activeFilter}
@@ -1937,15 +1963,15 @@ const App: React.FC = () => {
                 onDownloadCard={handleDownloadCard}
                 onSetSavedTab={setSavedTab}
                 onOpenShopModalTab={setShopModalTab}
-            onCloseShopModal={() => {
-              setSelectedShopForModal(null);
-              if (location.pathname.startsWith("/tiendas/")) {
-                navigateTo("/tiendas", true);
-              }
-              if (location.pathname.startsWith("/en-vivo/")) {
-                navigateTo("/en-vivo", true);
-              }
-            }}
+                onCloseShopModal={() => {
+                  setSelectedShopForModal(null);
+                  if (location.pathname.startsWith("/tiendas/")) {
+                    navigateTo("/tiendas", true);
+                  }
+                  if (location.pathname.startsWith("/en-vivo/")) {
+                    navigateTo("/en-vivo", true);
+                  }
+                }}
                 onCloseReel={() => setSelectedReel(null)}
                 onToggleFavorite={handleToggleFavorite}
                 onRequireLogin={requireLogin}
@@ -1954,10 +1980,10 @@ const App: React.FC = () => {
                 onOpenCalendarInvite={handleOpenCalendarInvite}
                 streams={allStreams}
               />
-            }
-          />
-        </Routes>
-      </main>
+            </ClientLayout>
+          }
+        />
+      </Routes>
 
       <NoticeModal
         isOpen={Boolean(notice)}

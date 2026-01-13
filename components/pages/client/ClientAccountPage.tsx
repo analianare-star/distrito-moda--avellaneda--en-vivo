@@ -1,5 +1,6 @@
 import React from "react";
 import { EmptyState } from "../../EmptyState";
+import styles from "./ClientAccountPage.module.css";
 
 // ClientAccountPage resume acceso a cuenta y panel.
 // ClientAccountPage summarizes account access and panel.
@@ -14,7 +15,7 @@ export const ClientAccountPage: React.FC<ClientAccountPageProps> = ({
 }) => {
   if (!isLoggedIn) {
     return (
-      <section className="max-w-3xl mx-auto px-4 py-10" aria-label="Cuenta">
+      <section className={styles.section} aria-label="Cuenta">
         <EmptyState
           title="Ingresá para ver tu cuenta"
           message="Accedé a recordatorios, notificaciones y favoritos."
@@ -26,10 +27,10 @@ export const ClientAccountPage: React.FC<ClientAccountPageProps> = ({
   }
 
   return (
-    <section className="max-w-3xl mx-auto px-4 py-10" aria-label="Cuenta">
-      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <h2 className="font-serif text-2xl text-dm-dark">Cuenta</h2>
-        <p className="mt-2 text-sm text-gray-500">
+    <section className={styles.section} aria-label="Cuenta">
+      <div className={styles.card}>
+        <h2 className={styles.title}>Cuenta</h2>
+        <p className={styles.message}>
           Tu panel de cuenta se muestra en el lateral derecho.
         </p>
       </div>

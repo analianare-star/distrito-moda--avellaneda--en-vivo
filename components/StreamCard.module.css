@@ -1,0 +1,91 @@
+.card {
+  @apply bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full;
+}
+
+.media {
+  @apply relative aspect-[4/5] overflow-hidden bg-gray-100;
+}
+
+.mediaImage {
+  @apply w-full h-full object-cover transition-transform duration-700;
+}
+
+.mediaPlaceholder {
+  @apply flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 text-[11px] font-semibold text-gray-500;
+}
+
+.mediaGradient {
+  @apply absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 opacity-60;
+}
+
+.topBadges {
+  @apply absolute top-3 left-3 right-3 flex justify-between items-start z-10;
+}
+
+.shopChip {
+  @apply flex items-center gap-2 bg-white/90 backdrop-blur-sm pr-3 pl-1 py-1 rounded-full cursor-pointer hover:bg-white transition-colors;
+}
+
+.shopName {
+  @apply text-[11px] font-bold text-dm-dark uppercase tracking-wide truncate max-w-[110px];
+}
+
+.ratingChip {
+  @apply flex items-center gap-1 bg-black/40 backdrop-blur-sm px-2 py-1 rounded-full text-white;
+}
+
+.statusWrap {
+  @apply absolute bottom-4 left-4 z-10;
+}
+
+.statusLive {
+  @apply flex flex-col items-start gap-1;
+}
+
+.statusLiveBadge {
+  @apply bg-dm-crimson text-white text-[11px] font-bold px-2 py-0.5 rounded-sm flex items-center gap-1 animate-pulse;
+}
+
+.statusLiveNote {
+  @apply text-white text-[11px] font-serif italic;
+}
+
+.statusRow {
+  @apply flex items-center gap-2 text-white;
+}
+
+.statusIconWrap {
+  @apply p-1.5 rounded-full;
+}
+
+.statusLabel {
+  @apply text-[11px] font-bold uppercase tracking-wider opacity-80;
+}
+
+.statusDate {
+  @apply text-[12px] font-bold shadow-black drop-shadow-md;
+}
+
+.body {
+  @apply p-3 md:p-4 flex flex-col flex-1;
+}
+
+.title {
+  @apply font-serif text-[17px] font-bold text-dm-dark leading-tight line-clamp-2;
+}
+
+.platformBadge {
+  @apply text-[11px] font-bold uppercase px-2 py-0.5 rounded border;
+}
+
+.actions {
+  @apply mt-auto pt-3 flex flex-col gap-2.5;
+}
+
+.actionRow {
+  @apply flex items-center justify-between;
+}
+
+.metaRow {
+  @apply flex items-center gap-2 mt-1.5;
+}

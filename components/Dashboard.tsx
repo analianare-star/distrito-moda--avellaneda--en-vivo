@@ -6,9 +6,11 @@ import { PLANES_URL } from '../constants';
 import { AddressAutocomplete } from './AddressAutocomplete';
 
 // Dashboard is the shop control panel for schedule, reels, and profile data.
+// Dashboard es el panel de tienda para agenda, reels y datos de perfil.
 import { api } from '../services/api';
 import { NoticeModal } from './NoticeModal';
 import { LogoBubble } from './LogoBubble';
+import styles from './Dashboard.module.css';
 
 interface DashboardProps {
     currentShop: Shop;
@@ -535,12 +537,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [formPlatform, setFormPlatform] = useState<SocialPlatform | ''>('');
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+    <div className={styles.root}>
       
       {/* SIDEBAR */}
-      <aside className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-shrink-0 z-10 flex-col">
-          <div className="p-6 border-b border-gray-100 text-center">
-              <div className="mx-auto mb-3 flex justify-center">
+      <aside className={styles.sidebar}>
+          <div className={styles.sidebarHeader}>
+              <div className={styles.sidebarLogoWrap}>
                   <LogoBubble
                     src={currentShop.logoUrl}
                     alt={currentShop.name}
@@ -548,35 +550,35 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     seed={currentShop.id || currentShop.name}
                   />
               </div>
-              <h2 className="font-serif text-lg font-bold text-dm-dark leading-tight">{currentShop.name}</h2>
-              <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider">{currentShop.plan}</p>
-              <div className={`mt-2 inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${statusTone}`}>
+              <h2 className={styles.sidebarTitle}>{currentShop.name}</h2>
+              <p className={styles.sidebarPlan}>{currentShop.plan}</p>
+              <div className={`${styles.sidebarStatus} ${statusTone}`}>
                   {statusLabel}
               </div>
           </div>
-          <nav className="p-4 space-y-1 flex-1">
-               <button onClick={() => setTab('RESUMEN')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'RESUMEN' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
+          <nav className={styles.sidebarNav}>
+               <button onClick={() => setTab('RESUMEN')} className={`${styles.navButton} ${activeTab === 'RESUMEN' ? styles.navButtonActive : styles.navButtonInactive}`}>
                    <LayoutDashboard size={18}/> Inicio / Resumen
                </button>
-               <button onClick={() => setTab('REDES')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'REDES' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
+               <button onClick={() => setTab('REDES')} className={`${styles.navButton} ${activeTab === 'REDES' ? styles.navButtonActive : styles.navButtonInactive}`}>
                    <Globe size={18}/> Mis Redes
                </button>
-               <button onClick={() => setTab('VIVOS')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'VIVOS' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
+               <button onClick={() => setTab('VIVOS')} className={`${styles.navButton} ${activeTab === 'VIVOS' ? styles.navButtonActive : styles.navButtonInactive}`}>
                    <Radio size={18}/> Mis Vivos
                </button>
-               <button onClick={() => setTab('REELS')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'REELS' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
+               <button onClick={() => setTab('REELS')} className={`${styles.navButton} ${activeTab === 'REELS' ? styles.navButtonActive : styles.navButtonInactive}`}>
                    <Film size={18}/> Mis Historias
                </button>
-               <button onClick={() => setTab('PERFIL')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${activeTab === 'PERFIL' ? 'bg-dm-crimson/5 text-dm-crimson' : 'text-gray-500 hover:bg-gray-50'}`}>
+               <button onClick={() => setTab('PERFIL')} className={`${styles.navButton} ${activeTab === 'PERFIL' ? styles.navButtonActive : styles.navButtonInactive}`}>
                    <Store size={18}/> Datos Tienda
                </button>
           </nav>
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 p-5 md:p-8 overflow-y-auto">
-          <div className="md:hidden mb-6">
-              <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-4 shadow-sm">
+      <main className={styles.main}>
+          <div className={styles.mobileHeader}>
+              <div className={styles.mobileCard}>
                   <LogoBubble
                     src={currentShop.logoUrl}
                     alt={currentShop.name}
@@ -584,24 +586,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     seed={currentShop.id || currentShop.name}
                   />
                   <div className="flex-1">
-                      <p className="text-xs text-gray-400 uppercase tracking-widest">Tienda</p>
-                      <h2 className="font-serif text-xl text-dm-dark">{currentShop.name}</h2>
-                      <p className="text-[11px] text-gray-500 uppercase tracking-wider">{currentShop.plan}</p>
+                      <p className={styles.mobileLabel}>Tienda</p>
+                      <h2 className={styles.mobileTitle}>{currentShop.name}</h2>
+                      <p className={styles.mobilePlan}>{currentShop.plan}</p>
                   </div>
-                  <div className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full border ${statusTone}`}>
+                  <div className={`${styles.mobileStatus} ${statusTone}`}>
                       {statusLabel}
                   </div>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className={styles.mobileActions}>
                   <button
                       onClick={() => setTab('VIVOS')}
-                      className="rounded-full border border-gray-200 bg-white py-2 text-xs font-bold text-gray-600"
+                      className={styles.mobileActionButton}
                   >
                       Gestionar vivos
                   </button>
                   <button
                       onClick={() => setTab('PERFIL')}
-                      className="rounded-full border border-gray-200 bg-white py-2 text-xs font-bold text-gray-600"
+                      className={styles.mobileActionButton}
                   >
                       Editar perfil
                   </button>
@@ -610,29 +612,29 @@ export const Dashboard: React.FC<DashboardProps> = ({
           
           {/* TAB 1: RESUMEN (HOME) */}
           {activeTab === 'RESUMEN' && (
-              <div className="max-w-5xl space-y-6 animate-in fade-in">
-                  <header>
-                      <h1 className="font-serif text-3xl text-dm-dark">Panel de Control</h1>
-                      <p className="text-gray-500 text-sm mt-1">Visión general de tu rendimiento y disponibilidad.</p>
+              <div className={styles.summarySection}>
+                  <header className={styles.summaryHeader}>
+                      <h1 className={styles.summaryTitle}>Panel de Control</h1>
+                      <p className={styles.summarySubtitle}>Visión general de tu rendimiento y disponibilidad.</p>
                   </header>
 
-                  <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className={styles.statusPanel}>
+                      <div className={styles.statusRow}>
                           <div>
-                              <p className="text-xs text-gray-400 uppercase tracking-widest">Estado de cuenta</p>
-                              <div className="mt-2 flex flex-wrap items-center gap-2">
-                                  <span className={`text-[11px] font-bold uppercase px-2 py-1 rounded-full border ${statusTone}`}>
+                              <p className={styles.statusLabel}>Estado de cuenta</p>
+                              <div className={styles.statusTags}>
+                                  <span className={`${styles.statusTag} ${statusTone}`}>
                                       {statusLabel}
                                   </span>
                                   {currentShop.ownerAcceptedAt && (
-                                      <span className="text-[10px] font-bold uppercase text-gray-400">
+                                      <span className={styles.statusConfirmed}>
                                           Datos confirmados {new Date(currentShop.ownerAcceptedAt).toLocaleDateString('es-AR')}
                                       </span>
                                   )}
                               </div>
-                              <p className="mt-2 text-xs text-gray-500 max-w-xl">{getStatusMessage()}</p>
+                              <p className={styles.statusMessage}>{getStatusMessage()}</p>
                           </div>
-                          <div className="flex flex-wrap gap-2">
+                          <div className={styles.statusActions}>
                               {canAcceptShop && (
                                   <Button size="sm" onClick={handleAcceptShop} className="bg-dm-crimson text-white">
                                       Confirmar datos
@@ -650,28 +652,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                   {/* PENALTY ALERT */}
                   {(isPenalized || shopStatus !== 'ACTIVE') && (
-                      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm flex items-start gap-4">
+                      <div className={styles.penaltyAlert}>
                           <AlertOctagon className="text-red-600 shrink-0" />
                           <div>
-                              <h3 className="font-bold text-red-800">{shopStatus === 'PENDING_VERIFICATION' ? 'Cuenta en Verificacion' : 'Agenda Restringida'}</h3>
-                              <p className="text-sm text-red-700 mt-1">
+                              <h3 className={styles.penaltyTitle}>{shopStatus === 'PENDING_VERIFICATION' ? 'Cuenta en Verificacion' : 'Agenda Restringida'}</h3>
+                              <p className={styles.penaltyText}>
                                   {getRestrictionMessage()}
                               </p>
-                              <div className="mt-2 text-xs font-mono bg-white/50 p-2 rounded">
+                              <div className={styles.penaltyReason}>
                                   {currentShop.agendaSuspendedReason || currentShop.penalties.find(p => p.active)?.reason || 'Motivo: estado restringido.'}
                               </div>
                           </div>
                       </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className={styles.cardsGrid}>
                       
                       {/* QUOTA CARD */}
-                      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm md:col-span-2 relative overflow-hidden">
-                          <div className="flex justify-between items-start mb-6">
+                      <div className={styles.quotaCard}>
+                          <div className={styles.quotaHeader}>
                               <div>
-                                  <h3 className="font-bold text-dm-dark text-lg">Cupos para Vivos</h3>
-                                  <p className="text-xs text-gray-500">Disponibilidad semanal</p>
+                                  <h3 className={styles.quotaTitle}>Cupos para Vivos</h3>
+                                  <p className={styles.quotaSubtitle}>Disponibilidad semanal</p>
                               </div>
                               <Button
                                   size="sm"
@@ -681,38 +683,38 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                       setShowBuyModal(true);
                                   }}
                                   disabled={isAgendaSuspended || isPreview}
-                                  className="bg-green-600 hover:bg-green-700 border-none text-white shadow-green-200"
+                                  className={styles.quotaBuyButton}
                               >
                                   <ShoppingCart size={16} className="mr-2"/> Comprar Extras
                               </Button>
                           </div>
 
-                          <div className="flex items-center gap-8">
+                          <div className={styles.quotaBody}>
                               {/* Circle Chart */}
-                              <div className="relative w-24 h-24 rounded-full border-8 border-gray-100 flex items-center justify-center">
+                              <div className={styles.quotaCircle}>
                                   <div className="text-center">
-                                      <span className={`text-2xl font-bold ${availableQuota > 0 ? 'text-dm-dark' : 'text-red-500'}`}>{isNaN(availableQuota) ? 0 : availableQuota}</span>
-                                      <span className="block text-[10px] text-gray-400 uppercase">Disp.</span>
+                                      <span className={`${styles.quotaCircleValue} ${availableQuota > 0 ? 'text-dm-dark' : 'text-red-500'}`}>{isNaN(availableQuota) ? 0 : availableQuota}</span>
+                                      <span className={styles.quotaCircleLabel}>Disp.</span>
                                   </div>
                               </div>
                               
-                              <div className="space-y-3 flex-1">
-                                  <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                                      <span className="text-gray-500">Plan Base ({currentShop.plan})</span>
-                                      <span className="font-bold">{baseQuota}</span>
+                              <div className={styles.quotaDetails}>
+                                  <div className={styles.quotaRow}>
+                                      <span className={styles.quotaLabel}>Plan Base ({currentShop.plan})</span>
+                                      <span className={styles.quotaValue}>{baseQuota}</span>
                                   </div>
-                                  <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                                      <span className="text-gray-500 flex items-center gap-1"><Plus size={12} className="text-green-500"/> Cupos Extras</span>
-                                      <span className="font-bold text-green-600">{extraQuota}</span>
+                                  <div className={styles.quotaRow}>
+                                      <span className={styles.quotaExtraLabel}><Plus size={12} className="text-green-500"/> Cupos Extras</span>
+                                      <span className={styles.quotaValuePositive}>{extraQuota}</span>
                                   </div>
-                                  <div className="flex justify-between items-center text-sm">
-                                      <span className="text-gray-500">Usados (En curso/Prog.)</span>
-                                      <span className="font-bold text-dm-crimson">-{usedQuota}</span>
+                                  <div className={styles.quotaRowLast}>
+                                      <span className={styles.quotaLabel}>Usados (En curso/Prog.)</span>
+                                      <span className={styles.quotaValueNegative}>-{usedQuota}</span>
                                   </div>
                                   {availableQuota <= 0 && (
-                                      <div className="mt-3 rounded-lg border border-red-100 bg-red-50 p-3 text-xs text-red-700">
-                                          <p className="font-bold">Sin cupos disponibles</p>
-                                          <p className="mt-1">
+                                      <div className={styles.quotaWarning}>
+                                          <p className={styles.quotaWarningTitle}>Sin cupos disponibles</p>
+                                          <p className={styles.quotaWarningText}>
                                               {isAgendaSuspended
                                                   ? 'Agenda suspendida: no podés comprar cupos de vivos.'
                                                   : 'Comprá cupos extras o mejorá tu plan para agendar.'}
@@ -724,16 +726,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </div>
 
                       {/* PLAN STATUS */}
-                      <div className="bg-gradient-to-b from-white to-gray-50 p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col">
-                           <div className="mb-4">
-                                <h3 className="font-bold text-dm-dark text-lg flex items-center gap-2">
+                      <div className={styles.planCard}>
+                           <div className={styles.planHeader}>
+                                <h3 className={styles.planTitle}>
                                     Tu Suscripción
                                 </h3>
-                                <p className="text-xs text-gray-500">Nivel de visibilidad actual</p>
+                                <p className={styles.planSubtitle}>Nivel de visibilidad actual</p>
                            </div>
                            
                            <div className="flex-1 flex flex-col justify-center items-center text-center space-y-4">
-                                <span className={`text-sm font-bold px-3 py-1 rounded-full uppercase tracking-widest ${
+                                <span className={`${styles.planBadge} ${
                                     isMaxima ? 'bg-purple-100 text-purple-700' :
                                     isAlta ? 'bg-blue-100 text-blue-700' :
                                     'bg-gray-200 text-gray-600'
@@ -742,23 +744,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                 </span>
 
                                 {isStandard && (
-                                    <div className="text-xs text-gray-500">
-                                        <p className="mb-2">Estás en el plan básico.</p>
-                                        <p className="text-blue-600 font-bold flex items-center justify-center gap-1">
+                                    <div className={styles.planHint}>
+                                        <p className={styles.planHintTitle}>Estás en el plan básico.</p>
+                                        <p className={`${styles.planHintUpgrade} text-blue-600`}>
                                             <ArrowUpCircle size={14}/> Pásate a ALTA
                                         </p>
                                     </div>
                                 )}
                                 {isAlta && (
-                                    <div className="text-xs text-gray-500">
-                                        <p className="mb-2">Tienes buena visibilidad.</p>
-                                        <p className="text-purple-600 font-bold flex items-center justify-center gap-1">
+                                    <div className={styles.planHint}>
+                                        <p className={styles.planHintTitle}>Tienes buena visibilidad.</p>
+                                        <p className={`${styles.planHintUpgrade} text-purple-600`}>
                                             <ArrowUpCircle size={14}/> Pásate a MÁXIMA
                                         </p>
                                     </div>
                                 )}
                                 {isMaxima && (
-                                    <div className="text-xs text-gray-500">
+                                    <div className={styles.planHint}>
                                         <p>¡Eres un líder en la plataforma!</p>
                                         <p>Disfrutas de máxima exposición y cupos.</p>
                                     </div>
@@ -924,52 +926,56 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           {/* TAB: MIS REELS */}
           {activeTab === 'REELS' && (
-              <div className="max-w-4xl space-y-6 animate-in fade-in">
-                  <header className="flex justify-between items-end">
+              <div className={styles.reelsSection}>
+                  <header className={styles.reelsHeader}>
                       <div>
-                          <h1 className="font-serif text-3xl text-dm-dark">Mis Historias</h1>
-                          <p className="text-gray-500 text-sm mt-1">Comparte contenido corto por 24 horas.</p>
+                          <h1 className={styles.reelsTitle}>Mis Historias</h1>
+                          <p className={styles.reelsSubtitle}>Comparte contenido corto por 24 horas.</p>
                       </div>
-                      <div className="text-right">
-                          <p className="text-xs text-gray-500">Disponibles hoy (Plan): <span className="font-bold">{availableReelPlan}</span></p>
-                          <p className="text-xs text-gray-500">Extras comprados: <span className="font-bold text-green-600">{reelsExtra}</span></p>
+                      <div className={styles.reelsStats}>
+                          <p className={styles.reelsStatLine}>
+                              Disponibles hoy (Plan): <span className={styles.reelsStatValue}>{availableReelPlan}</span>
+                          </p>
+                          <p className={styles.reelsStatLine}>
+                              Extras comprados: <span className={styles.reelsStatValuePositive}>{reelsExtra}</span>
+                          </p>
                           <button
                               onClick={() => {
                                   if (blockPreviewAction()) return;
                                   setShowBuyReelModal(true);
                               }}
-                              className={`text-[10px] font-bold mt-1 ${isPreview ? 'text-gray-300' : 'text-dm-crimson underline'}`}
+                              className={`${styles.reelsBuyLink} ${isPreview ? styles.reelsBuyLinkDisabled : styles.reelsBuyLinkActive}`}
                           >
                               Comprar Extras
                           </button>
                           {(availableReelPlan === 0 && reelsExtra === 0) && (
-                              <p className="text-[10px] text-red-500 mt-2">Sin cupos disponibles hoy.</p>
+                              <p className={styles.reelsWarning}>Sin cupos disponibles hoy.</p>
                           )}
                       </div>
                   </header>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className={styles.reelsGrid}>
                       
                       {/* UPLOAD FORM */}
-                      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-fit">
-                          <h3 className="font-bold text-dm-dark mb-4 border-b pb-2 flex items-center gap-2"><Plus size={16}/> Subir Historia</h3>
-                          <div className="space-y-4">
+                      <div className={`${styles.reelsPanel} h-fit`}>
+                          <h3 className={styles.reelsPanelTitle}><Plus size={16}/> Subir Historia</h3>
+                          <div className={styles.reelsForm}>
                               <div>
-                                  <label className="block text-xs font-bold text-gray-500 mb-1">Enlace del Video</label>
+                                  <label className={styles.reelsLabel}>Enlace del Video</label>
                                   <input 
                                     type="text" 
                                     value={reelUrl}
                                     onChange={e => setReelUrl(e.target.value)}
                                     placeholder="https://instagram.com/reel/..."
-                                    className="w-full p-2 border rounded text-sm"
+                                    className={styles.reelsInput}
                                   />
                               </div>
                               <div>
-                                  <label className="block text-xs font-bold text-gray-500 mb-1">Plataforma</label>
+                                  <label className={styles.reelsLabel}>Plataforma</label>
                                   <select 
                                     value={reelPlatform}
                                     onChange={e => setReelPlatform(e.target.value as SocialPlatform)}
-                                    className="w-full p-2 border rounded text-sm bg-gray-50"
+                                    className={styles.reelsSelect}
                                   >
                                       <option value="">Seleccionar...</option>
                                       <option value="Instagram">Instagram</option>
@@ -986,17 +992,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                   Publicar Historia
                               </Button>
                               {(availableReelPlan === 0 && reelsExtra === 0) && (
-                                  <p className="text-xs text-red-500 text-center">Sin cupos disponibles hoy.</p>
+                                  <p className={styles.reelsDisabledNote}>Sin cupos disponibles hoy.</p>
                               )}
                           </div>
                       </div>
 
                       {/* ACTIVE LIST */}
-                      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                           <h3 className="font-bold text-dm-dark mb-4 border-b pb-2 flex items-center gap-2"><Film size={16}/> Activas (últimas 24h)</h3>
-                           <div className="space-y-3">
+                      <div className={styles.reelsPanel}>
+                           <h3 className={styles.reelsPanelTitle}><Film size={16}/> Activas (últimas 24h)</h3>
+                           <div className={styles.reelsList}>
                                {shopReels.filter(r => r.status === 'ACTIVE').length === 0 ? (
-                                   <p className="text-sm text-gray-400 text-center py-4">No tienes historias activas.</p>
+                                   <p className={styles.reelsEmpty}>No tienes historias activas.</p>
                                ) : (
                                    shopReels.filter(r => r.status === 'ACTIVE').map(reel => {
                                        const now = new Date();
@@ -1004,14 +1010,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                        const diffMs = expires.getTime() - now.getTime();
                                        const hours = Math.floor(diffMs / (1000 * 60 * 60));
                                        return (
-                                           <div key={reel.id} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-100">
-                                               <div className="overflow-hidden">
-                                                   <p className="text-xs font-bold truncate w-40">{reel.url}</p>
-                                                   <p className="text-[10px] text-gray-500">
+                                           <div key={reel.id} className={styles.reelsItem}>
+                                               <div className={styles.reelsItemInfo}>
+                                                   <p className={styles.reelsItemTitle}>{reel.url}</p>
+                                                   <p className={styles.reelsItemMeta}>
                                                      {reel.platform} • Expira en {hours}h • {reel.views || 0} vistas
                                                    </p>
                                                </div>
-                                               <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded font-bold">ACTIVA</span>
+                                               <span className={styles.reelsItemBadge}>ACTIVA</span>
                                            </div>
                                        );
                                    })
@@ -1020,11 +1026,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                            
                            {/* EXPIRED LIST */}
                            {shopReels.some(r => r.status === 'EXPIRED') && (
-                               <div className="mt-6 pt-4 border-t border-gray-100 opacity-60">
-                                   <h4 className="text-xs font-bold text-gray-500 mb-2">Expiradas recientemente</h4>
+                               <div className={styles.reelsExpiredWrap}>
+                                   <h4 className={styles.reelsExpiredTitle}>Expiradas recientemente</h4>
                                    {shopReels.filter(r => r.status === 'EXPIRED').slice(0, 3).map(reel => (
-                                       <div key={reel.id} className="flex justify-between text-[10px] text-gray-400 py-1">
-                                           <span className="truncate w-40">{reel.url}</span>
+                                       <div key={reel.id} className={styles.reelsExpiredRow}>
+                                           <span className={styles.reelsExpiredLink}>{reel.url}</span>
                                            <span>EXPIRED</span>
                                        </div>
                                    ))}
@@ -1037,19 +1043,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           {/* TAB 2: MIS REDES (KEEP EXISTING) */}
           {activeTab === 'REDES' && (
-              <div className="max-w-3xl space-y-6 animate-in fade-in">
-                  <header>
-                      <h1 className="font-serif text-3xl text-dm-dark">Mis Redes</h1>
-                      <p className="text-gray-500 text-sm mt-1">Configura dónde transmitirás tus vivos y cómo te contactan.</p>
+              <div className={styles.socialsSection}>
+                  <header className={styles.socialsHeader}>
+                      <h1 className={styles.socialsTitle}>Mis Redes</h1>
+                      <p className={styles.socialsSubtitle}>Configura dónde transmitirás tus vivos y cómo te contactan.</p>
                   </header>
-                  <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
-                      <form onSubmit={saveSocials} className="space-y-6">
-                           <div className="space-y-4">
-                               <h3 className="font-bold text-dm-dark flex items-center gap-2 border-b pb-2"><Phone size={18}/> WhatsApp</h3>
+                  <div className={styles.socialsCard}>
+                      <form onSubmit={saveSocials} className={styles.socialsForm}>
+                           <div className={styles.socialsGroup}>
+                               <h3 className={styles.socialsGroupTitle}><Phone size={18}/> WhatsApp</h3>
                                {waLines.map((line, idx) => {
                                    const isDisabled = idx >= whatsappLimit;
                                    return (
-                                   <div key={idx} className={`flex gap-2 items-center ${isDisabled ? 'opacity-50' : ''}`}>
+                                   <div key={idx} className={`${styles.socialsRow} ${isDisabled ? styles.socialsRowDisabled : ''}`}>
                                        <select 
                                             value={line.label} 
                                             onChange={e => {
@@ -1058,7 +1064,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                 setWaLines(newLines);
                                             }}
                                             disabled={isDisabled}
-                                            className="w-1/3 p-2 border rounded text-xs bg-gray-50"
+                                            className={styles.socialsSelect}
                                        >
                                            <option value="">Etiqueta...</option>
                                            {WA_LABELS.map(l => <option key={l} value={l}>{l}</option>)}
@@ -1072,44 +1078,44 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                 setWaLines(newLines);
                                             }}
                                             disabled={isDisabled}
-                                            className="flex-1 p-2 border rounded text-sm" 
+                                            className={styles.socialsInput}
                                             placeholder="54911..."
                                         />
                                    </div>
                                )})}
                            </div>
-                           <div className="space-y-4 pt-4">
-                               <h3 className="font-bold text-dm-dark flex items-center gap-2 border-b pb-2"><Globe size={18}/> Redes Sociales</h3>
-                               <div className="grid grid-cols-1 gap-4">
-                                   <label className="flex items-center gap-3">
+                           <div className={`${styles.socialsGroup} pt-4`}>
+                               <h3 className={styles.socialsGroupTitle}><Globe size={18}/> Redes Sociales</h3>
+                               <div className={styles.socialsGrid}>
+                                   <label className={styles.socialsItem}>
                                        <div className="w-8 h-8 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center"><Instagram size={16}/></div>
-                                       <input type="text" value={socials.instagram || ''} onChange={e => setSocials({...socials, instagram: e.target.value})} className="flex-1 p-2 border rounded text-sm" placeholder="Usuario Instagram (sin @)" />
+                                       <input type="text" value={socials.instagram || ''} onChange={e => setSocials({...socials, instagram: e.target.value})} className={styles.socialsInput} placeholder="Usuario Instagram (sin @)" />
                                    </label>
-                                   <label className="flex items-center gap-3">
+                                   <label className={styles.socialsItem}>
                                        <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center"><span className="font-serif italic font-bold text-xs">Tk</span></div>
-                                       <input type="text" value={socials.tiktok || ''} onChange={e => setSocials({...socials, tiktok: e.target.value})} className="flex-1 p-2 border rounded text-sm" placeholder="Usuario TikTok (sin @)" />
+                                       <input type="text" value={socials.tiktok || ''} onChange={e => setSocials({...socials, tiktok: e.target.value})} className={styles.socialsInput} placeholder="Usuario TikTok (sin @)" />
                                    </label>
-                                   <label className="flex items-center gap-3">
+                                   <label className={styles.socialsItem}>
                                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center"><Facebook size={16}/></div>
-                                       <input type="text" value={socials.facebook || ''} onChange={e => setSocials({...socials, facebook: e.target.value})} className="flex-1 p-2 border rounded text-sm" placeholder="Página Facebook" />
+                                       <input type="text" value={socials.facebook || ''} onChange={e => setSocials({...socials, facebook: e.target.value})} className={styles.socialsInput} placeholder="Página Facebook" />
                                    </label>
-                                   <label className="flex items-center gap-3">
+                                   <label className={styles.socialsItem}>
                                        <div className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center"><Video size={16}/></div>
-                                       <input type="text" value={socials.youtube || ''} onChange={e => setSocials({...socials, youtube: e.target.value})} className="flex-1 p-2 border rounded text-sm" placeholder="Canal YouTube" />
+                                       <input type="text" value={socials.youtube || ''} onChange={e => setSocials({...socials, youtube: e.target.value})} className={styles.socialsInput} placeholder="Canal YouTube" />
                                    </label>
-                                   <label className="flex items-center gap-3">
+                                   <label className={styles.socialsItem}>
                                        <div className="w-8 h-8 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center"><ExternalLink size={16}/></div>
                                        <input
                                            type="text"
                                            value={shopForm.website || ''}
                                            onChange={e => setShopForm(prev => ({ ...prev, website: e.target.value }))}
-                                           className="flex-1 p-2 border rounded text-sm"
+                                           className={styles.socialsInput}
                                            placeholder="https://tuweb.com"
                                        />
                                    </label>
                                </div>
                            </div>
-                           <div className="flex justify-end pt-4">
+                           <div className={styles.socialsActionRow}>
                                <Button type="submit"><Save size={16} className="mr-2"/> Guardar Cambios</Button>
                            </div>
                       </form>
@@ -1119,13 +1125,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           {/* TAB 3: MIS VIVOS (KEEP EXISTING) */}
           {activeTab === 'VIVOS' && (
-              <div className="max-w-6xl space-y-6 animate-in fade-in">
-                  <header className="flex justify-between items-end">
+              <div className={styles.streamsSection}>
+                  <header className={styles.streamsHeader}>
                       <div>
-                          <h1 className="font-serif text-3xl text-dm-dark">Mis Vivos</h1>
-                          <p className="text-gray-500 text-sm mt-1">Gestiona tu agenda y monitorea el rendimiento.</p>
+                          <h1 className={styles.streamsTitle}>Mis Vivos</h1>
+                          <p className={styles.streamsSubtitle}>Gestiona tu agenda y monitorea el rendimiento.</p>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
+                      <div className={styles.streamsHeaderRight}>
                            <div className="relative group">
                                 <Button 
                                     onClick={handleCreateClick} 
@@ -1140,30 +1146,30 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                     </div>
                                 )}
                            </div>
-                           <p className="text-[10px] text-gray-400">Cupos Disponibles: {availableQuota}</p>
+                           <p className={styles.streamsQuotaNote}>Cupos Disponibles: {availableQuota}</p>
                       </div>
                   </header>
 
-                  <div className="rounded-xl border border-gray-100 bg-white p-4 text-xs text-gray-500">
-                      <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-bold text-dm-dark">Reglas clave:</span>
+                  <div className={styles.streamsRules}>
+                      <div className={styles.streamsRulesRow}>
+                          <span className={styles.streamsRulesLabel}>Reglas clave:</span>
                           <span>Máximo 1 vivo por día.</span>
                           <span>Máximo 7 vivos por semana.</span>
                           <span>Requiere cupo disponible.</span>
                           {pendingReprogramCount > 0 && (
-                              <span className="font-bold text-yellow-600">Tenés {pendingReprogramCount} vivos para reprogramar.</span>
+                              <span className={styles.streamsRulesWarning}>Tenés {pendingReprogramCount} vivos para reprogramar.</span>
                           )}
                       </div>
                   </div>
 
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                      <div className="md:hidden divide-y">
+                  <div className={styles.streamsCard}>
+                      <div className={styles.streamsMobileList}>
                           {myStreams.length > 0 ? myStreams.map(stream => (
-                              <div key={stream.id} className="p-3 space-y-2">
-                                  <div className="flex items-start justify-between">
+                              <div key={stream.id} className={styles.streamsMobileItem}>
+                                  <div className={styles.streamsMobileHeader}>
                                       <div>
-                                          <p className="text-sm font-bold text-dm-dark">{stream.title}</p>
-                                          <p className="text-[11px] text-gray-600">
+                                          <p className={styles.streamsMobileTitle}>{stream.title}</p>
+                                          <p className={styles.streamsMobileDate}>
                                               {new Date(stream.fullDateISO).toLocaleDateString()} - {stream.scheduledTime} hs
                                           </p>
                                       </div>
@@ -1185,7 +1191,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                            'FINALIZADO'}
                                       </span>
                                   </div>
-                                  <div className="flex items-center justify-between text-[11px] text-gray-600">
+                                  <div className={styles.streamsMobileMeta}>
                                       <span className={`text-[11px] font-bold px-2 py-1 rounded border ${
                                          stream.platform === 'Instagram' ? 'border-pink-200 text-pink-600 bg-pink-50' : 
                                          stream.platform === 'TikTok' ? 'border-gray-800 text-gray-900 bg-gray-100' :
@@ -1198,7 +1204,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                           <span className="text-xs font-bold text-gray-700">{stream.rating || '-'}</span>
                                       </div>
                                   </div>
-                                  <div className="flex flex-wrap gap-2 pt-2">
+                                  <div className={styles.streamsMobileActions}>
                                       {stream.status === StreamStatus.LIVE && onExtendStream && stream.extensionCount < 3 && (
                                           <Button 
                                               size="sm" 
@@ -1240,32 +1246,32 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                   </div>
                               </div>
                           )) : (
-                              <div className="p-8 text-center text-gray-400 text-sm">No has creado ningún vivo aún.</div>
+                              <div className={styles.streamsMobileEmpty}>No has creado ningún vivo aún.</div>
                           )}
                       </div>
-                      <div className="hidden md:block">
-                          <table className="w-full text-left">
-                              <thead className="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 font-bold">
+                      <div className={styles.streamsDesktopTable}>
+                          <table className={styles.streamsTable}>
+                              <thead className={styles.streamsTableHead}>
                                   <tr>
-                                      <th className="px-6 py-4">Información</th>
-                                      <th className="px-6 py-4">Red Social</th>
-                                      <th className="px-6 py-4">Estado</th>
-                                      <th className="px-6 py-4">Calificación</th>
-                                      <th className="px-6 py-4 text-right">Acciones</th>
+                                      <th className={styles.streamsTableHeadCell}>Información</th>
+                                      <th className={styles.streamsTableHeadCell}>Red Social</th>
+                                      <th className={styles.streamsTableHeadCell}>Estado</th>
+                                      <th className={styles.streamsTableHeadCell}>Calificación</th>
+                                      <th className={`${styles.streamsTableHeadCell} text-right`}>Acciones</th>
                                   </tr>
                               </thead>
-                              <tbody className="divide-y divide-gray-50">
+                              <tbody className={styles.streamsTableBody}>
                                   {myStreams.length > 0 ? myStreams.map(stream => (
-                                      <tr key={stream.id} className="hover:bg-gray-50/50 transition-colors">
-                                          <td className="px-6 py-4">
+                                      <tr key={stream.id} className={styles.streamsTableRow}>
+                                          <td className={styles.streamsTableCell}>
                                               <div className="flex flex-col">
-                                                  <span className="font-bold text-dm-dark text-sm">{stream.title}</span>
-                                                  <span className="text-xs text-gray-500">
+                                                  <span className={styles.streamsInfoTitle}>{stream.title}</span>
+                                                  <span className={styles.streamsInfoDate}>
                                                       {new Date(stream.fullDateISO).toLocaleDateString()} - {stream.scheduledTime} hs
                                                   </span>
                                               </div>
                                           </td>
-                                          <td className="px-6 py-4">
+                                          <td className={styles.streamsTableCell}>
                                               <span className={`text-[10px] font-bold px-2 py-1 rounded border ${
                                                  stream.platform === 'Instagram' ? 'border-pink-200 text-pink-600 bg-pink-50' : 
                                                  stream.platform === 'TikTok' ? 'border-gray-800 text-gray-900 bg-gray-100' :
@@ -1274,7 +1280,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                  {stream.platform}
                                               </span>
                                           </td>
-                                          <td className="px-6 py-4">
+                                          <td className={styles.streamsTableCell}>
                                                {stream.status === StreamStatus.LIVE ? (
                                                    <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">EN VIVO</span>
                                                ) : stream.status === StreamStatus.UPCOMING ? (
@@ -1291,15 +1297,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                    <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-full">FINALIZADO</span>
                                                )}
                                           </td>
-                                          <td className="px-6 py-4">
-                                              <div className="flex items-center gap-1">
+                                          <td className={styles.streamsTableCell}>
+                                              <div className={styles.streamsRatingRow}>
                                                   <Star size={14} className={stream.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
                                                   <span className="text-sm font-bold text-gray-700">{stream.rating || '-'}</span>
                                                   {stream.rating && <span className="text-xs text-gray-400">({Math.floor(Math.random() * 50) + 5})</span>}
                                               </div>
                                           </td>
-                                          <td className="px-6 py-4 text-right">
-                                              <div className="flex justify-end items-center gap-2">
+                                          <td className={`${styles.streamsTableCell} text-right`}>
+                                              <div className={styles.streamsActionsRow}>
                                                   {stream.status === StreamStatus.LIVE && onExtendStream && stream.extensionCount < 3 && (
                                                       <Button 
                                                           size="sm" 
@@ -1343,7 +1349,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                       </tr>
                                   )) : (
                                       <tr>
-                                          <td colSpan={5} className="p-8 text-center text-gray-400 text-sm">No has creado ningún vivo aún.</td>
+                                          <td colSpan={5} className={styles.streamsTableEmpty}>No has creado ningún vivo aún.</td>
                                       </tr>
                                   )}
                               </tbody>
@@ -1355,14 +1361,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           {/* TAB 4: PERFIL (KEEP EXISTING) */}
           {activeTab === 'PERFIL' && (
-              <div className="max-w-3xl space-y-8 animate-in fade-in">
-                  <header>
-                      <h1 className="font-serif text-3xl text-dm-dark">Datos de Tienda</h1>
-                      <p className="text-gray-500 text-sm mt-1">Información legal, ubicación y condiciones de venta.</p>
+              <div className={styles.profileSection}>
+                  <header className={styles.profileHeader}>
+                      <h1 className={styles.profileTitle}>Datos de Tienda</h1>
+                      <p className={styles.profileSubtitle}>Información legal, ubicación y condiciones de venta.</p>
                   </header>
-                  <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                      <p className="text-xs text-gray-400 uppercase tracking-widest">Vista pública</p>
-                      <div className="mt-3 flex items-center gap-4">
+                  <div className={styles.profileCard}>
+                      <p className={styles.profileLabel}>Vista pública</p>
+                      <div className={styles.profileSummary}>
                           <LogoBubble
                             src={currentShop.logoUrl}
                             alt={currentShop.name}
@@ -1370,107 +1376,107 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             seed={currentShop.id || currentShop.name}
                           />
                           <div className="flex-1">
-                              <p className="font-serif text-lg text-dm-dark">{currentShop.name}</p>
-                              <p className="text-xs text-gray-500">{currentShop.address || 'Dirección sin definir'}</p>
-                              <p className="text-[11px] text-gray-400">WhatsApp visibles: {publicWhatsappCount}</p>
+                              <p className={styles.profileName}>{currentShop.name}</p>
+                              <p className={styles.profileAddress}>{currentShop.address || 'Dirección sin definir'}</p>
+                              <p className={styles.profileMeta}>WhatsApp visibles: {publicWhatsappCount}</p>
                           </div>
-                          <div className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full border ${statusTone}`}>
+                          <div className={`${styles.profileBadge} ${statusTone}`}>
                               {statusLabel}
                           </div>
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-gray-500">
-                          <span className="rounded-full border border-gray-200 px-2 py-1">Mínimo: ${currentShop.minimumPurchase || 0}</span>
-                          <span className="rounded-full border border-gray-200 px-2 py-1">{currentShop.plan}</span>
+                      <div className={styles.profileTags}>
+                          <span className={styles.profileTag}>Mínimo: ${currentShop.minimumPurchase || 0}</span>
+                          <span className={styles.profileTag}>{currentShop.plan}</span>
                       </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
+                      <div className={styles.profileLinks}>
                           {mapsUrl && (
                               <a
                                   href={mapsUrl}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-[11px] font-bold text-gray-600 hover:bg-gray-50"
+                                  className={styles.profileMapsLink}
                               >
                                   Ver en Maps <ExternalLink size={12} />
                               </a>
                           )}
                       </div>
                   </div>
-                  <form onSubmit={saveShopProfile} className="space-y-8">
-                      <section className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
-                          <h3 className="font-bold text-dm-dark flex items-center gap-2 border-b pb-2"><Store size={18}/> Identidad & Legal</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <form onSubmit={saveShopProfile} className={styles.profileForm}>
+                      <section className={styles.profileFormSection}>
+                          <h3 className={styles.profileFormTitle}><Store size={18}/> Identidad & Legal</h3>
+                          <div className={styles.profileGridTwo}>
                               <label className="block">
-                                  <span className="text-xs font-bold text-gray-500">Nombre de Fantasía</span>
-                                  <input type="text" value={shopForm.name || ''} onChange={e => handleInputChange('name', e.target.value)} className="w-full mt-1 p-2 border border-gray-200 rounded text-sm bg-gray-50" />
+                                  <span className={styles.profileInputLabel}>Nombre de Fantasía</span>
+                                  <input type="text" value={shopForm.name || ''} onChange={e => handleInputChange('name', e.target.value)} className={styles.profileInputMuted} />
                               </label>
                               <label className="block">
-                                  <span className="text-xs font-bold text-gray-500">Razón Social</span>
-                                  <input type="text" value={shopForm.razonSocial || ''} onChange={e => handleInputChange('razonSocial', e.target.value)} className="w-full mt-1 p-2 border border-gray-200 rounded text-sm" />
+                                  <span className={styles.profileInputLabel}>Razón Social</span>
+                                  <input type="text" value={shopForm.razonSocial || ''} onChange={e => handleInputChange('razonSocial', e.target.value)} className={styles.profileInput} />
                               </label>
                               <label className="block">
-                                  <span className="text-xs font-bold text-gray-500">CUIT</span>
-                                  <input type="text" value={shopForm.cuit || ''} onChange={e => handleInputChange('cuit', e.target.value)} className="w-full mt-1 p-2 border border-gray-200 rounded text-sm" />
+                                  <span className={styles.profileInputLabel}>CUIT</span>
+                                  <input type="text" value={shopForm.cuit || ''} onChange={e => handleInputChange('cuit', e.target.value)} className={styles.profileInput} />
                               </label>
                           </div>
                       </section>
-                      <section className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
-                          <h3 className="font-bold text-dm-dark flex items-center gap-2 border-b pb-2"><MapPin size={18}/> Dirección Física</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <section className={styles.profileFormSection}>
+                          <h3 className={styles.profileFormTitle}><MapPin size={18}/> Dirección Física</h3>
+                          <div className={styles.profileGridThree}>
                               <div className="md:col-span-3 mb-2 relative">
-                                  <label className="block text-xs font-bold text-gray-500 mb-1">Buscador (Google Maps Simulado)</label>
+                                  <label className={styles.profileInputLabel}>Buscador (Google Maps Simulado)</label>
                                   <AddressAutocomplete onSelect={handleAddressSelect} />
                               </div>
                               <label className="block md:col-span-2">
-                                  <span className="text-xs font-bold text-gray-500">Calle</span>
-                                  <input type="text" value={shopForm.addressDetails?.street || ''} onChange={e => handleAddressChange('street', e.target.value)} className="w-full mt-1 p-2 border border-gray-200 rounded text-sm" />
+                                  <span className={styles.profileInputLabel}>Calle</span>
+                                  <input type="text" value={shopForm.addressDetails?.street || ''} onChange={e => handleAddressChange('street', e.target.value)} className={styles.profileInput} />
                               </label>
                               <label className="block">
-                                  <span className="text-xs font-bold text-gray-500">Número</span>
-                                  <input type="text" value={shopForm.addressDetails?.number || ''} onChange={e => handleAddressChange('number', e.target.value)} className="w-full mt-1 p-2 border border-gray-200 rounded text-sm" />
+                                  <span className={styles.profileInputLabel}>Número</span>
+                                  <input type="text" value={shopForm.addressDetails?.number || ''} onChange={e => handleAddressChange('number', e.target.value)} className={styles.profileInput} />
                               </label>
                               <label className="block">
-                                  <span className="text-xs font-bold text-gray-500">Localidad / Barrio</span>
-                                  <input type="text" value={shopForm.addressDetails?.city || ''} onChange={e => handleAddressChange('city', e.target.value)} className="w-full mt-1 p-2 border border-gray-200 rounded text-sm" />
+                                  <span className={styles.profileInputLabel}>Localidad / Barrio</span>
+                                  <input type="text" value={shopForm.addressDetails?.city || ''} onChange={e => handleAddressChange('city', e.target.value)} className={styles.profileInput} />
                               </label>
                               <label className="block">
-                                  <span className="text-xs font-bold text-gray-500">Provincia</span>
-                                  <input type="text" value={shopForm.addressDetails?.province || ''} onChange={e => handleAddressChange('province', e.target.value)} className="w-full mt-1 p-2 border border-gray-200 rounded text-sm" />
+                                  <span className={styles.profileInputLabel}>Provincia</span>
+                                  <input type="text" value={shopForm.addressDetails?.province || ''} onChange={e => handleAddressChange('province', e.target.value)} className={styles.profileInput} />
                               </label>
                               <label className="block">
-                                  <span className="text-xs font-bold text-gray-500">CP</span>
-                                  <input type="text" value={shopForm.addressDetails?.zip || ''} onChange={e => handleAddressChange('zip', e.target.value)} className="w-full mt-1 p-2 border border-gray-200 rounded text-sm" />
+                                  <span className={styles.profileInputLabel}>CP</span>
+                                  <input type="text" value={shopForm.addressDetails?.zip || ''} onChange={e => handleAddressChange('zip', e.target.value)} className={styles.profileInput} />
                               </label>
                               <label className="block md:col-span-3">
-                                  <span className="text-xs font-bold text-gray-500">Link Google Maps</span>
+                                  <span className={styles.profileInputLabel}>Link Google Maps</span>
                                   <input
                                       type="text"
                                       value={shopForm.addressDetails?.mapsUrl || ''}
                                       onChange={e => handleAddressChange('mapsUrl', e.target.value)}
-                                      className="w-full mt-1 p-2 border border-gray-200 rounded text-sm"
+                                      className={styles.profileInput}
                                       placeholder="https://maps.google.com/..."
                                   />
                               </label>
                           </div>
                       </section>
-                      <section className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
-                          <h3 className="font-bold text-dm-dark flex items-center gap-2 border-b pb-2"><CreditCard size={18}/> Condiciones de Venta</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <section className={styles.profileFormSection}>
+                          <h3 className={styles.profileFormTitle}><CreditCard size={18}/> Condiciones de Venta</h3>
+                          <div className={styles.profileGridTwo}>
                               <div>
                                   <label className="block mb-2">
-                                      <span className="text-xs font-bold text-gray-500">Monto Mínimo de Compra ($)</span>
+                                      <span className={styles.profileInputLabel}>Monto Mínimo de Compra ($)</span>
                                       <div className="relative mt-1">
                                           <span className="absolute left-3 top-2 text-gray-500">$</span>
-                                          <input type="number" value={shopForm.minimumPurchase || ''} onChange={e => handleInputChange('minimumPurchase', parseInt(e.target.value))} className="w-full pl-6 p-2 border border-gray-200 rounded text-sm" />
+                                          <input type="number" value={shopForm.minimumPurchase || ''} onChange={e => handleInputChange('minimumPurchase', parseInt(e.target.value))} className={`${styles.profileInput} pl-6`} />
                                       </div>
                                   </label>
                               </div>
                               <div>
                                   <label className="block mb-2">
-                                      <span className="text-xs font-bold text-gray-500">Formas de Pago Aceptadas</span>
+                                      <span className={styles.profileInputLabel}>Formas de Pago Aceptadas</span>
                                   </label>
-                                  <div className="grid grid-cols-2 gap-2">
+                                  <div className={styles.profileGridPayments}>
                                       {PAYMENT_OPTIONS.map(method => (
-                                          <label key={method} className="flex items-center space-x-2 text-sm cursor-pointer">
+                                          <label key={method} className={styles.profileCheckboxItem}>
                                               <input 
                                                 type="checkbox" 
                                                 checked={(shopForm.paymentMethods || []).includes(method)}
@@ -1484,7 +1490,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               </div>
                           </div>
                       </section>
-                      <div className="flex justify-end pt-4">
+                      <div className={styles.profileActions}>
                           <Button type="submit"><Save size={16} className="mr-2"/> Guardar Perfil</Button>
                       </div>
                   </form>
@@ -1495,26 +1501,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* MODAL: BUY QUOTA */}
       {showBuyModal && (
-           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 relative animate-in zoom-in-95">
-                  <button onClick={() => setShowBuyModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-dm-dark"><X size={20}/></button>
-                  <div className="text-center mb-6">
-                      <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+           <div className={styles.modalBackdrop}>
+              <div className={styles.modalCard}>
+                  <button onClick={() => setShowBuyModal(false)} className={styles.modalClose}><X size={20}/></button>
+                  <div className={styles.modalHeader}>
+                      <div className={`${styles.modalIcon} bg-green-100 text-green-600`}>
                           <DollarSign size={32} />
                       </div>
-                      <h2 className="font-serif text-2xl text-dm-dark">Comprar Cupo Extra</h2>
-                      <p className="text-sm text-gray-500 mt-2">Agrega un vivo adicional a tu agenda semanal.</p>
+                      <h2 className={styles.modalTitle}>Comprar Cupo Extra</h2>
+                      <p className={styles.modalSubtitle}>Agrega un vivo adicional a tu agenda semanal.</p>
                   </div>
                   
-                  <div className="space-y-4">
-                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 flex justify-between items-center">
+                  <div className={styles.modalForm}>
+                      <div className={styles.modalRow}>
                           <span className="font-bold text-dm-dark">1 Cupo de Vivo</span>
                           <span className="font-bold text-green-600">$5.000</span>
                       </div>
                       <Button className="w-full bg-green-600 hover:bg-green-700 border-none text-white" onClick={handleBuyConfirm}>
                           Confirmar Compra
                       </Button>
-                      <p className="text-[10px] text-center text-gray-400">Pago seguro procesado por Mercado Pago</p>
+                      <p className={styles.modalNote}>Pago seguro procesado por Mercado Pago</p>
                   </div>
               </div>
            </div>
@@ -1522,19 +1528,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* MODAL: BUY REEL QUOTA */}
       {showBuyReelModal && (
-           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 relative animate-in zoom-in-95">
-                  <button onClick={() => setShowBuyReelModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-dm-dark"><X size={20}/></button>
-                  <div className="text-center mb-6">
-                      <div className="w-16 h-16 bg-pink-100 text-dm-crimson rounded-full flex items-center justify-center mx-auto mb-4">
+           <div className={styles.modalBackdrop}>
+              <div className={styles.modalCard}>
+                  <button onClick={() => setShowBuyReelModal(false)} className={styles.modalClose}><X size={20}/></button>
+                  <div className={styles.modalHeader}>
+                      <div className={`${styles.modalIcon} bg-pink-100 text-dm-crimson`}>
                           <Film size={32} />
                       </div>
-                      <h2 className="font-serif text-2xl text-dm-dark">Comprar Historias Extra</h2>
-                      <p className="text-sm text-gray-500 mt-2">Agrega 5 historias adicionales para hoy.</p>
+                      <h2 className={styles.modalTitle}>Comprar Historias Extra</h2>
+                      <p className={styles.modalSubtitle}>Agrega 5 historias adicionales para hoy.</p>
                   </div>
                   
-                  <div className="space-y-4">
-                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 flex justify-between items-center">
+                  <div className={styles.modalForm}>
+                      <div className={styles.modalRow}>
                           <span className="font-bold text-dm-dark">Pack 5 Historias</span>
                           <span className="font-bold text-green-600">$2.500</span>
                       </div>
@@ -1544,7 +1550,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       }}>
                           Confirmar Compra
                       </Button>
-                      <p className="text-[10px] text-center text-gray-400">Compra simulada para entorno demo.</p>
+                      <p className={styles.modalNote}>Compra simulada para entorno demo.</p>
                   </div>
               </div>
            </div>
@@ -1552,42 +1558,42 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* MODAL: CREATE STREAM */}
       {showCreateModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-in zoom-in-95">
+          <div className={styles.modalBackdrop}>
+              <div className={`${styles.modalCard} ${styles.modalCardLarge}`}>
                   <div className="flex justify-between items-center mb-6">
-                      <h2 className="font-serif text-2xl text-dm-dark">
+                      <h2 className={styles.modalTitle}>
                           {editingStream ? 'Editar Vivo' : 'Agendar Nuevo Vivo'}
                       </h2>
                       <button onClick={() => setShowCreateModal(false)}><X size={20}/></button>
                   </div>
                   
                   {!editingStream && (
-                      <div className="bg-blue-50 text-blue-700 text-xs p-3 rounded mb-4 flex items-center gap-2">
+                      <div className={styles.modalInfo}>
                           <Info size={14}/> 
                           Consumirá 1 cupo de tu saldo (Disp: {availableQuota})
                       </div>
                   )}
 
-                  <div className="space-y-4">
+                  <div className={styles.modalForm}>
                       <div>
-                          <label className="block text-xs font-bold text-gray-500 mb-1">Título del Vivo</label>
-                          <input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} className="w-full p-2 border rounded-md text-sm" placeholder="Ej: Nueva Temporada..." />
+                          <label className={styles.modalLabel}>Título del Vivo</label>
+                          <input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} className={styles.modalInput} placeholder="Ej: Nueva Temporada..." />
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4">
                           <div>
-                              <label className="block text-xs font-bold text-gray-500 mb-1">Fecha</label>
-                              <input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} className="w-full p-2 border rounded-md text-sm" />
+                              <label className={styles.modalLabel}>Fecha</label>
+                              <input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} className={styles.modalInput} />
                           </div>
                           <div>
-                              <label className="block text-xs font-bold text-gray-500 mb-1">Hora</label>
-                              <input type="time" value={formTime} onChange={(e) => setFormTime(e.target.value)} className="w-full p-2 border rounded-md text-sm" />
+                              <label className={styles.modalLabel}>Hora</label>
+                              <input type="time" value={formTime} onChange={(e) => setFormTime(e.target.value)} className={styles.modalInput} />
                           </div>
                       </div>
                       
                       <div>
-                          <label className="block text-xs font-bold text-gray-500 mb-1">Plataforma</label>
-                          <select value={formPlatform} onChange={(e) => setFormPlatform(e.target.value as SocialPlatform)} className="w-full p-2 border rounded-md text-sm bg-white">
+                          <label className={styles.modalLabel}>Plataforma</label>
+                          <select value={formPlatform} onChange={(e) => setFormPlatform(e.target.value as SocialPlatform)} className={styles.modalSelect}>
                                <option value="">Seleccionar Plataforma...</option>
                                {currentShop.socialHandles?.instagram && <option value="Instagram">Instagram</option>}
                                {currentShop.socialHandles?.tiktok && <option value="TikTok">TikTok</option>}
@@ -1613,12 +1619,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       )}
 
       {confirmDialog && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 relative animate-in zoom-in-95">
-                  <button onClick={() => setConfirmDialog(null)} className="absolute top-4 right-4 text-gray-400 hover:text-dm-dark"><X size={20}/></button>
-                  <h3 className="font-serif text-xl text-dm-dark">{confirmDialog.title}</h3>
-                  <p className="text-xs text-gray-500 mt-2">{confirmDialog.message}</p>
-                  <div className="mt-6 flex gap-3">
+          <div className={styles.modalBackdrop}>
+              <div className={styles.modalCard}>
+                  <button onClick={() => setConfirmDialog(null)} className={styles.modalClose}><X size={20}/></button>
+                  <h3 className={styles.modalTitle}>{confirmDialog.title}</h3>
+                  <p className={styles.modalSubtitle}>{confirmDialog.message}</p>
+                  <div className={styles.modalActions}>
                       <Button variant="outline" className="flex-1" onClick={() => setConfirmDialog(null)}>
                           {confirmDialog.cancelLabel || 'Cancelar'}
                       </Button>
