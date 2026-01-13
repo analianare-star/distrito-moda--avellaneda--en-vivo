@@ -1,18 +1,20 @@
 // StoryModal shows a reel preview with actions and metadata.
-import React from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Reel } from '../types';
-import { X, ExternalLink, Clock, Share2, Eye } from 'lucide-react';
+import { X, ExternalLink, Clock, Share2, Eye, Heart, MapPin, BookOpen } from 'lucide-react';
 import { Button } from './Button';
 import styles from './StoryModal.module.css';
 
 interface StoryModalProps {
     reel: Reel;
+    reels: Reel[];
+    onNavigate: (reel: Reel) => void;
     onClose: () => void;
     onNotify?: (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => void;
     isSeen?: boolean;
 }
 
-export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify, isSeen }) => {
+export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate, onClose, onNotify, isSeen }) => {
     
     // Calculate time left
     const now = new Date();
@@ -20,9 +22,32 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify,
     const diffMs = expires.getTime() - now.getTime();
     const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
     const minutesLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const storyImage = reel.thumbnail || reel.shopLogo;
+    const hasMedia = Boolean(storyImage);
+    const mapsUrl =
+        reel.shopMapsUrl ||
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(reel.shopName)}`;
+    const catalogUrl = reel.shopCatalogUrl || '';
+    const [liked, setLiked] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const reelIndex = Math.max(0, reels.findIndex((item) => item.id === reel.id));
+    const totalReels = reels.length;
 
     const handleOpenExternal = () => {
         window.open(reel.url, '_blank');
+    };
+
+    const handleOpenMaps = () => {
+        if (!mapsUrl) return;
+        window.open(mapsUrl, '_blank');
+    };
+
+    const handleOpenCatalog = () => {
+        if (!catalogUrl) {
+            onNotify?.('Catálogo no disponible', 'Esta tienda aún no cargó su catálogo.', 'warning');
+            return;
+        }
+        window.open(catalogUrl, '_blank');
     };
 
     const handleShare = async () => {
@@ -53,6 +78,60 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify,
         onNotify?.('No se pudo copiar', 'Tu navegador no permite copiar automáticamente.', 'error');
     };
 
+    const handleNext = useCallback(() => {
+        if (totalReels <= 1) {
+            onClose();
+            return;
+        }
+        if (reelIndex < totalReels - 1) {
+            onNavigate(reels[reelIndex + 1]);
+            return;
+        }
+        onClose();
+    }, [onClose, onNavigate, reelIndex, reels, totalReels]);
+
+    const handlePrev = useCallback(() => {
+        if (totalReels <= 1) {
+            onClose();
+            return;
+        }
+        if (reelIndex > 0) {
+            onNavigate(reels[reelIndex - 1]);
+            return;
+        }
+        onClose();
+    }, [onClose, onNavigate, reelIndex, reels, totalReels]);
+
+    useEffect(() => {
+        setProgress(0);
+        const timer = window.setInterval(() => {
+            setProgress((value) => {
+                if (value >= 100) {
+                    window.clearInterval(timer);
+                    handleNext();
+                    return 100;
+                }
+                return value + 1;
+            });
+        }, 100);
+        return () => window.clearInterval(timer);
+    }, [reel.id, handleNext]);
+
+    const progressBars = useMemo(
+        () =>
+            reels.map((item, index) => {
+                const isComplete = index < reelIndex;
+                const isActive = index === reelIndex;
+                const width = isComplete ? 100 : isActive ? progress : 0;
+                return (
+                    <div key={item.id} className={styles.progressTrack}>
+                        <div className={styles.progressFill} style={{ width: `${width}%` }} />
+                    </div>
+                );
+            }),
+        [progress, reelIndex, reels]
+    );
+
     return (
         <div className={styles.overlay}>
             <button 
@@ -63,6 +142,11 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify,
             </button>
 
             <div className={styles.card}>
+
+                <div className={styles.progressRow}>{progressBars}</div>
+
+                <button className={styles.tapZoneLeft} onClick={handlePrev} aria-label="Historia anterior" />
+                <button className={styles.tapZoneRight} onClick={handleNext} aria-label="Historia siguiente" />
                 
                 {/* Header Info */}
                 <div className={styles.header}>
@@ -97,30 +181,61 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify,
                 <div className={styles.content}>
                     {/* Background blurry effect */}
                     <div className={styles.contentBackdrop}>
-                         <img src={reel.shopLogo} className={styles.contentBackdropImage} alt={reel.shopName} />
+                         <img src={storyImage} className={styles.contentBackdropImage} alt={reel.shopName} />
                     </div>
-                    
-                    <div className={styles.contentStack}>
-                        <div className={styles.contentIcon}>
-                            <ExternalLink size={32} className="text-white" />
+                    {hasMedia ? (
+                        <div className={styles.mediaWrap}>
+                            <img
+                                src={storyImage}
+                                alt={reel.shopName}
+                                loading="lazy"
+                                decoding="async"
+                                className={styles.mediaImage}
+                            />
                         </div>
-                        <div>
-                            <h3 className={styles.contentTitle}>Contenido Externo</h3>
-                            <p className={styles.contentText}>Esta historia está alojada en {reel.platform}.</p>
+                    ) : (
+                        <div className={styles.contentStack}>
+                            <div className={styles.contentIcon}>
+                                <ExternalLink size={32} className="text-white" />
+                            </div>
+                            <div>
+                                <h3 className={styles.contentTitle}>Contenido Externo</h3>
+                                <p className={styles.contentText}>Esta historia está alojada en {reel.platform}.</p>
+                            </div>
+                            <Button onClick={handleOpenExternal} className={styles.ctaButton}>
+                                Ver en {reel.platform}
+                            </Button>
                         </div>
-                        <Button onClick={handleOpenExternal} className={styles.ctaButton}>
-                            Ver en {reel.platform}
-                        </Button>
-                    </div>
+                    )}
                 </div>
 
                 {/* Footer Actions */}
                 <div className={styles.footer}>
-                    <button onClick={handleShare} className={styles.shareButton}>
-                        <Share2 size={18} /> Compartir
-                    </button>
-                    <div className={styles.footerLabel}>
-                        Historias de Distrito Moda
+                    <div className={styles.footerActions}>
+                        <button onClick={handleShare} className={styles.shareButton}>
+                            <Share2 size={18} /> Compartir
+                        </button>
+                        <button
+                            onClick={() => {
+                                setLiked((prev) => !prev);
+                                onNotify?.('Me gusta', 'Sumamos tu reacción a esta historia.', 'success');
+                            }}
+                            className={`${styles.likeButton} ${liked ? styles.likeButtonActive : ''}`}
+                            aria-pressed={liked}
+                        >
+                            <Heart size={18} className={liked ? 'fill-current' : ''} /> Me gusta
+                        </button>
+                    </div>
+                    <div className={styles.footerLinks}>
+                        <button onClick={handleOpenMaps} className={styles.footerLinkButton}>
+                            <MapPin size={16} /> Mapa
+                        </button>
+                        <button
+                            onClick={handleOpenCatalog}
+                            className={styles.footerLinkButton}
+                        >
+                            <BookOpen size={16} /> Catálogo
+                        </button>
                     </div>
                 </div>
             </div>

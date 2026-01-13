@@ -264,6 +264,8 @@ export const ClientView: React.FC<ClientViewProps> = ({
       {selectedReel && (
         <StoryModal
           reel={selectedReel}
+          reels={activeReels}
+          onNavigate={onViewReel}
           onClose={onCloseReel}
           onNotify={onNotify}
           isSeen={user.viewedReels.includes(selectedReel.id)}

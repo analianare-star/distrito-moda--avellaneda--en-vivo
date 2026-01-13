@@ -80,6 +80,8 @@ export interface Reel {
   shopLogo: string; // Desnormalizado
   url: string;
   thumbnail?: string; // Opcional
+  shopMapsUrl?: string;
+  shopCatalogUrl?: string;
   createdAtISO: string;
   expiresAtISO: string; // createdAt + 24h
   status: 'ACTIVE' | 'EXPIRED' | 'HIDDEN';

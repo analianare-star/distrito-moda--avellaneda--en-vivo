@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 // Verifica la ruta de 'types' si cambias estructura.
 // Check the 'types' import path if the structure changes.
@@ -21,6 +21,7 @@ import { AdminPreviewBanner } from "./components/layout/AdminPreviewBanner";
 import { AuthModal } from "./components/layout/AuthModal";
 import { ClientLayout } from "./components/layout/ClientLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
+import { MerchantLayout } from "./components/layout/MerchantLayout";
 import { ShopCard } from "./components/ShopCard";
 import { ResetView } from "./components/layout/ResetView";
 import { ClientView } from "./components/views/ClientView";
@@ -106,6 +107,67 @@ const EMPTY_SHOP: Shop = {
 };
 
 const BRAND_LOGO = new URL("./img/logo.svg", import.meta.url).href;
+
+const MOCK_REEL_COUNT = 10;
+const MOCK_REEL_TTL_HOURS = 2;
+
+const normalizeInstagramUrl = (value?: string) => {
+  if (!value) return "";
+  if (value.startsWith("http")) return value;
+  return `https://instagram.com/${value.replace("@", "")}`;
+};
+
+const buildMapsUrl = (shop: Shop) => {
+  if (shop.addressDetails?.mapsUrl) return shop.addressDetails.mapsUrl;
+  const addressParts = [
+    shop.address,
+    shop.addressDetails?.street,
+    shop.addressDetails?.number,
+    shop.addressDetails?.city,
+    shop.addressDetails?.province,
+  ].filter(Boolean);
+  const query = addressParts.length > 0 ? addressParts.join(" ") : shop.name;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+};
+
+const resolveCatalogUrl = (shop: Shop) =>
+  shop.website || normalizeInstagramUrl(shop.socialHandles?.instagram);
+
+const enrichReelsWithShop = (reels: Reel[], shops: Shop[]) =>
+  reels.map((reel) => {
+    const shop = shops.find((item) => item.id === reel.shopId);
+    return {
+      ...reel,
+      thumbnail: reel.thumbnail || shop?.coverUrl || shop?.logoUrl,
+      shopMapsUrl: shop ? buildMapsUrl(shop) : reel.shopMapsUrl,
+      shopCatalogUrl: shop ? resolveCatalogUrl(shop) : reel.shopCatalogUrl,
+    };
+  });
+
+const buildMockReels = (shops: Shop[], reels: Reel[], targetCount: number) => {
+  const usedShopIds = new Set(reels.map((reel) => reel.shopId));
+  const candidates = shops.filter((shop) => !usedShopIds.has(shop.id));
+  const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+  const count = Math.min(targetCount, shuffled.length);
+  const now = Date.now();
+
+  return shuffled.slice(0, count).map((shop, index) => ({
+    id: `mock-${shop.id}`,
+    shopId: shop.id,
+    shopName: shop.name,
+    shopLogo: shop.logoUrl,
+    url: resolveCatalogUrl(shop) || "https://www.distritomoda.com.ar",
+    thumbnail: shop.coverUrl || shop.logoUrl,
+    createdAtISO: new Date(now - index * 1000).toISOString(),
+    expiresAtISO: new Date(now + MOCK_REEL_TTL_HOURS * 60 * 60 * 1000).toISOString(),
+    status: "ACTIVE",
+    origin: "PLAN",
+    platform: "Instagram",
+    views: Math.floor(Math.random() * 120) + 1,
+    shopMapsUrl: buildMapsUrl(shop),
+    shopCatalogUrl: resolveCatalogUrl(shop),
+  }));
+};
 
 const CLIENT_NAV_CONFIG: Record<
   ClientNavId,
@@ -378,9 +440,15 @@ const App: React.FC = () => {
         api.fetchReels(),
       ]);
 
+      const enrichedReels = enrichReelsWithShop(reels, shops);
+      const mockReels = buildMockReels(shops, enrichedReels, MOCK_REEL_COUNT);
+      const activeOnly = [...enrichedReels, ...mockReels].filter(
+        (reel) => new Date(reel.expiresAtISO).getTime() > Date.now()
+      );
+
       setAllShops(shops);
       setAllStreams(streams);
-      setActiveReels(reels);
+      setActiveReels(activeOnly);
 
       // Inicializa currentShopId si esta vacio y hay tiendas.
       // Initialize currentShopId when empty and shops exist.
@@ -397,6 +465,16 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isResetView) return;
     refreshData();
+  }, [isResetView]);
+
+  useEffect(() => {
+    if (isResetView) return;
+    const timer = window.setInterval(() => {
+      setActiveReels((prev) =>
+        prev.filter((reel) => new Date(reel.expiresAtISO).getTime() > Date.now())
+      );
+    }, 60_000);
+    return () => window.clearInterval(timer);
   }, [isResetView]);
 
   useEffect(() => {
@@ -1284,6 +1362,7 @@ const App: React.FC = () => {
   };
 
   const handleViewReel = (reel: Reel) => {
+    const isMockReel = reel.id.startsWith("mock-");
     setSelectedReel(reel);
     if (user.isLoggedIn && authProfile?.userType === "CLIENT") {
       if (!user.viewedReels.includes(reel.id)) {
@@ -1292,7 +1371,9 @@ const App: React.FC = () => {
           viewedReels: [...prev.viewedReels, reel.id],
         }));
       }
-      void api.registerReelView(reel.id);
+      if (!isMockReel) {
+        void api.registerReelView(reel.id);
+      }
       pushHistory(`Viste historia de ${reel.shopName}`);
     }
   };
@@ -1382,10 +1463,14 @@ const App: React.FC = () => {
       return a.name.localeCompare(b.name);
     });
 
-  const publicShops = sortShopsByPriority(allShops.filter(isPublicShop));
-  const featuredShops = publicShops.slice(0, 60);
-  const favoriteShops = sortShopsByPriority(
-    allShops.filter((shop) => user.favorites.includes(shop.id))
+  const publicShops = useMemo(
+    () => sortShopsByPriority(allShops.filter(isPublicShop)),
+    [allShops]
+  );
+  const featuredShops = useMemo(() => publicShops.slice(0, 60), [publicShops]);
+  const favoriteShops = useMemo(
+    () => sortShopsByPriority(allShops.filter((shop) => user.favorites.includes(shop.id))),
+    [allShops, user.favorites]
   );
   const normalizedShopQuery = shopQuery.trim().toLowerCase();
   const filterShopsByQuery = (shops: Shop[]) => {
@@ -1823,24 +1908,57 @@ const App: React.FC = () => {
           path="/tienda/*"
           element={
             canAccessShopRoute ? (
-              <MerchantView
-                currentShop={currentShop}
-                streams={allStreams}
-                onStreamCreate={handleStreamCreate}
-                onStreamUpdate={handleStreamUpdate}
-                onStreamDelete={handleStreamDelete}
-                onShopUpdate={handleShopUpdate}
-                onExtendStream={handleExtendStream}
-                onBuyQuota={handleBuyQuota}
-                onReelChange={refreshData}
-                onRefreshData={refreshData}
-                activeTab={merchantTab}
-                onTabChange={syncMerchantTab}
-                notifications={notifications}
-                onMarkNotificationRead={handleMarkNotificationRead}
-                onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
-                isPreview={Boolean(adminPreview)}
-              />
+              <MerchantLayout
+                header={
+                  <AppHeader
+                    brandLogo={BRAND_LOGO}
+                    bottomNavItems={bottomNavItems}
+                    activeBottomNav={activeBottomNav}
+                    isDesktopMenuOpen={isDesktopMenuOpen}
+                    onToggleDesktopMenu={() =>
+                      setIsDesktopMenuOpen((prev) => !prev)
+                    }
+                    onCloseDesktopMenu={() => setIsDesktopMenuOpen(false)}
+                    userName={currentShop?.name || user.name || "Tienda"}
+                    isLoggedIn={user.isLoggedIn}
+                    onLogout={handleToggleClientLogin}
+                  />
+                }
+                footer={
+                  <AppFooterNav
+                    items={bottomNavItems}
+                    activeId={activeBottomNav}
+                  />
+                }
+                previewBanner={
+                  adminPreview ? (
+                    <AdminPreviewBanner
+                      mode="MERCHANT"
+                      shopName={previewShop?.name}
+                      onExit={stopAdminPreview}
+                    />
+                  ) : null
+                }
+              >
+                <MerchantView
+                  currentShop={currentShop}
+                  streams={allStreams}
+                  onStreamCreate={handleStreamCreate}
+                  onStreamUpdate={handleStreamUpdate}
+                  onStreamDelete={handleStreamDelete}
+                  onShopUpdate={handleShopUpdate}
+                  onExtendStream={handleExtendStream}
+                  onBuyQuota={handleBuyQuota}
+                  onReelChange={refreshData}
+                  onRefreshData={refreshData}
+                  activeTab={merchantTab}
+                  onTabChange={syncMerchantTab}
+                  notifications={notifications}
+                  onMarkNotificationRead={handleMarkNotificationRead}
+                  onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+                  isPreview={Boolean(adminPreview)}
+                />
+              </MerchantLayout>
             ) : (
               <Navigate to="/" replace />
             )
