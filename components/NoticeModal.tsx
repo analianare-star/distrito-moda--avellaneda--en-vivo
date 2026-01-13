@@ -1,6 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { Button } from './Button';
+import styles from './NoticeModal.module.css';
 
 // NoticeModal shows lightweight feedback for success, warning, or errors.
 type NoticeTone = 'info' | 'success' | 'warning' | 'error';
@@ -35,19 +36,19 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({
   const styles = TONE_STYLES[tone];
 
   return (
-    <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative">
+    <div className={styles.overlay}>
+      <div className={styles.card}>
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-dm-dark"
+          className={styles.closeButton}
           aria-label="Cerrar"
         >
           <X size={18} />
         </button>
-        <div className={`rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider ${styles.bg} ${styles.text}`}>
+        <div className={`${styles.titleBadge} ${styles.bg} ${styles.text}`}>
           {title}
         </div>
-        <p className="mt-4 text-sm text-gray-600">{message}</p>
+        <p className={styles.message}>{message}</p>
         <Button
           className="mt-6 w-full"
           onClick={() => {

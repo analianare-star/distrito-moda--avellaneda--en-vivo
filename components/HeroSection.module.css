@@ -1,0 +1,239 @@
+.root {
+  @apply w-full flex flex-col overflow-x-hidden;
+}
+
+.reelsWrap {
+  @apply w-full bg-white border-b border-gray-100 pt-6 pb-6 animate-in slide-in-from-top-2 fade-in duration-500;
+}
+
+.reelsHeader {
+  @apply max-w-7xl mx-auto px-4 mb-4 flex items-center gap-2;
+}
+
+.reelsIcon {
+  @apply p-1.5 bg-dm-crimson/10 rounded-full text-dm-crimson;
+}
+
+.reelsTitle {
+  @apply font-serif text-lg font-bold text-dm-dark tracking-wide;
+}
+
+.reelsScroller {
+  @apply max-w-7xl mx-auto px-4 overflow-x-auto no-scrollbar overscroll-x-contain;
+}
+
+.reelsRow {
+  @apply flex gap-5 min-w-max px-1 pb-2;
+}
+
+.reelCard {
+  @apply flex flex-col items-center gap-2 cursor-pointer w-[72px];
+}
+
+.reelRing {
+  @apply w-[72px] h-[72px] rounded-full p-[2px] transition-all duration-300;
+}
+
+.reelRingSeen {
+  @apply bg-gray-200;
+}
+
+.reelRingNew {
+  @apply bg-gradient-to-tr from-dm-crimson via-orange-400 to-yellow-400 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-dm-crimson/20;
+}
+
+.reelImageWrap {
+  @apply w-full h-full rounded-full border-[3px] border-white overflow-hidden bg-white;
+}
+
+.reelImage {
+  @apply w-full h-full object-cover transition-all duration-500;
+}
+
+.reelImageSeen {
+  @apply opacity-60 grayscale scale-100;
+}
+
+.reelImageNew {
+  @apply opacity-100 scale-100 group-hover:scale-110;
+}
+
+.reelName {
+  @apply text-[10px] text-center truncate w-full transition-colors;
+}
+
+.reelNameSeen {
+  @apply text-gray-400 font-normal;
+}
+
+.reelNameNew {
+  @apply text-dm-dark font-bold group-hover:text-dm-crimson;
+}
+
+.reelViews {
+  @apply text-[9px] text-gray-400;
+}
+
+.liveWrap {
+  @apply w-full bg-dm-dark text-white overflow-hidden relative transition-all duration-500;
+}
+
+.liveBackdrop {
+  @apply absolute inset-0 z-0 animate-in fade-in duration-700;
+}
+
+.liveBackdropImage {
+  @apply w-full h-full object-cover opacity-30 blur-xl scale-110;
+}
+
+.liveBackdropOverlay {
+  @apply absolute inset-0 bg-black/20;
+}
+
+.liveContent {
+  @apply relative z-10 max-w-7xl mx-auto px-4 py-8 md:py-12 flex items-center gap-4;
+}
+
+.liveNavButton {
+  @apply hidden md:flex p-2 rounded-full bg-black/20 hover:bg-white/20 text-white transition-all backdrop-blur-sm z-20;
+}
+
+.liveStack {
+  @apply flex-1 flex flex-col md:flex-row items-center gap-8 animate-in slide-in-from-right-4 fade-in duration-300;
+}
+
+.liveMedia {
+  @apply w-full md:w-1/2 aspect-video rounded-xl overflow-hidden shadow-2xl border border-white/10 relative cursor-pointer bg-black;
+}
+
+.liveMediaImage {
+  @apply w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100;
+}
+
+.liveMediaOverlay {
+  @apply absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors;
+}
+
+.liveMediaBadgeRow {
+  @apply absolute top-4 left-4 flex gap-2;
+}
+
+.liveBadge {
+  @apply bg-dm-crimson text-white text-xs font-bold px-3 py-1 rounded animate-pulse shadow-lg flex items-center gap-2;
+}
+
+.liveBadgeDot {
+  @apply w-2 h-2 bg-white rounded-full;
+}
+
+.liveBadgeViews {
+  @apply bg-black/60 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded flex items-center gap-1;
+}
+
+.liveInfo {
+  @apply w-full md:w-1/2 text-left space-y-4 relative;
+}
+
+.liveShop {
+  @apply flex items-center gap-3;
+}
+
+.liveShopName {
+  @apply font-serif text-xl font-bold leading-none text-white;
+}
+
+.liveShopTag {
+  @apply text-xs text-dm-light uppercase tracking-wider mt-1;
+}
+
+.liveTitle {
+  @apply font-serif text-3xl md:text-5xl font-bold leading-tight text-white drop-shadow-sm;
+}
+
+.liveActions {
+  @apply flex gap-4 pt-2;
+}
+
+.liveMobileNav {
+  @apply flex md:hidden justify-between mt-4 w-full;
+}
+
+.liveMobileButton {
+  @apply p-2 bg-white/10 rounded-full;
+}
+
+.liveMobileCounter {
+  @apply text-xs self-center text-white/50;
+}
+
+.liveIndicators {
+  @apply absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20;
+}
+
+.liveDot {
+  @apply w-2 h-2 rounded-full transition-all duration-300;
+}
+
+.liveDotActive {
+  @apply bg-white w-6;
+}
+
+.liveDotInactive {
+  @apply bg-white/40 hover:bg-white/60;
+}
+
+.banner {
+  @apply relative w-full h-[40vh] md:h-[400px] flex items-center justify-center overflow-hidden;
+}
+
+.bannerBackdrop {
+  @apply absolute inset-0 z-0;
+}
+
+.bannerImage {
+  @apply w-full h-full object-cover;
+}
+
+.bannerOverlay {
+  @apply absolute inset-0 bg-dm-dark/60 backdrop-blur-[1px];
+}
+
+.bannerContent {
+  @apply relative z-10 text-center px-4 max-w-4xl mx-auto mt-8;
+}
+
+.bannerEyebrow {
+  @apply font-serif text-white text-xl tracking-[0.3em] border-b border-white/30 pb-2 inline-block mb-4;
+}
+
+.bannerTitle {
+  @apply font-serif text-4xl md:text-6xl text-white mb-4 leading-tight;
+}
+
+.bannerText {
+  @apply font-sans text-lg text-white/80 font-light max-w-xl mx-auto;
+}
+
+.filters {
+  @apply bg-white border-b border-gray-100 shadow-sm sticky top-16 z-30;
+}
+
+.filtersInner {
+  @apply max-w-7xl mx-auto px-4 py-4 overflow-x-auto no-scrollbar overscroll-x-contain;
+}
+
+.filtersRow {
+  @apply flex gap-2 md:justify-center min-w-max;
+}
+
+.filterButton {
+  @apply px-6 py-2 rounded-full font-sans font-bold text-xs uppercase tracking-wider transition-all duration-200 border;
+}
+
+.filterActive {
+  @apply bg-dm-dark text-white border-dm-dark;
+}
+
+.filterInactive {
+  @apply bg-white text-gray-500 border-gray-200 hover:border-dm-dark hover:text-dm-dark;
+}

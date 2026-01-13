@@ -1,0 +1,91 @@
+.overlay {
+  @apply fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200;
+}
+
+.closeButton {
+  @apply absolute top-4 right-4 z-50 p-2 text-white hover:text-dm-crimson;
+}
+
+.card {
+  @apply relative w-full max-w-sm h-[80vh] bg-dm-dark rounded-xl overflow-hidden shadow-2xl flex flex-col border border-white/10;
+}
+
+.header {
+  @apply absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/80 to-transparent z-20 flex items-center gap-3;
+}
+
+.avatarWrap {
+  @apply w-10 h-10 rounded-full border-2 border-dm-crimson p-0.5 bg-white;
+}
+
+.avatarImage {
+  @apply w-full h-full rounded-full object-cover;
+}
+
+.headerTitle {
+  @apply text-white font-bold text-sm;
+}
+
+.meta {
+  @apply flex items-center gap-2 text-gray-300 text-xs;
+}
+
+.metaItem {
+  @apply flex items-center gap-1;
+}
+
+.metaDot {
+  @apply h-1 w-1 rounded-full bg-gray-500;
+}
+
+.seenActive {
+  @apply text-gray-400;
+}
+
+.seenNew {
+  @apply text-dm-crimson;
+}
+
+.content {
+  @apply flex-1 bg-black flex flex-col items-center justify-center text-center p-8 relative;
+}
+
+.contentBackdrop {
+  @apply absolute inset-0 opacity-30;
+}
+
+.contentBackdropImage {
+  @apply w-full h-full object-cover blur-2xl;
+}
+
+.contentStack {
+  @apply relative z-10 space-y-6;
+}
+
+.contentIcon {
+  @apply w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto animate-pulse;
+}
+
+.contentTitle {
+  @apply text-white font-serif text-2xl mb-2;
+}
+
+.contentText {
+  @apply text-gray-300 text-sm;
+}
+
+.ctaButton {
+  @apply bg-dm-crimson hover:bg-white hover:text-dm-crimson text-white w-full py-4 shadow-lg shadow-dm-crimson/20;
+}
+
+.footer {
+  @apply p-4 bg-gradient-to-t from-black/80 to-transparent z-20 flex justify-between items-center;
+}
+
+.shareButton {
+  @apply text-white hover:text-dm-crimson transition-colors flex items-center gap-2 text-sm font-bold;
+}
+
+.footerLabel {
+  @apply text-[10px] text-gray-500 uppercase tracking-widest font-sans;
+}

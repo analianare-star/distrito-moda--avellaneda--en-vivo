@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Flag, AlertTriangle } from 'lucide-react';
 import { Button } from './Button';
+import styles from './ReportModal.module.css';
 
 // ReportModal collects a reason to report a stream.
 const REASONS = [
@@ -23,30 +24,30 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, streamTitle, o
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+    <div className={styles.overlay}>
+      <div className={styles.card}>
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-dm-dark"
+          className={styles.closeButton}
           aria-label="Cerrar"
         >
           <X size={18} />
         </button>
-        <div className="flex items-center gap-2 text-dm-crimson font-bold text-xs uppercase tracking-wider">
+        <div className={styles.header}>
           <Flag size={14} /> Reportar vivo
         </div>
-        <h3 className="mt-2 font-serif text-xl text-dm-dark">{streamTitle}</h3>
-        <p className="mt-2 text-xs text-gray-500 flex items-start gap-2">
-          <AlertTriangle size={14} className="text-orange-400 mt-0.5" />
+        <h3 className={styles.title}>{streamTitle}</h3>
+        <p className={styles.helper}>
+          <AlertTriangle size={14} className={styles.helperIcon} />
           Selecciona un motivo para registrar el reporte. Esto se audita en el backend.
         </p>
 
-        <div className="mt-4 space-y-2">
+        <div className={styles.reasons}>
           {REASONS.map((item) => (
             <label
               key={item.value}
-              className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm ${
-                reason === item.value ? 'border-dm-crimson bg-red-50 text-dm-dark' : 'border-gray-200 text-gray-600'
+              className={`${styles.reason} ${
+                reason === item.value ? styles.reasonActive : styles.reasonInactive
               }`}
             >
               <input
@@ -61,7 +62,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, streamTitle, o
           ))}
         </div>
 
-        <div className="mt-6 flex gap-3">
+        <div className={styles.actions}>
           <Button variant="outline" className="flex-1" onClick={onClose}>
             Cancelar
           </Button>

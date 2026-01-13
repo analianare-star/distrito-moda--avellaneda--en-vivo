@@ -4,6 +4,7 @@ import { Button } from './Button';
 import { ShareableCard } from './ShareableCard';
 import { LogoBubble } from './LogoBubble';
 import { X, MapPin, Globe, Instagram, Phone, UserPlus, Check, AlertOctagon, Clock } from 'lucide-react';
+import styles from './ShopDetailModal.module.css';
 
 // ShopDetailModal presents the shop profile with contact and agenda actions.
 interface ShopDetailModalProps {
@@ -61,25 +62,25 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
   const waLines = shop.whatsappLines ? shop.whatsappLines.filter(l => l.number && l.number.trim() !== '').slice(0, whatsappLimit) : [];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+    <div className={styles.overlay}>
+      <div className={styles.card}>
         
         {/* Header */}
-        <div className="relative h-36 bg-dm-dark flex-shrink-0 overflow-hidden">
+        <div className={styles.header}>
             {shop.coverUrl && (
                 <div
-                    className="absolute inset-0 bg-cover bg-center"
+                    className={styles.headerCover}
                     style={{ backgroundImage: `url(${shop.coverUrl})` }}
                 />
             )}
             <button 
                 onClick={onClose}
-                className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/20 hover:bg-black/40 rounded-full p-2 transition-colors z-10"
+                className={styles.closeButton}
                 aria-label="Cerrar"
             >
                 <X size={20} />
             </button>
-            <div className="absolute -bottom-10 left-6 flex items-end justify-between w-[calc(100%-48px)]">
+            <div className={styles.headerContent}>
                 <LogoBubble
                   src={shop.logoUrl}
                   alt={shop.name}
@@ -89,12 +90,12 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                 
                 <button 
                     onClick={() => canClientInteract && onToggleFavorite(shop.id)}
-                    className={`mb-2 px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-sm transition-all ${
+                    className={`${styles.followButton} ${
                         canClientInteract
                           ? isFollowing
-                            ? 'bg-gray-100 text-dm-dark border border-gray-300'
-                            : 'bg-dm-crimson text-white hover:bg-red-700'
-                          : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                            ? styles.followActive
+                            : styles.followInactive
+                          : styles.followDisabled
                     }`}
                     disabled={!canClientInteract}
                     aria-pressed={isFollowing}
@@ -114,12 +115,17 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
         </div>
 
         {/* Body */}
-        <div className="pt-12 px-6 pb-6 flex-1 overflow-y-auto">
-            <h2 className="font-serif text-3xl text-dm-dark leading-none mb-4">{shop.name}</h2>
+        <div className={styles.body}>
+            <h2 className={styles.title}>{shop.name}</h2>
             
             {/* Tabs */}
-            <div className="flex border-b border-gray-100 mb-6">
-                <button onClick={() => setActiveTab('INFO')} className={`flex-1 py-3 text-sm font-bold uppercase tracking-wide border-b-2 ${activeTab === 'INFO' ? 'border-dm-crimson text-dm-crimson' : 'border-transparent text-gray-400'}`}>Perfil</button>
+            <div className={styles.tabs}>
+                <button
+                    onClick={() => setActiveTab('INFO')}
+                    className={`${styles.tabButton} ${activeTab === 'INFO' ? styles.tabActive : styles.tabInactive}`}
+                >
+                    Perfil
+                </button>
                 <button
                     onClick={() => {
                         if (!canClientInteract) {
@@ -128,35 +134,35 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                         }
                         setActiveTab('CARD');
                     }}
-                    className={`flex-1 py-3 text-sm font-bold uppercase tracking-wide border-b-2 ${activeTab === 'CARD' ? 'border-dm-crimson text-dm-crimson' : 'border-transparent text-gray-400'}`}
+                    className={`${styles.tabButton} ${activeTab === 'CARD' ? styles.tabActive : styles.tabInactive}`}
                 >
                     Tarjeta Digital
                 </button>
             </div>
 
             {activeTab === 'INFO' ? (
-                <div className="space-y-4">
+                <div className={styles.infoSection}>
                     
                     {/* LIVE / UPCOMING CONTEXT BLOCK */}
                     {liveStream ? (
-                        <div className="bg-red-50 border border-red-100 rounded-lg p-4 flex items-center justify-between animate-pulse">
+                        <div className={styles.liveBlock}>
                             <div>
-                                <p className="text-dm-crimson text-xs font-bold uppercase tracking-widest">En Vivo Ahora</p>
-                                <p className="text-dm-dark font-serif text-xl">HOY · {liveStream.scheduledTime} hs</p>
+                                <p className={styles.liveLabel}>En Vivo Ahora</p>
+                                <p className={styles.liveTime}>HOY · {liveStream.scheduledTime} hs</p>
                             </div>
                             <Button size="sm" onClick={() => window.open(liveStream.url, '_blank')}>Ver</Button>
                         </div>
                     ) : upcomingStream ? (
-                         <div className="bg-gray-50 border border-gray-100 rounded-lg p-4">
-                            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest flex items-center gap-1"><Clock size={12}/> Próximo Vivo</p>
-                            <p className="text-dm-dark font-serif text-xl">
+                         <div className={styles.upcomingBlock}>
+                            <p className={styles.upcomingLabel}><Clock size={12}/> Próximo Vivo</p>
+                            <p className={styles.upcomingTime}>
                                 {new Date(upcomingStream.fullDateISO).getDate()} {new Date(upcomingStream.fullDateISO).toLocaleDateString('es-ES', {month: 'short'}).toUpperCase()} · {upcomingStream.scheduledTime} hs
                             </p>
                         </div>
                     ) : null}
 
                     {/* LINKS REALES */}
-                    <div className="space-y-3 mt-4">
+                    <div className={styles.links}>
                          {/* Dynamic WhatsApp Buttons */}
                         {canSeeWhatsapp ? (
                             waLines.length > 0 ? (
@@ -185,7 +191,7 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                             </Button>
                         )}
 
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className={styles.linkGrid}>
                              <Button 
                                 variant="outline" 
                                 className="w-full justify-start text-xs h-10 px-2"
@@ -214,16 +220,16 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                     </div>
                 </div>
             ) : (
-                <div className="flex flex-col items-center pt-2">
+                <div className={styles.cardSection}>
                     {!canClientInteract ? (
-                        <div className="text-center p-8 bg-gray-50 rounded-lg">
+                        <div className={styles.alertBox}>
                             <AlertOctagon size={32} className="mx-auto text-orange-400 mb-2" />
-                            <p className="text-sm text-dm-dark font-bold">Solo clientes pueden ver la tarjeta</p>
-                            <p className="text-xs text-gray-500 mt-1">Inicia sesion con un perfil cliente.</p>
+                            <p className={styles.alertTitle}>Solo clientes pueden ver la tarjeta</p>
+                            <p className={styles.alertText}>Inicia sesion con un perfil cliente.</p>
                         </div>
                     ) : canDownloadCard ? (
                         <>
-                            <div className="scale-75 origin-top -mb-28 shadow-xl">
+                            <div className={styles.cardWrapper}>
                                 <ShareableCard 
                                     shop={shop} 
                                     stream={priorityStream} 
@@ -233,10 +239,10 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                             </div>
                         </>
                     ) : (
-                        <div className="text-center p-8 bg-gray-50 rounded-lg">
+                        <div className={styles.alertBox}>
                             <AlertOctagon size={32} className="mx-auto text-orange-400 mb-2" />
-                            <p className="text-sm text-dm-dark font-bold">Tarjeta no disponible</p>
-                            <p className="text-xs text-gray-500 mt-1">La tienda no ha completado sus datos obligatorios.</p>
+                            <p className={styles.alertTitle}>Tarjeta no disponible</p>
+                            <p className={styles.alertText}>La tienda no ha completado sus datos obligatorios.</p>
                         </div>
                     )}
                 </div>

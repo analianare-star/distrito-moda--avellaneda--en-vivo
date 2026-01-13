@@ -4,6 +4,7 @@ import { FILTERS } from '../constants';
 import { Button } from './Button';
 import { LogoBubble } from './LogoBubble';
 import { PlayCircle, Users, ChevronLeft, ChevronRight, Plus, Sparkles } from 'lucide-react';
+import styles from './HeroSection.module.css';
 
 // HeroSection renders the featured live carousel and filter controls.
 
@@ -57,45 +58,45 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   };
 
   return (
-    <div className="w-full flex flex-col overflow-x-hidden">
+    <div className={styles.root}>
       
       {/* --- STORIES / REELS CAROUSEL --- */}
       {sortedReels.length > 0 && (
-          <div className="w-full bg-white border-b border-gray-100 pt-6 pb-6 animate-in slide-in-from-top-2 fade-in duration-500">
-              <div className="max-w-7xl mx-auto px-4 mb-4 flex items-center gap-2">
-                  <div className="p-1.5 bg-dm-crimson/10 rounded-full text-dm-crimson">
+          <div className={styles.reelsWrap}>
+              <div className={styles.reelsHeader}>
+                  <div className={styles.reelsIcon}>
                     <Sparkles size={16} className="fill-current" />
                   </div>
-                  <h2 className="font-serif text-lg font-bold text-dm-dark tracking-wide">
+                  <h2 className={styles.reelsTitle}>
                       NOVEDADES & HISTORIAS
                   </h2>
               </div>
 
-              <div className="max-w-7xl mx-auto px-4 overflow-x-auto no-scrollbar overscroll-x-contain">
-                  <div className="flex gap-5 min-w-max px-1 pb-2">
+              <div className={styles.reelsScroller}>
+                  <div className={styles.reelsRow}>
                       {sortedReels.map(reel => {
                           const isSeen = viewedReels.includes(reel.id);
                           return (
                               <div 
                                 key={reel.id} 
-                                className="flex flex-col items-center gap-2 cursor-pointer group w-[72px]"
+                                className={`${styles.reelCard} group`}
                                 onClick={() => onViewReel(reel)}
                               >
-                                  <div className={`w-[72px] h-[72px] rounded-full p-[2px] transition-all duration-300 ${isSeen ? 'bg-gray-200' : 'bg-gradient-to-tr from-dm-crimson via-orange-400 to-yellow-400 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-dm-crimson/20'}`}>
-                                      <div className="w-full h-full rounded-full border-[3px] border-white overflow-hidden bg-white">
+                                  <div className={`${styles.reelRing} ${isSeen ? styles.reelRingSeen : styles.reelRingNew}`}>
+                                      <div className={styles.reelImageWrap}>
                                           <img 
                                             src={reel.shopLogo} 
                                             alt={reel.shopName} 
                                             loading="lazy"
                                             decoding="async"
-                                            className={`w-full h-full object-cover transition-all duration-500 ${isSeen ? 'opacity-60 grayscale scale-100' : 'opacity-100 scale-100 group-hover:scale-110'}`} 
+                                            className={`${styles.reelImage} ${isSeen ? styles.reelImageSeen : styles.reelImageNew}`} 
                                           />
                                       </div>
                                   </div>
-                                  <span className={`text-[10px] text-center truncate w-full transition-colors ${isSeen ? 'text-gray-400 font-normal' : 'text-dm-dark font-bold group-hover:text-dm-crimson'}`}>
+                                  <span className={`${styles.reelName} ${isSeen ? styles.reelNameSeen : styles.reelNameNew}`}>
                                       {reel.shopName}
                                   </span>
-                                  <span className="text-[9px] text-gray-400">{reel.views || 0} vistas</span>
+                                  <span className={styles.reelViews}>{reel.views || 0} vistas</span>
                               </div>
                           );
                       })}
@@ -106,21 +107,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       {/* FEATURED LIVE SECTION (CAROUSEL) */}
       {activeStream && (
-          <div className="w-full bg-dm-dark text-white overflow-hidden relative transition-all duration-500">
+          <div className={styles.liveWrap}>
               
               {/* Dynamic Background Blur */}
-              <div key={activeStream.id + '-bg'} className="absolute inset-0 z-0 animate-in fade-in duration-700">
-                  <img src={activeStream.coverImage} className="w-full h-full object-cover opacity-30 blur-xl scale-110" alt={activeStream.title} />
-                  <div className="absolute inset-0 bg-black/20"></div>
+              <div key={activeStream.id + '-bg'} className={styles.liveBackdrop}>
+                  <img src={activeStream.coverImage} className={styles.liveBackdropImage} alt={activeStream.title} />
+                  <div className={styles.liveBackdropOverlay}></div>
               </div>
               
-              <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 md:py-12 flex items-center gap-4">
+              <div className={styles.liveContent}>
                   
                   {/* PREV BUTTON (Only if multiple) */}
                   {liveStreams.length > 1 && (
                       <button 
                         onClick={prevSlide}
-                        className="hidden md:flex p-2 rounded-full bg-black/20 hover:bg-white/20 text-white transition-all backdrop-blur-sm z-20"
+                        className={styles.liveNavButton}
                         aria-label="Anterior"
                       >
                           <ChevronLeft size={32} />
@@ -128,29 +129,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   )}
 
                   {/* CONTENT WRAPPER */}
-                  <div className="flex-1 flex flex-col md:flex-row items-center gap-8 animate-in slide-in-from-right-4 fade-in duration-300" key={activeStream.id}>
+                  <div className={styles.liveStack} key={activeStream.id}>
                       
                       {/* Video/Image Container */}
-                      <div className="w-full md:w-1/2 aspect-video rounded-xl overflow-hidden shadow-2xl border border-white/10 relative group cursor-pointer bg-black" onClick={() => window.open(activeStream.url, '_blank')}>
-                          <img src={activeStream.coverImage} alt={activeStream.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"/>
+                      <div className={`${styles.liveMedia} group`} onClick={() => window.open(activeStream.url, '_blank')}>
+                          <img src={activeStream.coverImage} alt={activeStream.title} className={styles.liveMediaImage}/>
                           
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
+                          <div className={styles.liveMediaOverlay}>
                               <PlayCircle size={64} className="text-white opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all drop-shadow-lg"/>
                           </div>
                           
-                          <div className="absolute top-4 left-4 flex gap-2">
-                              <span className="bg-dm-crimson text-white text-xs font-bold px-3 py-1 rounded animate-pulse shadow-lg flex items-center gap-2">
-                                  <span className="w-2 h-2 bg-white rounded-full"></span> EN VIVO AHORA
+                          <div className={styles.liveMediaBadgeRow}>
+                              <span className={styles.liveBadge}>
+                                  <span className={styles.liveBadgeDot}></span> EN VIVO AHORA
                               </span>
-                              <span className="bg-black/60 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded flex items-center gap-1">
+                              <span className={styles.liveBadgeViews}>
                                   <Users size={12}/> {activeStream.views}
                               </span>
                           </div>
                       </div>
 
                       {/* Info Container */}
-                      <div className="w-full md:w-1/2 text-left space-y-4 relative">
-                          <div className="flex items-center gap-3">
+                      <div className={styles.liveInfo}>
+                          <div className={styles.liveShop}>
                               <LogoBubble
                                 src={activeStream.shop.logoUrl}
                                 alt={activeStream.shop.name}
@@ -158,16 +159,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                                 seed={activeStream.shop.id || activeStream.shop.name}
                               />
                               <div>
-                                  <h3 className="font-serif text-xl font-bold leading-none text-white">{activeStream.shop.name}</h3>
-                                  <p className="text-xs text-dm-light uppercase tracking-wider mt-1">Avellaneda en Vivo</p>
+                                  <h3 className={styles.liveShopName}>{activeStream.shop.name}</h3>
+                                  <p className={styles.liveShopTag}>Avellaneda en Vivo</p>
                               </div>
                           </div>
                           
-                          <h1 className="font-serif text-3xl md:text-5xl font-bold leading-tight text-white drop-shadow-sm">
+                          <h1 className={styles.liveTitle}>
                               {activeStream.title}
                           </h1>
                           
-                          <div className="flex gap-4 pt-2">
+                          <div className={styles.liveActions}>
                               <Button 
                                 variant="primary" 
                                 size="lg" 
@@ -187,10 +188,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                           {/* Mobile Navigation (Visible only on small screens) */}
                           {liveStreams.length > 1 && (
-                              <div className="flex md:hidden justify-between mt-4 w-full">
-                                  <button onClick={prevSlide} className="p-2 bg-white/10 rounded-full"><ChevronLeft/></button>
-                                  <span className="text-xs self-center text-white/50">{currentIndex + 1} / {liveStreams.length}</span>
-                                  <button onClick={nextSlide} className="p-2 bg-white/10 rounded-full"><ChevronRight/></button>
+                              <div className={styles.liveMobileNav}>
+                                  <button onClick={prevSlide} className={styles.liveMobileButton}><ChevronLeft/></button>
+                                  <span className={styles.liveMobileCounter}>{currentIndex + 1} / {liveStreams.length}</span>
+                                  <button onClick={nextSlide} className={styles.liveMobileButton}><ChevronRight/></button>
                               </div>
                           )}
                       </div>
@@ -200,7 +201,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   {liveStreams.length > 1 && (
                       <button 
                         onClick={nextSlide}
-                        className="hidden md:flex p-2 rounded-full bg-black/20 hover:bg-white/20 text-white transition-all backdrop-blur-sm z-20"
+                        className={styles.liveNavButton}
                         aria-label="Siguiente"
                       >
                           <ChevronRight size={32} />
@@ -210,13 +211,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
               {/* CAROUSEL INDICATORS (DOTS) */}
               {liveStreams.length > 1 && (
-                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
+                  <div className={styles.liveIndicators}>
                       {liveStreams.map((_, idx) => (
                           <button
                               key={idx}
                               onClick={() => setCurrentIndex(idx)}
-                              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                                  idx === currentIndex ? 'bg-white w-6' : 'bg-white/40 hover:bg-white/60'
+                              className={`${styles.liveDot} ${
+                                  idx === currentIndex ? styles.liveDotActive : styles.liveDotInactive
                               }`}
                           />
                       ))}
@@ -227,22 +228,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       {/* STANDARD BANNER (Only if no live) */}
       {!activeStream && (
-        <div className="relative w-full h-[40vh] md:h-[400px] flex items-center justify-center overflow-hidden">
-            <div className="absolute inset-0 z-0">
+        <div className={styles.banner}>
+            <div className={styles.bannerBackdrop}>
                 <img 
                 src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop" 
                 alt="Showroom Background" 
-                className="w-full h-full object-cover"
+                className={styles.bannerImage}
                 />
-                <div className="absolute inset-0 bg-dm-dark/60 backdrop-blur-[1px]"></div>
+                <div className={styles.bannerOverlay}></div>
             </div>
 
-            <div className="relative z-10 text-center px-4 max-w-4xl mx-auto mt-8">
-                <span className="font-serif text-white text-xl tracking-[0.3em] border-b border-white/30 pb-2 inline-block mb-4">DISTRITO MODA</span>
-                <h1 className="font-serif text-4xl md:text-6xl text-white mb-4 leading-tight">
+            <div className={styles.bannerContent}>
+                <span className={styles.bannerEyebrow}>DISTRITO MODA</span>
+                <h1 className={styles.bannerTitle}>
                 Avellaneda en Vivo
                 </h1>
-                <p className="font-sans text-lg text-white/80 font-light max-w-xl mx-auto">
+                <p className={styles.bannerText}>
                 La pasarela digital mayorista más grande de la región.
                 </p>
             </div>
@@ -250,17 +251,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       )}
 
       {/* FILTERS BAR */}
-      <div className="bg-white border-b border-gray-100 shadow-sm sticky top-16 z-30">
-          <div className="max-w-7xl mx-auto px-4 py-4 overflow-x-auto no-scrollbar overscroll-x-contain">
-               <div className="flex gap-2 md:justify-center min-w-max">
+      <div className={styles.filters}>
+          <div className={styles.filtersInner}>
+               <div className={styles.filtersRow}>
                     {FILTERS.map((filter) => (
                         <button
                         key={filter}
                         onClick={() => onFilterChange(filter)}
-                        className={`px-6 py-2 rounded-full font-sans font-bold text-xs uppercase tracking-wider transition-all duration-200 border ${
+                        className={`${styles.filterButton} ${
                             activeFilter === filter
-                            ? 'bg-dm-dark text-white border-dm-dark' 
-                            : 'bg-white text-gray-500 border-gray-200 hover:border-dm-dark hover:text-dm-dark'
+                            ? styles.filterActive
+                            : styles.filterInactive
                         }`}
                         >
                         {filter}

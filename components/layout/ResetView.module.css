@@ -1,0 +1,71 @@
+.page {
+  @apply min-h-screen bg-gradient-to-b from-white via-dm-light/30 to-white px-5 py-10 text-dm-dark;
+}
+
+.card {
+  @apply mx-auto w-full max-w-sm rounded-2xl border border-dm-crimson/10 bg-white p-5 shadow-[0_18px_48px_rgba(0,0,0,0.12)];
+}
+
+.header {
+  @apply flex items-center justify-between;
+}
+
+.titleRow {
+  @apply flex items-center gap-2;
+}
+
+.title {
+  @apply font-serif text-lg;
+}
+
+.closeButton {
+  @apply rounded-full border border-gray-200 p-1 text-gray-400 hover:text-gray-600;
+}
+
+.sub {
+  @apply mt-2 text-[11px] text-gray-500;
+}
+
+.box {
+  @apply mt-5 rounded-xl border px-3 py-3 text-[11px];
+}
+
+.boxNeutral {
+  @apply border-gray-100 bg-gray-50 text-gray-500;
+}
+
+.boxError {
+  @apply border-dm-alert/20 bg-dm-alert/10 text-dm-alert;
+}
+
+.boxSuccess {
+  @apply border-dm-crimson/20 bg-dm-crimson/10 text-gray-700;
+}
+
+.primaryButton {
+  @apply mt-3 w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm;
+}
+
+.form {
+  @apply mt-5 space-y-3;
+}
+
+.label {
+  @apply block text-[11px] font-bold text-gray-500;
+}
+
+.inputWrap {
+  @apply mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2;
+}
+
+.input {
+  @apply w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400;
+}
+
+.errorText {
+  @apply text-[11px] font-semibold text-dm-alert;
+}
+
+.submit {
+  @apply w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60;
+}

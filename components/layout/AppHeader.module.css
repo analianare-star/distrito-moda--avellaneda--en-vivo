@@ -1,0 +1,67 @@
+.header {
+  @apply fixed top-0 left-0 right-0 z-50 border-b border-gray-100 bg-white/95 px-6 py-3 shadow-sm backdrop-blur-sm md:py-4;
+}
+
+.nav {
+  @apply relative flex min-h-[88px] items-center justify-between;
+}
+
+.desktopMenuWrap {
+  @apply relative hidden items-center md:flex;
+}
+
+.menuButton {
+  @apply flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-[11px] font-bold text-gray-500 hover:text-dm-dark;
+}
+
+.menuChevron {
+  @apply transition-transform;
+}
+
+.menuPanel {
+  @apply absolute left-0 top-11 z-50 w-48 rounded-xl border border-gray-100 bg-white shadow-xl;
+}
+
+.menuList {
+  @apply py-2;
+}
+
+.menuItem {
+  @apply flex w-full items-center justify-between px-4 py-2 text-xs font-bold hover:bg-gray-50;
+}
+
+.menuItemActive {
+  @apply text-dm-crimson;
+}
+
+.menuItemInactive {
+  @apply text-gray-500;
+}
+
+.badge {
+  @apply rounded-full bg-dm-crimson px-1.5 py-0.5 text-[9px] font-bold text-white;
+}
+
+.logoWrap {
+  @apply absolute left-1/2 -translate-x-1/2;
+}
+
+.logoImage {
+  @apply h-20 w-auto object-contain sm:h-24 md:h-28;
+}
+
+.userInfo {
+  @apply absolute bottom-2 right-4 flex flex-col items-end text-[11px] font-sans leading-tight text-gray-500 md:right-6;
+}
+
+.userDot {
+  @apply font-semibold text-dm-dark;
+}
+
+.userName {
+  @apply inline-block max-w-[150px] truncate font-semibold text-dm-dark;
+}
+
+.logout {
+  @apply mt-0.5 text-[10px] font-semibold text-gray-400 underline underline-offset-2 hover:text-dm-crimson;
+}

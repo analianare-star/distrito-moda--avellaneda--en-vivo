@@ -1,0 +1,23 @@
+.root {
+  @apply col-span-full flex flex-col items-center rounded-2xl border p-6 text-center;
+}
+
+.toneNeutral {
+  @apply border-gray-100 bg-gray-50 text-gray-500;
+}
+
+.toneWarning {
+  @apply border-yellow-200 bg-yellow-50 text-yellow-700;
+}
+
+.iconWrap {
+  @apply mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-dm-crimson shadow-sm;
+}
+
+.title {
+  @apply text-sm font-bold text-dm-dark;
+}
+
+.message {
+  @apply mt-1 text-xs text-gray-500;
+}

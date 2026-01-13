@@ -47,6 +47,8 @@ export const StreamCard: React.FC<StreamCardProps> = ({
   
   // Shop Rating Display
   const shopRating = stream.shop.ratingAverage || 5.0;
+  const coverImage = stream.coverImage?.trim();
+  const hasCoverImage = Boolean(coverImage);
 
   // --- TIME FORMATTING ---
   const formatDisplayDate = (isoString: string, scheduledTime: string) => {
@@ -97,13 +99,19 @@ export const StreamCard: React.FC<StreamCardProps> = ({
       
       {/* 1. HEADER IMAGE & BADGES */}
       <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
-        <img 
-          src={stream.coverImage} 
-          alt={stream.title} 
-          loading="lazy"
-          decoding="async"
-          className={`w-full h-full object-cover transition-transform duration-700 ${isHovered ? 'scale-105' : 'scale-100'} ${isFinished ? 'grayscale' : ''}`}
-        />
+        {hasCoverImage ? (
+          <img 
+            src={coverImage} 
+            alt={stream.title} 
+            loading="lazy"
+            decoding="async"
+            className={`w-full h-full object-cover transition-transform duration-700 ${isHovered ? 'scale-105' : 'scale-100'} ${isFinished ? 'grayscale' : ''}`}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 text-[11px] font-semibold text-gray-500">
+            Sin portada
+          </div>
+        )}
         
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 opacity-60"></div>

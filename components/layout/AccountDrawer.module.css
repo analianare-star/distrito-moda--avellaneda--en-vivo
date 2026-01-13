@@ -1,0 +1,267 @@
+.wrapper {
+  @apply fixed inset-0 z-[130];
+}
+
+.wrapperOpen {
+  @apply pointer-events-auto;
+}
+
+.wrapperClosed {
+  @apply pointer-events-none;
+}
+
+.scrim {
+  @apply absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity;
+}
+
+.scrimOpen {
+  @apply opacity-100;
+}
+
+.scrimClosed {
+  @apply opacity-0;
+}
+
+.drawer {
+  @apply absolute right-0 top-0 h-full w-[88vw] max-w-sm bg-white/95 backdrop-blur-xl shadow-2xl border-l border-gray-200/70 transition-transform duration-300 md:w-[30vw] md:max-w-md rounded-l-3xl flex flex-col;
+}
+
+.drawerOpen {
+  @apply translate-x-0;
+}
+
+.drawerClosed {
+  @apply translate-x-full;
+}
+
+.header {
+  @apply p-6 border-b border-gray-100 flex items-center justify-between;
+}
+
+.headerProfile {
+  @apply flex items-center gap-3;
+}
+
+.avatar {
+  @apply flex h-10 w-10 items-center justify-center rounded-full bg-dm-crimson/10 text-dm-crimson font-bold;
+}
+
+.headerEyebrow {
+  @apply text-[10px] uppercase tracking-widest text-gray-400;
+}
+
+.headerTitle {
+  @apply font-serif text-xl text-dm-dark;
+}
+
+.headerRole {
+  @apply text-[10px] text-gray-400;
+}
+
+.closeButton {
+  @apply text-gray-400 hover:text-dm-dark;
+}
+
+.tabs {
+  @apply px-6 pt-4 pb-2 border-b border-gray-100 flex gap-2;
+}
+
+.tabButton {
+  @apply flex-1 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wider;
+}
+
+.tabActive {
+  @apply border-dm-crimson text-dm-crimson bg-red-50;
+}
+
+.tabInactive {
+  @apply border-gray-200 text-gray-400;
+}
+
+.tabLabel {
+  @apply flex items-center justify-center gap-1;
+}
+
+.tabBadge {
+  @apply ml-1 rounded-full bg-dm-crimson px-1.5 py-0.5 text-[9px] font-bold text-white;
+}
+
+.content {
+  @apply flex-1 overflow-y-auto p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5;
+}
+
+.identityCard {
+  @apply rounded-xl border border-gray-100 bg-gray-50 p-4;
+}
+
+.identityLabel {
+  @apply text-xs text-gray-400 uppercase tracking-widest;
+}
+
+.identityName {
+  @apply mt-1 text-sm font-bold text-dm-dark;
+}
+
+.identityEmail {
+  @apply text-[11px] text-gray-500;
+}
+
+.statsGrid {
+  @apply grid grid-cols-2 gap-3 text-xs;
+}
+
+.statCard {
+  @apply rounded-lg border border-gray-100 p-3 text-center;
+}
+
+.statLabel {
+  @apply text-gray-400 uppercase tracking-widest;
+}
+
+.statValue {
+  @apply mt-1 text-lg font-bold text-dm-dark;
+}
+
+.statValueSmall {
+  @apply mt-1 text-sm font-bold text-dm-dark;
+}
+
+.actionCard {
+  @apply rounded-lg border border-gray-100 p-3 text-left hover:border-dm-crimson;
+}
+
+.actionSmall {
+  @apply text-[10px] text-gray-400;
+}
+
+.historyCard {
+  @apply rounded-xl border border-gray-100 bg-white p-4;
+}
+
+.historyTitle {
+  @apply text-[10px] uppercase tracking-widest text-gray-400;
+}
+
+.historyList {
+  @apply mt-2 space-y-2 max-h-32 overflow-y-auto pr-1 text-xs text-gray-500;
+}
+
+.historyRow {
+  @apply flex items-start justify-between gap-2;
+}
+
+.historyTime {
+  @apply text-[10px] text-gray-400;
+}
+
+.notificationsHeader {
+  @apply flex items-center justify-between;
+}
+
+.notificationsTitle {
+  @apply text-[11px] font-bold uppercase tracking-widest text-gray-400;
+}
+
+.notificationsAction {
+  @apply text-[10px] font-bold text-dm-crimson;
+}
+
+.notificationsEmpty {
+  @apply rounded-xl border border-gray-100 bg-gray-50 p-4 text-center text-xs text-gray-500;
+}
+
+.notificationsList {
+  @apply space-y-3 max-h-[55vh] overflow-y-auto pr-1;
+}
+
+.notificationItem {
+  @apply flex items-start gap-2 rounded-lg border border-gray-100 p-3;
+}
+
+.notificationDot {
+  @apply mt-1 h-2 w-2 rounded-full;
+}
+
+.notificationRead {
+  @apply bg-gray-200;
+}
+
+.notificationUnread {
+  @apply bg-dm-crimson;
+}
+
+.notificationText {
+  @apply text-xs;
+}
+
+.notificationTextRead {
+  @apply text-gray-500;
+}
+
+.notificationTextUnread {
+  @apply text-dm-dark font-semibold;
+}
+
+.notificationDate {
+  @apply text-[10px] text-gray-400;
+}
+
+.notificationActions {
+  @apply flex flex-col items-end gap-1 text-[10px];
+}
+
+.notificationPrimary {
+  @apply font-bold text-dm-crimson hover:text-dm-dark;
+}
+
+.notificationSecondary {
+  @apply font-bold text-gray-400 hover:text-dm-dark;
+}
+
+.remindersTitle {
+  @apply text-[11px] font-bold uppercase tracking-widest text-gray-400;
+}
+
+.remindersEmpty {
+  @apply rounded-xl border border-gray-100 bg-gray-50 p-4 text-center text-xs text-gray-500;
+}
+
+.reminderCard {
+  @apply rounded-lg border border-gray-100 p-3;
+}
+
+.reminderRow {
+  @apply flex items-start justify-between gap-3;
+}
+
+.reminderName {
+  @apply text-xs font-semibold text-dm-dark;
+}
+
+.reminderMeta {
+  @apply text-[10px] text-gray-400;
+}
+
+.reminderRemove {
+  @apply text-[10px] font-bold text-gray-400 hover:text-dm-crimson;
+}
+
+.reminderFooter {
+  @apply mt-2 flex justify-end;
+}
+
+.reminderCalendar {
+  @apply inline-flex items-center gap-1 text-[10px] font-bold text-dm-crimson hover:text-dm-dark;
+}
+
+.guestCard {
+  @apply rounded-xl border border-gray-100 bg-gray-50 p-4 text-center;
+}
+
+.guestText {
+  @apply text-sm text-gray-500;
+}
+
+.guestRegister {
+  @apply mt-2 text-[11px] font-semibold text-gray-500 hover:text-dm-crimson;
+}

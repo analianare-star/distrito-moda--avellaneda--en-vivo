@@ -3,6 +3,7 @@ import React from 'react';
 import { Reel } from '../types';
 import { X, ExternalLink, Clock, Share2, Eye } from 'lucide-react';
 import { Button } from './Button';
+import styles from './StoryModal.module.css';
 
 interface StoryModalProps {
     reel: Reel;
@@ -53,33 +54,39 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify,
     };
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200">
+        <div className={styles.overlay}>
             <button 
                 onClick={onClose} 
-                className="absolute top-4 right-4 text-white hover:text-dm-crimson z-50 p-2"
+                className={styles.closeButton}
             >
                 <X size={32} />
             </button>
 
-            <div className="relative w-full max-w-sm h-[80vh] bg-dm-dark rounded-xl overflow-hidden shadow-2xl flex flex-col border border-white/10">
+            <div className={styles.card}>
                 
                 {/* Header Info */}
-                <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/80 to-transparent z-20 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full border-2 border-dm-crimson p-0.5 bg-white">
-                        <img src={reel.shopLogo} alt={reel.shopName} loading="lazy" decoding="async" className="w-full h-full rounded-full object-cover" />
+                <div className={styles.header}>
+                    <div className={styles.avatarWrap}>
+                        <img
+                            src={reel.shopLogo}
+                            alt={reel.shopName}
+                            loading="lazy"
+                            decoding="async"
+                            className={styles.avatarImage}
+                        />
                     </div>
                     <div className="flex-1">
-                        <p className="text-white font-bold text-sm">{reel.shopName}</p>
-                        <div className="flex items-center gap-2 text-gray-300 text-xs">
-                            <span className="flex items-center gap-1">
+                        <p className={styles.headerTitle}>{reel.shopName}</p>
+                        <div className={styles.meta}>
+                            <span className={styles.metaItem}>
                                 <Clock size={10} /> Expira en {hoursLeft}h {minutesLeft}m
                             </span>
-                            <span className="h-1 w-1 rounded-full bg-gray-500" />
-                            <span className="flex items-center gap-1">
+                            <span className={styles.metaDot} />
+                            <span className={styles.metaItem}>
                                 <Eye size={10} /> {reel.views || 0} vistas
                             </span>
-                            <span className="h-1 w-1 rounded-full bg-gray-500" />
-                            <span className={`text-[10px] font-bold uppercase ${isSeen ? 'text-gray-400' : 'text-dm-crimson'}`}>
+                            <span className={styles.metaDot} />
+                            <span className={`text-[10px] font-bold uppercase ${isSeen ? styles.seenActive : styles.seenNew}`}>
                                 {isSeen ? 'Visto' : 'Nuevo'}
                             </span>
                         </div>
@@ -87,32 +94,32 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, onClose, onNotify,
                 </div>
 
                 {/* Content Placeholder / Preview */}
-                <div className="flex-1 bg-black flex flex-col items-center justify-center text-center p-8 relative">
+                <div className={styles.content}>
                     {/* Background blurry effect */}
-                    <div className="absolute inset-0 opacity-30">
-                         <img src={reel.shopLogo} className="w-full h-full object-cover blur-2xl" alt={reel.shopName} />
+                    <div className={styles.contentBackdrop}>
+                         <img src={reel.shopLogo} className={styles.contentBackdropImage} alt={reel.shopName} />
                     </div>
                     
-                    <div className="relative z-10 space-y-6">
-                        <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto animate-pulse">
+                    <div className={styles.contentStack}>
+                        <div className={styles.contentIcon}>
                             <ExternalLink size={32} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-white font-serif text-2xl mb-2">Contenido Externo</h3>
-                            <p className="text-gray-300 text-sm">Esta historia está alojada en {reel.platform}.</p>
+                            <h3 className={styles.contentTitle}>Contenido Externo</h3>
+                            <p className={styles.contentText}>Esta historia está alojada en {reel.platform}.</p>
                         </div>
-                        <Button onClick={handleOpenExternal} className="bg-dm-crimson hover:bg-white hover:text-dm-crimson text-white w-full py-4 shadow-lg shadow-dm-crimson/20">
+                        <Button onClick={handleOpenExternal} className={styles.ctaButton}>
                             Ver en {reel.platform}
                         </Button>
                     </div>
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-4 bg-gradient-to-t from-black/80 to-transparent z-20 flex justify-between items-center">
-                    <button onClick={handleShare} className="text-white hover:text-dm-crimson transition-colors flex items-center gap-2 text-sm font-bold">
+                <div className={styles.footer}>
+                    <button onClick={handleShare} className={styles.shareButton}>
                         <Share2 size={18} /> Compartir
                     </button>
-                    <div className="text-[10px] text-gray-500 uppercase tracking-widest font-sans">
+                    <div className={styles.footerLabel}>
                         Historias de Distrito Moda
                     </div>
                 </div>

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import styles from './LogoBubble.module.css';
 
 // LogoBubble displays a branded avatar with animated pastel background.
 type LogoBubbleProps = {
@@ -53,8 +54,13 @@ export const LogoBubble: React.FC<LogoBubbleProps> = ({
   } as React.CSSProperties;
 
   return (
-    <div className={`logo-halo ${className || ''}`} style={style} role="img" aria-label={alt}>
-      <div className="logo-glass">
+    <div
+      className={`${styles.logoHalo} ${className || ''}`}
+      style={style}
+      role="img"
+      aria-label={alt}
+    >
+      <div className={styles.logoGlass}>
         {showFallback ? (
           <span className="relative z-10 flex h-full w-full items-center justify-center text-sm font-semibold text-dm-dark/70">
             {initial}
@@ -66,7 +72,7 @@ export const LogoBubble: React.FC<LogoBubbleProps> = ({
             loading="lazy"
             decoding="async"
             onError={() => setHasError(true)}
-            className="logo-bubble-img relative z-10 h-full w-full object-contain"
+            className={`${styles.logoImage} relative z-10 h-full w-full object-contain`}
           />
         )}
       </div>

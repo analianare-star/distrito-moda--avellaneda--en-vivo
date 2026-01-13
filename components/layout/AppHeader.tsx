@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronDown } from "lucide-react";
+import styles from "./AppHeader.module.css";
 
 // AppHeader muestra marca, menu y saludo del usuario.
 // AppHeader renders brand, menu, and user greeting.
@@ -35,22 +36,22 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onLogout,
 }) => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-100 bg-white/95 px-6 py-3 shadow-sm backdrop-blur-sm md:py-4">
+    <header className={styles.header}>
       <nav
-        className="relative flex min-h-[88px] items-center justify-between"
+        className={styles.nav}
         aria-label="Navegacion principal"
       >
-        <div className="relative hidden md:flex items-center">
+        <div className={styles.desktopMenuWrap}>
           <button
             onClick={onToggleDesktopMenu}
-            className="flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-[11px] font-bold text-gray-500 hover:text-dm-dark"
+            className={styles.menuButton}
             aria-expanded={isDesktopMenuOpen}
             aria-controls="desktop-menu"
           >
             Menu
             <ChevronDown
               size={14}
-              className={`transition-transform ${
+              className={`${styles.menuChevron} ${
                 isDesktopMenuOpen ? "rotate-180" : ""
               }`}
             />
@@ -58,9 +59,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           {isDesktopMenuOpen && (
             <div
               id="desktop-menu"
-              className="absolute left-0 top-11 z-50 w-48 rounded-xl border border-gray-100 bg-white shadow-xl"
+              className={styles.menuPanel}
             >
-              <div className="py-2">
+              <div className={styles.menuList}>
                 {bottomNavItems.map((item) => {
                   const isActive = activeBottomNav === item.id;
                   const badgeCount = typeof item.badge === "number" ? item.badge : 0;
@@ -71,14 +72,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                         item.onSelect();
                         onCloseDesktopMenu();
                       }}
-                      className={`flex w-full items-center justify-between px-4 py-2 text-xs font-bold ${
-                        isActive ? "text-dm-crimson" : "text-gray-500"
-                      } hover:bg-gray-50`}
+                      className={`${styles.menuItem} ${
+                        isActive ? styles.menuItemActive : styles.menuItemInactive
+                      }`}
                     >
                       <span className="flex items-center gap-2">
                         {item.label}
                         {badgeCount > 0 && (
-                          <span className="rounded-full bg-dm-crimson px-1.5 py-0.5 text-[9px] font-bold text-white">
+                          <span className={styles.badge}>
                             {badgeCount > 9 ? "9+" : badgeCount}
                           </span>
                         )}
@@ -92,26 +93,26 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           )}
         </div>
 
-        <div className="absolute left-1/2 -translate-x-1/2">
+        <div className={styles.logoWrap}>
           <img
             src={brandLogo}
             alt="Distrito Moda"
-            className="h-20 w-auto object-contain sm:h-24 md:h-28"
+            className={styles.logoImage}
           />
         </div>
 
-        <div className="absolute bottom-2 right-4 flex flex-col items-end text-[11px] font-sans text-gray-500 leading-tight md:right-6">
+        <div className={styles.userInfo}>
           <span className="flex items-center gap-1">
             <span>Hola</span>
-            <span className="font-semibold text-dm-dark">·</span>
-            <span className="inline-block max-w-[150px] truncate font-semibold text-dm-dark">
+            <span className={styles.userDot}>·</span>
+            <span className={styles.userName}>
               {userName}
             </span>
           </span>
           {isLoggedIn && (
             <button
               onClick={onLogout}
-              className="mt-0.5 text-[10px] font-semibold text-gray-400 underline underline-offset-2 hover:text-dm-crimson"
+              className={styles.logout}
             >
               Salir
             </button>

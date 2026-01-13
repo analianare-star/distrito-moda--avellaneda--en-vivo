@@ -1,6 +1,7 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 import { Button } from './Button';
+import styles from './EmptyState.module.css';
 
 // EmptyState provides a friendly placeholder with optional CTA.
 interface EmptyStateProps {
@@ -12,18 +13,15 @@ interface EmptyStateProps {
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({ title, message, actionLabel, onAction, tone = 'neutral' }) => {
-  const toneStyles =
-    tone === 'warning'
-      ? 'border-yellow-200 bg-yellow-50 text-yellow-700'
-      : 'border-gray-100 bg-gray-50 text-gray-500';
+  const toneStyles = tone === 'warning' ? styles.toneWarning : styles.toneNeutral;
 
   return (
-    <div className={`col-span-full flex flex-col items-center rounded-2xl border p-6 text-center ${toneStyles}`}>
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-dm-crimson shadow-sm">
+    <div className={`${styles.root} ${toneStyles}`}>
+      <div className={styles.iconWrap}>
         <Info size={18} />
       </div>
-      <p className="text-sm font-bold text-dm-dark">{title}</p>
-      <p className="mt-1 text-xs text-gray-500">{message}</p>
+      <p className={styles.title}>{title}</p>
+      <p className={styles.message}>{message}</p>
       {actionLabel && onAction && (
         <Button size="sm" className="mt-4" onClick={onAction}>
           {actionLabel}

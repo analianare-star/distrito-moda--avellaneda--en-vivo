@@ -19,6 +19,9 @@ import { AppHeader } from "./components/layout/AppHeader";
 import { AppFooterNav } from "./components/layout/AppFooterNav";
 import { AccountDrawer } from "./components/layout/AccountDrawer";
 import { AdminPreviewBanner } from "./components/layout/AdminPreviewBanner";
+import { ShopCard } from "./components/ShopCard";
+import authStyles from "./components/layout/AuthModal.module.css";
+import resetStyles from "./components/layout/ResetView.module.css";
 import { ClientView } from "./components/views/ClientView";
 import { MerchantView } from "./components/views/MerchantView";
 import { AdminView } from "./components/views/AdminView";
@@ -1333,138 +1336,16 @@ const App: React.FC = () => {
       toggleShopCard(shopId);
     }
   };
-  const renderShopCard = (shop: Shop) => {
-    const isActive = activeShopCardId === shop.id;
-    const hasCover = Boolean(shop.coverUrl);
-
-    if (!hasCover) {
-      return (
-        <button
-          key={shop.id}
-          onClick={() => handleOpenShop(shop)}
-          className="rounded-2xl border border-gray-100 bg-white p-4 md:p-5 text-left shadow-sm transition hover:shadow-md"
-        >
-          <div className="flex items-center gap-3">
-            <LogoBubble
-              src={shop.logoUrl}
-              alt={shop.name}
-              size={48}
-              seed={shop.id || shop.name}
-            />
-            <div>
-              <p className="text-sm font-bold text-dm-dark">{shop.name}</p>
-              <p className="text-[11px] text-gray-500 uppercase">
-                {shop.plan}
-              </p>
-            </div>
-          </div>
-          <div className="mt-2 flex items-center gap-2 text-[10px] text-gray-500">
-            <span className="font-bold text-dm-dark">
-              {shop.ratingAverage?.toFixed(1) || "0.0"}
-            </span>
-            <span>★</span>
-            <span>({shop.ratingCount || 0})</span>
-          </div>
-          <p className="mt-3 text-xs text-gray-500 line-clamp-2">
-            {shop.address || "Sin dirección cargada"}
-          </p>
-        </button>
-      );
-    }
-
-    return (
-      <div
-        key={shop.id}
-        role="button"
-        tabIndex={0}
-        onClick={() => toggleShopCard(shop.id)}
-        onKeyDown={(event) => handleShopCardKeyDown(event, shop.id)}
-        className="group relative min-h-[140px] overflow-hidden rounded-2xl border border-gray-100 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-dm-crimson/40"
-      >
-        <img
-          src={shop.coverUrl}
-          alt={`Portada ${shop.name}`}
-          className="absolute inset-0 h-full w-full object-cover"
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-        />
-        <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full bg-white/85 px-2 py-1 shadow-sm">
-          <div className="rounded-full bg-white/90 p-0.5 ring-2 ring-white">
-            <LogoBubble
-              src={shop.logoUrl}
-              alt={shop.name}
-              size={28}
-              seed={shop.id || shop.name}
-            />
-          </div>
-          <span className="max-w-[140px] truncate text-xs font-bold text-dm-dark">
-            {shop.name}
-          </span>
-        </div>
-        <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full bg-white/85 px-2 py-1 shadow-sm">
-          <div className="rounded-full bg-white/90 p-0.5 ring-2 ring-white">
-            <LogoBubble
-              src={shop.logoUrl}
-              alt={shop.name}
-              size={28}
-              seed={shop.id || shop.name}
-            />
-          </div>
-          <span className="max-w-[140px] truncate text-xs font-bold text-dm-dark">
-            {shop.name}
-          </span>
-        </div>
-
-        {isActive && (
-          <>
-            <div className="absolute inset-0 bg-white/75 backdrop-blur-md transition-opacity" />
-            <div className="relative z-10 flex h-full flex-col justify-between p-4">
-              <div className="flex items-start gap-3">
-                <div className="rounded-full bg-white/80 p-1 ring-2 ring-white/90 shadow-sm">
-                  <LogoBubble
-                    src={shop.logoUrl}
-                    alt={shop.name}
-                    size={44}
-                    seed={shop.id || shop.name}
-                  />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-dm-dark">
-                    {shop.name}
-                  </p>
-                  <p className="text-[11px] uppercase text-gray-600">
-                    {shop.plan}
-                  </p>
-                  <div className="mt-1 flex items-center gap-2 text-[10px] text-gray-600">
-                    <span className="font-bold text-dm-dark">
-                      {shop.ratingAverage?.toFixed(1) || "0.0"}
-                    </span>
-                    <span>★</span>
-                    <span>({shop.ratingCount || 0})</span>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <p className="text-xs text-gray-700 line-clamp-2">
-                  {shop.address || "Sin dirección cargada"}
-                </p>
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleOpenShop(shop);
-                  }}
-                  className="whitespace-nowrap rounded-full bg-dm-crimson px-3 py-1.5 text-[11px] font-bold text-white shadow-sm hover:bg-dm-crimson/90"
-                >
-                  Ver más
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    );
-  };
+  const renderShopCard = (shop: Shop) => (
+    <ShopCard
+      key={shop.id}
+      shop={shop}
+      isActive={activeShopCardId === shop.id}
+      onToggleActive={toggleShopCard}
+      onOpenShop={handleOpenShop}
+      onKeyDown={handleShopCardKeyDown}
+    />
+  );
 
   useEffect(() => {
     if (isResetView) return;
@@ -1927,45 +1808,45 @@ const App: React.FC = () => {
 
   if (isResetView) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white via-dm-light/30 to-white px-5 py-10 text-dm-dark">
-        <div className="mx-auto w-full max-w-sm rounded-2xl border border-dm-crimson/10 bg-white p-5 shadow-[0_18px_48px_rgba(0,0,0,0.12)]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+      <div className={resetStyles.page}>
+        <div className={resetStyles.card}>
+          <div className={resetStyles.header}>
+            <div className={resetStyles.titleRow}>
               <Shield size={18} className="text-dm-crimson" />
-              <p className="font-serif text-lg">Restablecer clave</p>
+              <p className={resetStyles.title}>Restablecer clave</p>
             </div>
             <button
               onClick={() => window.location.assign("/")}
-              className="rounded-full border border-gray-200 p-1 text-gray-400 hover:text-gray-600"
+              className={resetStyles.closeButton}
               aria-label="Volver al inicio"
             >
               <X size={12} />
             </button>
           </div>
-          <p className="mt-2 text-[11px] text-gray-500">
+          <p className={resetStyles.sub}>
             {resetViewEmail
               ? `Cuenta: ${resetViewEmail}`
               : "Validando enlace..."}
           </p>
 
           {resetViewStatus === "loading" && (
-            <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 px-3 py-3 text-[11px] text-gray-500">
+            <div className={`${resetStyles.box} ${resetStyles.boxNeutral}`}>
               Verificando enlace...
             </div>
           )}
 
           {resetViewStatus === "error" && (
-            <div className="mt-5 rounded-xl border border-dm-alert/20 bg-dm-alert/10 px-3 py-3 text-[11px] text-dm-alert">
+            <div className={`${resetStyles.box} ${resetStyles.boxError}`}>
               {resetViewError || "No se pudo validar el enlace."}
             </div>
           )}
 
           {resetViewStatus === "success" && (
-            <div className="mt-5 rounded-xl border border-dm-crimson/20 bg-dm-crimson/10 px-3 py-3 text-[11px] text-gray-700">
+            <div className={`${resetStyles.box} ${resetStyles.boxSuccess}`}>
               Tu contraseña se actualizó correctamente. Ya podés iniciar sesión.
               <button
                 onClick={() => window.location.assign("/")}
-                className="mt-3 w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm"
+                className={resetStyles.primaryButton}
               >
                 Ir a iniciar sesión
               </button>
@@ -1974,15 +1855,15 @@ const App: React.FC = () => {
 
           {resetViewStatus === "ready" && (
             <form
-              className="mt-5 space-y-3"
+              className={resetStyles.form}
               onSubmit={(event) => {
                 event.preventDefault();
                 handleResetViewSubmit();
               }}
             >
-              <label className="block text-[11px] font-bold text-gray-500">
+              <label className={resetStyles.label}>
                 Nueva contraseña
-                <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                <div className={resetStyles.inputWrap}>
                   <Key size={14} className="text-gray-400" />
                   <input
                     type="password"
@@ -1990,15 +1871,15 @@ const App: React.FC = () => {
                     onChange={(event) =>
                       setResetViewPassword(event.target.value)
                     }
-                    className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                    className={resetStyles.input}
                     placeholder="Mínimo 6 caracteres"
                     required
                   />
                 </div>
               </label>
-              <label className="block text-[11px] font-bold text-gray-500">
+              <label className={resetStyles.label}>
                 Repetí la contraseña
-                <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                <div className={resetStyles.inputWrap}>
                   <Key size={14} className="text-gray-400" />
                   <input
                     type="password"
@@ -2006,21 +1887,21 @@ const App: React.FC = () => {
                     onChange={(event) =>
                       setResetViewConfirm(event.target.value)
                     }
-                    className="w-full text-sm font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                    className={resetStyles.input}
                     placeholder="Confirmá la clave"
                     required
                   />
                 </div>
               </label>
               {resetViewError && (
-                <p className="text-[11px] font-semibold text-dm-alert">
+                <p className={resetStyles.errorText}>
                   {resetViewError}
                 </p>
               )}
               <button
                 type="submit"
                 disabled={resetViewBusy}
-                className="w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+                className={resetStyles.submit}
               >
                 {resetViewBusy ? "Guardando..." : "Guardar contraseña"}
               </button>
@@ -2048,18 +1929,18 @@ const App: React.FC = () => {
       {effectiveViewMode === "CLIENT" &&
         !user.isLoggedIn &&
         showLoginPrompt && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-            <div className="w-[92%] max-w-sm rounded-2xl border border-dm-crimson/10 bg-gradient-to-b from-white via-white to-dm-light/40 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)]">
-              <div className="flex items-start justify-between gap-3">
+          <div className={authStyles.overlay}>
+            <div className={authStyles.card}>
+              <div className={authStyles.header}>
                 <div>
-                  <p className="font-serif text-xl text-dm-dark">Ingreso</p>
-                  <p className="mt-1 text-[11px] font-sans text-gray-500">
+                  <p className={authStyles.title}>Ingreso</p>
+                  <p className={authStyles.subtitle}>
                     Accede a recordatorios, favoritos y reportes.
                   </p>
                 </div>
                 <button
                   onClick={handleContinueAsGuest}
-                  className="rounded-full border border-gray-200 p-0.5 text-gray-400 hover:text-gray-600"
+                  className={authStyles.closeButton}
                   aria-label="Cerrar"
                 >
                   <X size={12} />
@@ -2067,16 +1948,16 @@ const App: React.FC = () => {
               </div>
 
               {loginStep === "ENTRY" && (
-                <div className="mt-4 space-y-2">
+                <div className={authStyles.stack}>
                   <button
                     onClick={() => setLoginStep("AUDIENCE")}
-                    className="w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90"
+                    className={authStyles.primaryButton}
                   >
                     Ingresar
                   </button>
                   <button
                     onClick={openAudienceSelection}
-                    className="w-full text-center text-[11px] font-semibold text-gray-500 hover:text-dm-crimson"
+                    className={authStyles.linkButton}
                   >
                     Registrarme
                   </button>
@@ -2084,7 +1965,7 @@ const App: React.FC = () => {
               )}
 
               {loginStep === "AUDIENCE" && (
-                <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className={authStyles.roleGrid}>
                   <button
                     onClick={() => {
                       setLoginMode("EMAIL");
@@ -2093,11 +1974,11 @@ const App: React.FC = () => {
                       setLoginError("");
                       setLoginStep("SHOP");
                     }}
-                    className="flex h-full flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-3 py-3 text-center text-xs font-bold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
+                    className={authStyles.roleButton}
                   >
                     <FaStore size={22} className="mb-2 text-dm-crimson" />
                     Soy tienda
-                    <span className="mt-1 text-[10px] font-medium text-gray-400">
+                    <span className={authStyles.roleNote}>
                       Acceso mayorista
                     </span>
                   </button>
@@ -2108,11 +1989,11 @@ const App: React.FC = () => {
                       setLoginError("");
                       setLoginStep("CLIENT");
                     }}
-                    className="flex h-full flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-3 py-3 text-center text-xs font-bold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
+                    className={authStyles.roleButton}
                   >
                     <FaUser size={22} className="mb-2 text-dm-crimson" />
                     Soy cliente
-                    <span className="mt-1 text-[10px] font-medium text-gray-400">
+                    <span className={authStyles.roleNote}>
                       Comprar y seguir
                     </span>
                   </button>
@@ -2121,33 +2002,33 @@ const App: React.FC = () => {
 
               {loginStep === "SHOP" && (
                 <form
-                  className="mt-3 space-y-2"
+                  className={authStyles.form}
                   onSubmit={(event) => {
                     event.preventDefault();
                     handleEmailLogin();
                   }}
                 >
-                  <p className="text-[10px] font-medium text-gray-500">
+                  <p className={authStyles.formHint}>
                     Usá el correo registrado por el administrador.
                   </p>
-                  <label className="block text-[10px] font-bold text-gray-500">
+                  <label className={authStyles.label}>
                     Correo electrónico
-                    <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5">
+                    <div className={authStyles.inputWrap}>
                       <Mail size={14} className="text-gray-400" />
                       <input
                         type="email"
                         value={loginEmail}
                         onChange={(event) => setLoginEmail(event.target.value)}
-                        className="w-full text-[13px] font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                        className={authStyles.input}
                         placeholder="correo de la tienda"
                         autoComplete="email"
                         required
                       />
                     </div>
                   </label>
-                  <label className="block text-[10px] font-bold text-gray-500">
+                  <label className={authStyles.label}>
                     Contraseña
-                    <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5">
+                    <div className={authStyles.inputWrap}>
                       <Key size={14} className="text-gray-400" />
                       <input
                         type="password"
@@ -2155,7 +2036,7 @@ const App: React.FC = () => {
                         onChange={(event) =>
                           setLoginPassword(event.target.value)
                         }
-                        className="w-full text-[13px] font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                        className={authStyles.input}
                         placeholder="Tu contraseña"
                         autoComplete="current-password"
                         required
@@ -2163,14 +2044,14 @@ const App: React.FC = () => {
                     </div>
                   </label>
                   {loginError && (
-                    <p className="text-[11px] font-semibold text-dm-alert">
+                    <p className={authStyles.errorText}>
                       {loginError}
                     </p>
                   )}
                   <button
                     type="submit"
                     disabled={loginBusy}
-                    className="w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90 disabled:cursor-not-allowed disabled:opacity-60"
+                    className={authStyles.primaryButton}
                   >
                     {loginBusy ? "Ingresando..." : "Ingresar"}
                   </button>
@@ -2178,14 +2059,14 @@ const App: React.FC = () => {
                     type="button"
                     disabled={resetBusy}
                     onClick={handlePasswordReset}
-                    className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-crimson disabled:cursor-not-allowed disabled:opacity-60"
+                    className={authStyles.secondaryButton}
                   >
                     {resetBusy ? "Enviando enlace..." : "Olvidé mi contraseña"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setLoginStep("AUDIENCE")}
-                    className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
+                    className={authStyles.backButton}
                   >
                     Volver
                   </button>
@@ -2193,14 +2074,14 @@ const App: React.FC = () => {
               )}
 
               {loginStep === "CLIENT" && (
-                <div className="mt-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
+                <div className={authStyles.clientStack}>
+                  <div className={authStyles.clientGrid}>
                     <button
                       onClick={handleGoogleLogin}
                       disabled={loginBusy}
-                      className="flex h-full flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-3 py-3 text-center text-[10px] font-semibold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson disabled:cursor-not-allowed disabled:opacity-60"
+                      className={authStyles.clientOption}
                     >
-                      <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+                      <span className={authStyles.googleIcon}>
                         <GoogleMark />
                       </span>
                       Continuar con tu cuenta de Google
@@ -2213,9 +2094,9 @@ const App: React.FC = () => {
                         setLoginError("");
                         setLoginStep("CLIENT_EMAIL");
                       }}
-                      className="flex h-full flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-3 py-3 text-center text-[10px] font-semibold text-gray-600 hover:border-dm-crimson hover:text-dm-crimson"
+                      className={authStyles.clientOption}
                     >
-                      <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-dm-crimson/10 text-dm-crimson">
+                      <span className={authStyles.mailIcon}>
                         <FaEnvelope size={18} />
                       </span>
                       Continuá con tu correo
@@ -2229,19 +2110,19 @@ const App: React.FC = () => {
                       setLoginError("");
                       setLoginStep("CLIENT_EMAIL");
                     }}
-                    className="w-full text-center text-[11px] font-semibold text-gray-500 hover:text-dm-crimson"
+                    className={authStyles.linkButton}
                   >
                     Registrate
                   </button>
                   {loginError && (
-                    <p className="text-[11px] font-semibold text-dm-alert">
+                    <p className={authStyles.errorText}>
                       {loginError}
                     </p>
                   )}
                   <button
                     type="button"
                     onClick={() => setLoginStep("AUDIENCE")}
-                    className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
+                    className={authStyles.backButton}
                   >
                     Volver
                   </button>
@@ -2250,7 +2131,7 @@ const App: React.FC = () => {
 
               {loginStep === "CLIENT_EMAIL" && (
                 <form
-                  className="mt-3 space-y-2"
+                  className={authStyles.form}
                   onSubmit={(event) => {
                     event.preventDefault();
                     if (clientEmailMode === "REGISTER") {
@@ -2260,29 +2141,29 @@ const App: React.FC = () => {
                     }
                   }}
                 >
-                  <p className="text-[10px] font-medium text-gray-500">
+                  <p className={authStyles.formHint}>
                     {clientEmailMode === "REGISTER"
                       ? "Creando cuenta de cliente."
                       : "Ingresá con tu correo."}
                   </p>
-                  <label className="block text-[10px] font-bold text-gray-500">
+                  <label className={authStyles.label}>
                     Correo electrónico
-                    <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5">
+                    <div className={authStyles.inputWrap}>
                       <Mail size={14} className="text-gray-400" />
                       <input
                         type="email"
                         value={loginEmail}
                         onChange={(event) => setLoginEmail(event.target.value)}
-                        className="w-full text-[13px] font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                        className={authStyles.input}
                         placeholder="tu@email.com"
                         autoComplete="email"
                         required
                       />
                     </div>
                   </label>
-                  <label className="block text-[10px] font-bold text-gray-500">
+                  <label className={authStyles.label}>
                     Contraseña
-                    <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5">
+                    <div className={authStyles.inputWrap}>
                       <Key size={14} className="text-gray-400" />
                       <input
                         type="password"
@@ -2290,7 +2171,7 @@ const App: React.FC = () => {
                         onChange={(event) =>
                           setLoginPassword(event.target.value)
                         }
-                        className="w-full text-[13px] font-semibold text-dm-dark outline-none placeholder:text-gray-400"
+                        className={authStyles.input}
                         placeholder="Tu contraseña"
                         autoComplete={
                           clientEmailMode === "REGISTER"
@@ -2302,14 +2183,14 @@ const App: React.FC = () => {
                     </div>
                   </label>
                   {loginError && (
-                    <p className="text-[11px] font-semibold text-dm-alert">
+                    <p className={authStyles.errorText}>
                       {loginError}
                     </p>
                   )}
                   <button
                     type="submit"
                     disabled={loginBusy}
-                    className="w-full rounded-full bg-dm-crimson px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-dm-crimson/90 disabled:cursor-not-allowed disabled:opacity-60"
+                    className={authStyles.primaryButton}
                   >
                     {loginBusy
                       ? clientEmailMode === "REGISTER"
@@ -2324,7 +2205,7 @@ const App: React.FC = () => {
                       type="button"
                       disabled={resetBusy}
                       onClick={handlePasswordReset}
-                      className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-crimson disabled:cursor-not-allowed disabled:opacity-60"
+                      className={authStyles.secondaryButton}
                     >
                       {resetBusy
                         ? "Enviando enlace..."
@@ -2338,7 +2219,7 @@ const App: React.FC = () => {
                         prev === "REGISTER" ? "LOGIN" : "REGISTER"
                       )
                     }
-                    className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
+                    className={authStyles.inlineLink}
                   >
                     {clientEmailMode === "REGISTER"
                       ? "¿Ya tenés cuenta? Iniciá sesión"
@@ -2347,7 +2228,7 @@ const App: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setLoginStep("CLIENT")}
-                    className="w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
+                    className={authStyles.backButton}
                   >
                     Volver
                   </button>
@@ -2356,7 +2237,7 @@ const App: React.FC = () => {
 
               <button
                 onClick={handleContinueAsGuest}
-                className="mt-4 w-full text-center text-[10px] font-semibold text-gray-500 hover:text-dm-dark"
+                className={authStyles.continueGuest}
               >
                 Continuar como visitante
               </button>
