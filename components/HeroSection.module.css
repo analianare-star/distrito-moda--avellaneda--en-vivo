@@ -3,7 +3,18 @@
 }
 
 .showcase {
-  @apply w-full bg-white border-b border-gray-100 px-0 pt-0 pb-0;
+  @apply relative w-full border-b border-gray-100 px-0 pt-0 pb-0;
+}
+
+.showcase::before {
+  content: "";
+  @apply absolute inset-0;
+  background: linear-gradient(
+    180deg,
+    rgba(216, 237, 244, 0.35) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  pointer-events: none;
 }
 
 .showcaseHeader {
@@ -24,6 +35,18 @@
 
 .showcaseGrid {
   @apply w-full grid grid-cols-2 gap-[3px] auto-rows-[90px] sm:auto-rows-[110px] md:grid-cols-3 md:auto-rows-[130px];
+}
+
+.showcaseGrid > :last-child::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 255, 255, 0) 55%
+  );
+  pointer-events: none;
 }
 
 .showcaseTile {
@@ -65,7 +88,18 @@
 }
 
 .reelsWrap {
-  @apply w-full bg-white border-b border-gray-100 pt-6 pb-6 animate-in slide-in-from-top-2 fade-in duration-500;
+  @apply relative w-full border-b border-gray-100 pt-6 pb-6 animate-in slide-in-from-top-2 fade-in duration-500;
+}
+
+.reelsWrap::before {
+  content: "";
+  @apply absolute inset-0;
+  background: linear-gradient(
+    180deg,
+    rgba(245, 246, 248, 0.7) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  pointer-events: none;
 }
 
 .reelsHeader {

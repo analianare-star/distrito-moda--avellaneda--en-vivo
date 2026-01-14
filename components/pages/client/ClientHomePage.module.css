@@ -1,5 +1,40 @@
 .section {
   @apply mx-auto max-w-7xl px-4 py-10;
+  position: relative;
+}
+
+.section::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -48px;
+  width: 100vw;
+  height: 520px;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(600px 320px at 20% 0%, rgba(216, 237, 244, 0.6), transparent 60%),
+    linear-gradient(180deg, rgba(216, 237, 244, 0.35) 0%, rgba(255, 255, 255, 0) 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.section::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 520px;
+  width: 100vw;
+  height: 420px;
+  transform: translateX(-50%);
+  background:
+    linear-gradient(180deg, rgba(245, 246, 248, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.section > * {
+  position: relative;
+  z-index: 1;
 }
 
 .queueSection {
