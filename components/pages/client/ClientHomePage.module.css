@@ -32,7 +32,7 @@
   z-index: 0;
 }
 
-.section > * {
+.content {
   position: relative;
   z-index: 1;
 }
@@ -66,7 +66,7 @@
 }
 
 .queueLiveBadge {
-  @apply absolute bottom-2 right-2 text-[9px] font-bold uppercase tracking-widest rounded-full px-2 py-1 text-white bg-dm-crimson/80 backdrop-blur-sm shadow-[0_0_12px_rgba(237,22,80,0.6)];
+  @apply absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-widest rounded-full px-3 py-1 text-white bg-[#ff0033] backdrop-blur-sm shadow-[0_0_12px_rgba(255,0,51,0.6)];
 }
 
 .queueRecDot {

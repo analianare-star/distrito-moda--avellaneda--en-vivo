@@ -79,95 +79,97 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
 
   return (
     <section className={styles.section} aria-label="Contenido principal">
-      {queueStreams.length > 0 && (
-        <div className={styles.queueSection} aria-label="En vivo y próximos">
-          <div className={styles.queueRow}>
-            {queueStreams.map((stream) => {
-              const isLive = stream.status === StreamStatus.LIVE;
+      <div className={styles.content}>
+        {queueStreams.length > 0 && (
+          <div className={styles.queueSection} aria-label="En vivo y próximos">
+            <div className={styles.queueRow}>
+              {queueStreams.map((stream) => {
+                const isLive = stream.status === StreamStatus.LIVE;
+                return (
+                  <button
+                    key={stream.id}
+                    className={styles.queueCard}
+                    onClick={() => setQueueStream(stream)}
+                  >
+                    <LogoBubble
+                      src={stream.shop.logoUrl}
+                      alt={stream.shop.name}
+                      size={50}
+                      seed={stream.shop.id || stream.shop.name}
+                      className={styles.queueLogo}
+                    />
+                    <span className={styles.queueName}>{stream.shop.name}</span>
+                    {isLive ? (
+                      <span className={styles.queueLiveBadge}>
+                        <span className={styles.queueRecDot} /> VIVO
+                      </span>
+                    ) : (
+                      <span className={styles.queueUpcoming}>
+                        {formatUpcoming()}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <HeroSection
+          activeFilter={activeFilter}
+          onFilterChange={onFilterChange}
+          liveStreams={sortedLiveStreams}
+          activeReels={activeReels}
+          featuredShops={featuredShops}
+          onViewReel={onViewReel}
+          viewedReels={user.viewedReels}
+          onOpenShop={onOpenShop}
+        />
+
+        <div className={styles.schedule}>
+          <div className={styles.scheduleHeader}>
+            <h2 className={styles.scheduleTitle}>Vivos recientes</h2>
+            <div className={styles.scheduleFilter}>
+              Mostrando: <span className={styles.filterValue}>{activeFilter}</span>
+            </div>
+          </div>
+          <div className={styles.streamsGrid}>
+            {visibleStreams.map((stream, index) => {
+              const layout = streamLayout[index] || "small";
               return (
-                <button
+                <div
                   key={stream.id}
-                  className={styles.queueCard}
-                  onClick={() => setQueueStream(stream)}
+                  className={`${styles.streamItem} ${
+                    layout === "wide" ? styles.streamItemWide : ""
+                  }`}
                 >
-                  <LogoBubble
-                    src={stream.shop.logoUrl}
-                    alt={stream.shop.name}
-                    size={50}
-                    seed={stream.shop.id || stream.shop.name}
-                    className={styles.queueLogo}
+                  <StreamCard
+                    stream={stream}
+                    user={user}
+                    canClientInteract={canClientInteract}
+                    onNotify={onNotify}
+                    onOpenShop={() => onOpenShop(stream.shop)}
+                    onReport={onReport}
+                    onToggleReminder={onToggleReminder}
+                    onLike={onLike}
+                    onRate={onRate}
+                    onDownloadCard={onDownloadCard}
                   />
-                  <span className={styles.queueName}>{stream.shop.name}</span>
-                  {isLive ? (
-                    <span className={styles.queueLiveBadge}>
-                      <span className={styles.queueRecDot} /> VIVO
-                    </span>
-                  ) : (
-                    <span className={styles.queueUpcoming}>
-                      {formatUpcoming()}
-                    </span>
-                  )}
-                </button>
+                </div>
               );
             })}
+            {visibleStreams.length === 0 && (
+              <EmptyState
+                title="No hay vivos con este filtro"
+                message="Probá ver todos los vivos o revisá más tarde."
+                actionLabel="Ver todos"
+                onAction={() => {
+                  onFilterChange("Todos");
+                  onSelectBottomNav("home");
+                }}
+              />
+            )}
           </div>
-        </div>
-      )}
-
-      <HeroSection
-        activeFilter={activeFilter}
-        onFilterChange={onFilterChange}
-        liveStreams={sortedLiveStreams}
-        activeReels={activeReels}
-        featuredShops={featuredShops}
-        onViewReel={onViewReel}
-        viewedReels={user.viewedReels}
-        onOpenShop={onOpenShop}
-      />
-
-      <div className={styles.schedule}>
-        <div className={styles.scheduleHeader}>
-          <h2 className={styles.scheduleTitle}>Vivos recientes</h2>
-          <div className={styles.scheduleFilter}>
-            Mostrando: <span className={styles.filterValue}>{activeFilter}</span>
-          </div>
-        </div>
-        <div className={styles.streamsGrid}>
-          {visibleStreams.map((stream, index) => {
-            const layout = streamLayout[index] || "small";
-            return (
-              <div
-                key={stream.id}
-                className={`${styles.streamItem} ${
-                  layout === "wide" ? styles.streamItemWide : ""
-                }`}
-              >
-                <StreamCard
-                  stream={stream}
-                  user={user}
-                  canClientInteract={canClientInteract}
-                  onNotify={onNotify}
-                  onOpenShop={() => onOpenShop(stream.shop)}
-                  onReport={onReport}
-                  onToggleReminder={onToggleReminder}
-                  onLike={onLike}
-                  onRate={onRate}
-                  onDownloadCard={onDownloadCard}
-                />
-              </div>
-            );
-          })}
-          {visibleStreams.length === 0 && (
-            <EmptyState
-              title="No hay vivos con este filtro"
-              message="Probá ver todos los vivos o revisá más tarde."
-              actionLabel="Ver todos"
-              onAction={() => {
-                onFilterChange("Todos");
-                onSelectBottomNav("home");
-              }}
-            />
-          )}
         </div>
       </div>
 

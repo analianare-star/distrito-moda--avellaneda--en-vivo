@@ -11,8 +11,17 @@
 }
 
 .scroller {
-  @apply h-full overflow-y-auto scroll-smooth;
+  @apply h-full overflow-y-scroll scroll-smooth;
   scroll-snap-type: y mandatory;
+  scroll-snap-stop: always;
+  overscroll-behavior: contain;
+  touch-action: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
 }
 
 .slide {
