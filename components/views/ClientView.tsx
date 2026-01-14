@@ -50,6 +50,7 @@ interface ClientViewProps {
   onNotify: (title: string, message: string, tone?: "info" | "success" | "warning" | "error") => void;
   onOpenCalendarInvite: (stream: Stream) => void;
   streams: Stream[];
+  queueStreamsSource: Stream[];
 }
 
 export const ClientView: React.FC<ClientViewProps> = ({
@@ -92,6 +93,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
   onNotify,
   onOpenCalendarInvite,
   streams,
+  queueStreamsSource,
 }) => {
   return (
     <section aria-label="Vista cliente">
@@ -105,6 +107,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
               sortedLiveStreams={sortedLiveStreams}
               activeReels={activeReels}
               featuredShops={featuredShops}
+              queueStreamsSource={queueStreamsSource}
               user={user}
               canClientInteract={canClientInteract}
               onFilterChange={onFilterChange}
@@ -129,6 +132,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
               sortedLiveStreams={sortedLiveStreams}
               activeReels={activeReels}
               featuredShops={featuredShops}
+              queueStreamsSource={queueStreamsSource}
               user={user}
               canClientInteract={canClientInteract}
               onFilterChange={onFilterChange}

@@ -2,6 +2,42 @@
   @apply mx-auto max-w-7xl px-4 py-10;
 }
 
+.queueSection {
+  @apply mb-6;
+}
+
+.queueRow {
+  @apply flex gap-3 overflow-x-auto pb-2 no-scrollbar;
+  scroll-snap-type: x mandatory;
+}
+
+.queueCard {
+  @apply relative flex flex-col items-center justify-start rounded-2xl border border-gray-100 bg-white px-3 py-4 shadow-sm;
+  min-width: clamp(90px, 27vw, 120px);
+  height: 162px;
+  scroll-snap-align: start;
+}
+
+.queueLogo {
+  @apply mb-2;
+}
+
+.queueName {
+  @apply text-[11px] font-bold text-dm-dark text-center leading-tight line-clamp-2;
+}
+
+.queueUpcoming {
+  @apply absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-dm-dark/85 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.2em] text-white;
+}
+
+.queueLiveBadge {
+  @apply absolute bottom-2 right-2 text-[9px] font-bold uppercase tracking-widest rounded-full px-2 py-1 text-white bg-dm-crimson/80 backdrop-blur-sm shadow-[0_0_12px_rgba(237,22,80,0.6)];
+}
+
+.queueRecDot {
+  @apply inline-block w-1.5 h-1.5 rounded-full bg-white mr-1 animate-pulse;
+}
+
 .schedule {
   @apply mt-10;
 }

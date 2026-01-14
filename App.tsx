@@ -110,6 +110,7 @@ const BRAND_LOGO = new URL("./img/logo.svg", import.meta.url).href;
 
 const MOCK_REEL_COUNT = 10;
 const MOCK_REEL_TTL_HOURS = 2;
+const MOCK_STREAM_COUNT = 10;
 
 const normalizeInstagramUrl = (value?: string) => {
   if (!value) return "";
@@ -132,6 +133,46 @@ const buildMapsUrl = (shop: Shop) => {
 
 const resolveCatalogUrl = (shop: Shop) =>
   shop.website || normalizeInstagramUrl(shop.socialHandles?.instagram);
+
+const buildMockStreams = (shops: Shop[], streams: Stream[], count: number) => {
+  if (shops.length === 0) return [];
+  const usedShopIds = new Set(streams.map((stream) => stream.shopId));
+  const candidates = shops.filter((shop) => !usedShopIds.has(shop.id));
+  const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+  const liveCount = Math.min(3, count);
+  const now = Date.now();
+
+  return shuffled.slice(0, count).map((shop, index) => {
+    const isLive = index < liveCount;
+    const baseTime = isLive
+      ? new Date(now - 5 * 60 * 1000)
+      : new Date(now + (index + 1) * 60 * 60 * 1000);
+    const scheduledTime = baseTime.toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    return {
+      id: `mock-stream-${shop.id}`,
+      shop,
+      shopId: shop.id,
+      title: isLive ? `Vivo de ${shop.name}` : `Próximo vivo de ${shop.name}`,
+      coverImage: shop.coverUrl || shop.logoUrl,
+      status: isLive ? StreamStatus.LIVE : StreamStatus.UPCOMING,
+      extensionCount: 0,
+      scheduledTime,
+      fullDateISO: baseTime.toISOString(),
+      startedAt: isLive ? now - 5 * 60 * 1000 : undefined,
+      platform: "Instagram",
+      url: resolveCatalogUrl(shop) || "https://www.distritomoda.com.ar",
+      views: Math.floor(Math.random() * 180) + 20,
+      reportCount: 0,
+      isVisible: true,
+      likes: Math.floor(Math.random() * 40),
+      rating: shop.ratingAverage || 5,
+    };
+  });
+};
 
 const enrichReelsWithShop = (reels: Reel[], shops: Shop[]) =>
   reels.map((reel) => {
@@ -1472,6 +1513,14 @@ const App: React.FC = () => {
     () => sortShopsByPriority(allShops.filter((shop) => user.favorites.includes(shop.id))),
     [allShops, user.favorites]
   );
+  const mockStreams = useMemo(
+    () => buildMockStreams(publicShops, allStreams, MOCK_STREAM_COUNT),
+    [publicShops, allStreams]
+  );
+  const queueStreamsSource = useMemo(
+    () => [...allStreams, ...mockStreams],
+    [allStreams, mockStreams]
+  );
   const normalizedShopQuery = shopQuery.trim().toLowerCase();
   const filterShopsByQuery = (shops: Shop[]) => {
     if (!normalizedShopQuery) return shops;
@@ -2069,6 +2118,7 @@ const App: React.FC = () => {
                 onNotify={notify}
                 onOpenCalendarInvite={handleOpenCalendarInvite}
                 streams={allStreams}
+                queueStreamsSource={queueStreamsSource}
               />
             </ClientLayout>
           }
