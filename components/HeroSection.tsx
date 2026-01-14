@@ -17,6 +17,8 @@ interface HeroSectionProps {
     onViewReel: (reel: Reel) => void; 
     viewedReels: string[];
     onOpenShop: (shop: Stream['shop']) => void;
+    isLoggedIn: boolean;
+    onOpenLogin: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ 
@@ -27,9 +29,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     featuredShops,
     onViewReel,
     viewedReels,
-    onOpenShop
+    onOpenShop,
+    isLoggedIn,
+    onOpenLogin
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const bannerMessages = useMemo(() => {
+    const base = [
+      { id: "verified", text: "+280 TIENDAS VERIFICADAS", duration: 4000 },
+      { id: "daily", text: "NUEVOS VIVOS CADA DÍA", duration: 4000 },
+      { id: "prices", text: "PRECIOS MAYORISTAS", duration: 4000 },
+    ];
+    if (!isLoggedIn) {
+      base.push({ id: "register", text: "REGISTRATE AHORA", duration: 4000 });
+    }
+    base.push({
+      id: "brand",
+      text: "AVELLANEDA EN VIVO",
+      duration: 8000,
+      isBrand: true,
+    });
+    return base;
+  }, [isLoggedIn]);
+  const [bannerIndex, setBannerIndex] = useState(0);
 
   const showcasePool = useMemo(
     () =>
@@ -87,6 +109,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     }, 7000);
     return () => clearInterval(timer);
   }, [showcasePool]);
+
+  useEffect(() => {
+    if (bannerMessages.length === 0) return;
+    const current = bannerMessages[bannerIndex % bannerMessages.length];
+    const timer = window.setTimeout(() => {
+      setBannerIndex((prev) => (prev + 1) % bannerMessages.length);
+    }, current.duration);
+    return () => window.clearTimeout(timer);
+  }, [bannerIndex, bannerMessages]);
 
   const sortedReels = [...activeReels].sort((a, b) => {
       const aSeen = viewedReels.includes(a.id);
@@ -176,7 +207,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <Sparkles size={16} className="fill-current" />
                   </div>
                   <h2 className={styles.reelsTitle}>
-                      NOVEDADES & HISTORIAS
+                      REELS DE TIENDAS
                   </h2>
               </div>
 
@@ -212,6 +243,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </div>
           </div>
       )}
+
+      <div className={styles.reelsBanner} aria-label="Beneficios de la plataforma">
+          {(() => {
+              const current = bannerMessages[bannerIndex % bannerMessages.length];
+              return (
+                <div className={styles.reelsBannerInner}>
+                  <span
+                    key={`${current.id}-${bannerIndex}`}
+                    className={`${styles.reelsBannerText} ${
+                      current.isBrand ? styles.reelsBannerBrand : ""
+                    }`}
+                    style={
+                      {
+                        "--banner-duration": `${current.duration}ms`,
+                      } as React.CSSProperties
+                    }
+                  >
+                    {current.text}
+                  </span>
+                </div>
+              );
+          })()}
+      </div>
 
       {/* FEATURED LIVE SECTION (CAROUSEL) */}
       {activeStream && (

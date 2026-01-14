@@ -2114,6 +2114,7 @@ const App: React.FC = () => {
                 onCloseReel={() => setSelectedReel(null)}
                 onToggleFavorite={handleToggleFavorite}
                 onRequireLogin={requireLogin}
+                onOpenLogin={openAudienceSelection}
                 onLogout={handleToggleClientLogin}
                 onNotify={notify}
                 onOpenCalendarInvite={handleOpenCalendarInvite}

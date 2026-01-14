@@ -48,6 +48,7 @@ interface ClientViewProps {
   onRequireLogin: () => void;
   onLogout: () => void;
   onNotify: (title: string, message: string, tone?: "info" | "success" | "warning" | "error") => void;
+  onOpenLogin: () => void;
   onOpenCalendarInvite: (stream: Stream) => void;
   streams: Stream[];
   queueStreamsSource: Stream[];
@@ -91,6 +92,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
   onRequireLogin,
   onLogout,
   onNotify,
+  onOpenLogin,
   onOpenCalendarInvite,
   streams,
   queueStreamsSource,
@@ -120,6 +122,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onRate={onRate}
               onDownloadCard={onDownloadCard}
               onNotify={onNotify}
+              onOpenLogin={onOpenLogin}
             />
           }
         />
@@ -145,6 +148,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onRate={onRate}
               onDownloadCard={onDownloadCard}
               onNotify={onNotify}
+              onOpenLogin={onOpenLogin}
             />
           }
         />
@@ -169,6 +173,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onRate={onRate}
               onDownloadCard={onDownloadCard}
               onNotify={onNotify}
+              onOpenLogin={onOpenLogin}
             />
           }
         />

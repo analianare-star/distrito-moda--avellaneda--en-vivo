@@ -4,6 +4,7 @@
 
 .showcase {
   @apply relative w-full border-b border-gray-100 px-0 pt-0 pb-0;
+  isolation: isolate;
 }
 
 .showcase::before {
@@ -15,10 +16,15 @@
     rgba(255, 255, 255, 0) 70%
   );
   pointer-events: none;
+  z-index: -1;
 }
 
 .showcaseHeader {
-  @apply w-full px-3 pt-4 pb-3 flex items-end justify-between gap-4;
+  @apply w-full pt-4 pb-3 flex items-end justify-between gap-4;
+  position: relative;
+  z-index: 1;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .showcaseEyebrow {
@@ -35,6 +41,10 @@
 
 .showcaseGrid {
   @apply w-full grid grid-cols-2 gap-[3px] auto-rows-[90px] sm:auto-rows-[110px] md:grid-cols-3 md:auto-rows-[130px];
+  position: relative;
+  z-index: 1;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .showcaseGrid > :last-child::after {
@@ -88,34 +98,41 @@
 }
 
 .reelsWrap {
-  @apply relative w-full border-b border-gray-100 pt-6 pb-6 animate-in slide-in-from-top-2 fade-in duration-500;
+  @apply relative w-full pt-6 pb-6 animate-in slide-in-from-top-2 fade-in duration-500;
+  isolation: isolate;
+  color: #fff;
+  background: linear-gradient(
+    180deg,
+    #0b0b0d 0%,
+    #1c2128 45%,
+    #c9cfd7 100%
+  );
 }
 
 .reelsWrap::before {
-  content: "";
-  @apply absolute inset-0;
-  background: linear-gradient(
-    180deg,
-    rgba(245, 246, 248, 0.7) 0%,
-    rgba(255, 255, 255, 0) 70%
-  );
-  pointer-events: none;
+  display: none;
 }
 
 .reelsHeader {
   @apply max-w-7xl mx-auto px-4 mb-4 flex items-center gap-2;
+  position: relative;
+  z-index: 1;
 }
 
 .reelsIcon {
-  @apply p-1.5 bg-dm-crimson/10 rounded-full text-dm-crimson;
+  @apply p-1.5 rounded-full text-white border border-white/20;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .reelsTitle {
-  @apply font-serif text-lg font-bold text-dm-dark tracking-wide;
+  @apply font-serif text-lg font-bold text-white tracking-wide;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .reelsScroller {
   @apply max-w-7xl mx-auto px-4 overflow-x-auto no-scrollbar overscroll-x-contain;
+  position: relative;
+  z-index: 1;
 }
 
 .reelsRow {
@@ -131,7 +148,7 @@
 }
 
 .reelRingSeen {
-  @apply bg-gray-200;
+  @apply bg-white/20;
 }
 
 .reelRingNew {
@@ -159,15 +176,83 @@
 }
 
 .reelNameSeen {
-  @apply text-gray-400 font-normal;
+  @apply text-white/60 font-normal;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .reelNameNew {
-  @apply text-dm-dark font-bold group-hover:text-dm-crimson;
+  @apply text-white font-bold group-hover:text-dm-crimson;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .reelViews {
-  @apply text-[9px] text-gray-400;
+  @apply text-[9px] text-white/60;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.reelsBanner {
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    #2b2f36 0%,
+    #2b2f36 70%,
+    #b3bac4 100%
+  );
+  padding: 12px 16px;
+}
+
+.reelsBannerInner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-height: 52px;
+  overflow: hidden;
+  justify-content: center;
+}
+
+.reelsBannerText {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: clamp(15px, 4.7vw, 24px);
+  font-weight: 900;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #ffd84a;
+  animation: bannerSweep var(--banner-duration, 4000ms) ease-in-out both;
+}
+
+.reelsBannerBrand {
+  color: #ffffff;
+  letter-spacing: 0.22em;
+  font-weight: 900;
+  font-size: clamp(22px, 6vw, 32px);
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.85),
+    0 0 26px rgba(255, 255, 255, 0.55);
+  animation: none;
+  margin: 0 auto;
+}
+
+@keyframes bannerSweep {
+  0% {
+    transform: translateX(110%);
+    opacity: 0;
+  }
+  20% {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  80% {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-110%);
+    opacity: 0;
+  }
 }
 
 .liveWrap {

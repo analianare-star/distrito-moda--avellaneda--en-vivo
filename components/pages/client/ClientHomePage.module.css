@@ -1,6 +1,7 @@
 .section {
-  @apply mx-auto max-w-7xl px-4 py-10;
+  @apply mx-auto max-w-7xl pt-10;
   position: relative;
+  isolation: isolate;
 }
 
 .section::before {
@@ -15,7 +16,7 @@
     radial-gradient(600px 320px at 20% 0%, rgba(216, 237, 244, 0.6), transparent 60%),
     linear-gradient(180deg, rgba(216, 237, 244, 0.35) 0%, rgba(255, 255, 255, 0) 65%);
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
 }
 
 .section::after {
@@ -29,7 +30,7 @@
   background:
     linear-gradient(180deg, rgba(245, 246, 248, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
 }
 
 .content {
@@ -43,14 +44,49 @@
 
 .queueRow {
   @apply flex gap-3 overflow-x-auto pb-2 no-scrollbar;
+  padding-left: 15px;
+  padding-right: 15px;
   scroll-snap-type: x mandatory;
 }
 
 .queueCard {
-  @apply relative flex flex-col items-center justify-start rounded-2xl border border-gray-100 bg-white px-3 py-4 shadow-sm;
+  @apply relative flex flex-col items-center justify-start rounded-2xl border border-white/50 px-3 py-4 shadow-sm;
   min-width: clamp(90px, 27vw, 120px);
   height: 162px;
   scroll-snap-align: start;
+  color: #0f172a;
+  overflow: hidden;
+}
+
+.queueBackdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.03);
+  filter: saturate(1.1) contrast(1.02);
+  z-index: 0;
+}
+
+.queueGlass {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.45) 55%,
+    rgba(255, 255, 255, 0.75) 100%
+  );
+  backdrop-filter: blur(6px);
+  z-index: 1;
+}
+
+.queueContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .queueLogo {
@@ -59,22 +95,110 @@
 
 .queueName {
   @apply text-[11px] font-bold text-dm-dark text-center leading-tight line-clamp-2;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
 }
 
 .queueUpcoming {
   @apply absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-dm-dark/85 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.2em] text-white;
+  z-index: 3;
 }
 
 .queueLiveBadge {
-  @apply absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-widest rounded-full px-3 py-1 text-white bg-[#ff0033] backdrop-blur-sm shadow-[0_0_12px_rgba(255,0,51,0.6)];
+  @apply absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-white;
+  z-index: 3;
 }
 
-.queueRecDot {
-  @apply inline-block w-1.5 h-1.5 rounded-full bg-white mr-1 animate-pulse;
+.queueLiveText {
+  @apply text-[9px] font-bold tracking-[0.3em];
+  color: #0b0b0d;
+}
+
+.queueLiveDot {
+  @apply inline-block w-4 h-4 rounded-full bg-[#ff0033] shadow-[0_0_10px_rgba(255,0,51,0.7)] animate-pulse;
+  position: relative;
+}
+
+.queueLiveDot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 6px;
+  height: 6px;
+  margin: auto;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.promoStrip {
+  @apply mb-4;
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  overflow: hidden;
+}
+
+.promoBanner {
+  @apply w-full flex items-center gap-4 px-6 py-4 text-left uppercase;
+  border-radius: 0;
+  border: none;
+  color: var(--promo-text);
+  background: linear-gradient(
+      180deg,
+      var(--promo-bg) 0%,
+      var(--promo-bg) 70%,
+      var(--promo-edge) 100%
+  );
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  animation: promoSweep 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+
+.promoIcon {
+  @apply w-9 h-9 flex items-center justify-center border border-white/30;
+  border-radius: 0;
+  color: var(--promo-text);
+  background: transparent;
+}
+
+.promoText {
+  @apply flex flex-col gap-0.5 flex-1 min-w-0;
+}
+
+.promoEyebrow {
+  @apply text-[10px] tracking-[0.4em];
+  color: var(--promo-muted);
+}
+
+.promoTitle {
+  @apply text-[16px] font-extrabold font-serif leading-tight;
+  color: var(--promo-text);
+}
+
+.trustStrip {
+  @apply grid grid-cols-1 gap-2 mb-6;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.trustItem {
+  @apply text-[10px] font-bold uppercase tracking-[0.2em] text-dm-dark border border-black/10 px-3 py-2;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes promoSweep {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .schedule {
   @apply mt-10;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .scheduleHeader {
