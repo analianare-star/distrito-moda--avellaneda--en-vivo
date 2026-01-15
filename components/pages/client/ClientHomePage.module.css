@@ -40,6 +40,12 @@
 
 .queueSection {
   @apply mb-6;
+  background: linear-gradient(
+    180deg,
+    #c1b5ab 0%,
+    #2b2f36 55%,
+    #0b0b0d 100%
+  );
 }
 
 .queueRow {
