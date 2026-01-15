@@ -97,8 +97,8 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
     () => [
       {
         id: "brands",
-        eyebrow: "EN VIVO",
-        title: "CONOCÉ LAS MARCAS DE AVELLANEDA EN TIEMPO REAL",
+        eyebrow: "En vivo",
+        title: "Conocé las marcas de Avellaneda en tiempo real",
         icon: Radio,
         theme: {
           bg: "#c1b5ab",
@@ -111,8 +111,8 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
       },
       {
         id: "real",
-        eyebrow: "EN VIVO",
-        title: "VIVOS REALES, SIN INTERMEDIARIOS",
+        eyebrow: "En vivo",
+        title: "Vivos reales, sin intermediarios",
         icon: Sparkles,
         theme: {
           bg: "#c1b5ab",
@@ -125,8 +125,8 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
       },
       {
         id: "wholesale",
-        eyebrow: "EN VIVO",
-        title: "EL MAYORISTA EN VIVO",
+        eyebrow: "En vivo",
+        title: "El mayorista en vivo",
         icon: CalendarCheck,
         theme: {
           bg: "#c1b5ab",

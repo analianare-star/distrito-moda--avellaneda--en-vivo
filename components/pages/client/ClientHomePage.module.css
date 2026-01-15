@@ -39,7 +39,12 @@
 }
 
 .queueSection {
-  @apply mb-6;
+  @apply mb-0;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-left: 15px;
+  padding-right: 0;
+  margin-bottom: 0.5rem;
   background: linear-gradient(
     180deg,
     #c1b5ab 0%,
@@ -136,16 +141,17 @@
 }
 
 .promoStrip {
-  @apply mb-3;
+  @apply mb-0;
   width: 100vw;
   margin-left: 50%;
   transform: translateX(-50%);
   overflow: hidden;
   margin-top: 6px;
+  margin-bottom: -0.25rem;
 }
 
 .promoBanner {
-  @apply w-full flex items-center gap-4 px-6 py-4 text-left uppercase;
+  @apply w-full flex items-center gap-4 px-6 py-4 text-left;
   border-radius: 0;
   border: none;
   color: var(--promo-text);
