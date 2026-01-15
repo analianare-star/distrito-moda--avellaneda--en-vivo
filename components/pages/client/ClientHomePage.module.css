@@ -169,20 +169,20 @@
   @apply text-[10px] tracking-[0.4em];
   color: var(--promo-muted);
   text-shadow:
-    1px 0 var(--promo-stroke),
-    -1px 0 var(--promo-stroke),
-    0 1px var(--promo-stroke),
-    0 -1px var(--promo-stroke);
+    0.5px 0 var(--promo-stroke),
+    -0.5px 0 var(--promo-stroke),
+    0 0.5px var(--promo-stroke),
+    0 -0.5px var(--promo-stroke);
 }
 
 .promoTitle {
   @apply text-[16px] font-extrabold font-serif leading-tight;
   color: var(--promo-text);
   text-shadow:
-    1px 0 var(--promo-stroke),
-    -1px 0 var(--promo-stroke),
-    0 1px var(--promo-stroke),
-    0 -1px var(--promo-stroke);
+    0.5px 0 var(--promo-stroke),
+    -0.5px 0 var(--promo-stroke),
+    0 0.5px var(--promo-stroke),
+    0 -0.5px var(--promo-stroke);
 }
 
 .trustStrip {

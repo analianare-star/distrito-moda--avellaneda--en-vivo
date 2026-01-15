@@ -47,6 +47,19 @@
   padding-right: 15px;
 }
 
+.showcaseGrid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 255, 255, 0) 35%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
 .showcaseGrid > :last-child::after {
   content: "";
   position: absolute;
@@ -98,7 +111,7 @@
 }
 
 .reelsWrap {
-  @apply relative w-full pt-0 pb-0 animate-in slide-in-from-top-2 fade-in duration-500;
+  @apply relative w-full pt-0 pb-0 mt-2 animate-in slide-in-from-top-2 fade-in duration-500;
   isolation: isolate;
   color: inherit;
   background: transparent;
@@ -168,21 +181,22 @@
 
 .reelName {
   @apply text-[10px] text-center truncate w-full transition-colors;
+  color: #0b0b0d;
 }
 
 .reelNameSeen {
-  @apply text-white/60 font-normal;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  @apply font-normal;
+  color: #0b0b0d;
 }
 
 .reelNameNew {
-  @apply text-white font-bold group-hover:text-dm-crimson;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  @apply font-bold group-hover:text-dm-crimson;
+  color: #0b0b0d;
 }
 
 .reelViews {
-  @apply text-[9px] text-white/60;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  @apply text-[9px];
+  color: #0b0b0d;
 }
 
 .reelsBanner {
