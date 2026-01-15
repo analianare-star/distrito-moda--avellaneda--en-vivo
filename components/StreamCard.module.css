@@ -89,3 +89,29 @@
 .metaRow {
   @apply flex items-center gap-2 mt-1.5;
 }
+
+.liveActionButton {
+  @apply w-full text-white font-bold shadow-md;
+  background: linear-gradient(
+    120deg,
+    #ff2455 0%,
+    #ff4b3a 40%,
+    #ff2455 70%,
+    #b30a2a 100%
+  );
+  background-size: 200% 200%;
+  animation: lavaFlow 3.6s ease-in-out infinite;
+  box-shadow: 0 10px 20px rgba(255, 36, 85, 0.35);
+}
+
+@keyframes lavaFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

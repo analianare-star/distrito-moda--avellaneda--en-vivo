@@ -1,5 +1,5 @@
 .section {
-  @apply mx-auto max-w-7xl pt-10;
+  @apply mx-auto max-w-7xl pt-8;
   position: relative;
   isolation: isolate;
 }
@@ -8,13 +8,13 @@
   content: "";
   position: absolute;
   left: 50%;
-  top: -48px;
+  top: -40px;
   width: 100vw;
-  height: 520px;
+  height: 480px;
   transform: translateX(-50%);
   background:
-    radial-gradient(600px 320px at 20% 0%, rgba(216, 237, 244, 0.6), transparent 60%),
-    linear-gradient(180deg, rgba(216, 237, 244, 0.35) 0%, rgba(255, 255, 255, 0) 65%);
+    radial-gradient(600px 320px at 25% 0%, rgba(216, 237, 244, 0.65), transparent 62%),
+    linear-gradient(180deg, rgba(216, 237, 244, 0.45) 0%, rgba(255, 255, 255, 0) 68%);
   pointer-events: none;
   z-index: -1;
 }
@@ -23,9 +23,9 @@
   content: "";
   position: absolute;
   left: 50%;
-  top: 520px;
+  top: 480px;
   width: 100vw;
-  height: 420px;
+  height: 360px;
   transform: translateX(-50%);
   background:
     linear-gradient(180deg, rgba(245, 246, 248, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
@@ -130,11 +130,12 @@
 }
 
 .promoStrip {
-  @apply mb-4;
+  @apply mb-3;
   width: 100vw;
   margin-left: 50%;
   transform: translateX(-50%);
   overflow: hidden;
+  margin-top: 6px;
 }
 
 .promoBanner {
@@ -167,11 +168,21 @@
 .promoEyebrow {
   @apply text-[10px] tracking-[0.4em];
   color: var(--promo-muted);
+  text-shadow:
+    1px 0 var(--promo-stroke),
+    -1px 0 var(--promo-stroke),
+    0 1px var(--promo-stroke),
+    0 -1px var(--promo-stroke);
 }
 
 .promoTitle {
   @apply text-[16px] font-extrabold font-serif leading-tight;
   color: var(--promo-text);
+  text-shadow:
+    1px 0 var(--promo-stroke),
+    -1px 0 var(--promo-stroke),
+    0 1px var(--promo-stroke),
+    0 -1px var(--promo-stroke);
 }
 
 .trustStrip {

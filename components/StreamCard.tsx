@@ -190,7 +190,7 @@ export const StreamCard: React.FC<StreamCardProps> = ({
             
             {/* Primary Action Button */}
             {isLive ? (
-                <Button onClick={handleEnter} className="w-full bg-dm-crimson hover:bg-red-700 text-white shadow-md shadow-red-200 animate-pulse-slow">
+                <Button onClick={handleEnter} className={styles.liveActionButton}>
                     ENTRAR AL VIVO
                 </Button>
             ) : isCancelled ? (

@@ -9,6 +9,7 @@ interface ClientLayoutProps {
   authModal?: React.ReactNode;
   previewBanner?: React.ReactNode;
   isPreview?: boolean;
+  hideChrome?: boolean;
   children: React.ReactNode;
 }
 
@@ -18,16 +19,21 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({
   authModal,
   previewBanner,
   isPreview,
+  hideChrome,
   children,
 }) => {
   return (
     <div className={styles.layout}>
-      {header}
-      {previewBanner}
-      <main className={`${styles.main} ${isPreview ? styles.mainPreview : ""}`}>
+      {!hideChrome && header}
+      {!hideChrome && previewBanner}
+      <main
+        className={`${styles.main} ${isPreview ? styles.mainPreview : ""} ${
+          hideChrome ? styles.mainNoChrome : ""
+        }`}
+      >
         {children}
       </main>
-      {footer}
+      {!hideChrome && footer}
       {authModal}
     </div>
   );

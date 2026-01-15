@@ -3,7 +3,7 @@ import { Stream, Reel, Shop } from '../types';
 import { FILTERS } from '../constants';
 import { Button } from './Button';
 import { LogoBubble } from './LogoBubble';
-import { PlayCircle, Users, ChevronLeft, ChevronRight, Plus, Sparkles } from 'lucide-react';
+import { PlayCircle, Users, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import styles from './HeroSection.module.css';
 
 // HeroSection renders the featured live carousel and filter controls.
@@ -17,8 +17,7 @@ interface HeroSectionProps {
     onViewReel: (reel: Reel) => void; 
     viewedReels: string[];
     onOpenShop: (shop: Stream['shop']) => void;
-    isLoggedIn: boolean;
-    onOpenLogin: () => void;
+    queueSlot?: React.ReactNode;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ 
@@ -30,28 +29,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     onViewReel,
     viewedReels,
     onOpenShop,
-    isLoggedIn,
-    onOpenLogin
+    queueSlot
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const bannerMessages = useMemo(() => {
-    const base = [
-      { id: "verified", text: "+280 TIENDAS VERIFICADAS", duration: 4000 },
-      { id: "daily", text: "NUEVOS VIVOS CADA DÍA", duration: 4000 },
-      { id: "prices", text: "PRECIOS MAYORISTAS", duration: 4000 },
-    ];
-    if (!isLoggedIn) {
-      base.push({ id: "register", text: "REGISTRATE AHORA", duration: 4000 });
-    }
-    base.push({
-      id: "brand",
-      text: "AVELLANEDA EN VIVO",
-      duration: 8000,
-      isBrand: true,
-    });
-    return base;
-  }, [isLoggedIn]);
-  const [bannerIndex, setBannerIndex] = useState(0);
 
   const showcasePool = useMemo(
     () =>
@@ -109,25 +89,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     }, 7000);
     return () => clearInterval(timer);
   }, [showcasePool]);
-
-  useEffect(() => {
-    if (bannerMessages.length === 0) return;
-    const current = bannerMessages[bannerIndex % bannerMessages.length];
-    const timer = window.setTimeout(() => {
-      setBannerIndex((prev) => (prev + 1) % bannerMessages.length);
-    }, current.duration);
-    return () => window.clearTimeout(timer);
-  }, [bannerIndex, bannerMessages]);
-
-  const sortedReels = [...activeReels].sort((a, b) => {
-      const aSeen = viewedReels.includes(a.id);
-      const bSeen = viewedReels.includes(b.id);
-      if (aSeen === bSeen) {
-          // Both seen or both unseen, sort by newest
-          return new Date(b.createdAtISO).getTime() - new Date(a.createdAtISO).getTime();
-      }
-      return aSeen ? 1 : -1; // Unseen first
-  });
 
   // Reset index if the list of live streams changes
   useEffect(() => {
@@ -198,74 +159,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         </section>
       )}
-      
-      {/* --- STORIES / REELS CAROUSEL --- */}
-      {sortedReels.length > 0 && (
-          <div className={styles.reelsWrap}>
-              <div className={styles.reelsHeader}>
-                  <div className={styles.reelsIcon}>
-                    <Sparkles size={16} className="fill-current" />
-                  </div>
-                  <h2 className={styles.reelsTitle}>
-                      REELS DE TIENDAS
-                  </h2>
-              </div>
 
-              <div className={styles.reelsScroller}>
-                  <div className={styles.reelsRow}>
-                      {sortedReels.map(reel => {
-                          const isSeen = viewedReels.includes(reel.id);
-                          return (
-                              <div 
-                                key={reel.id} 
-                                className={`${styles.reelCard} group`}
-                                onClick={() => onViewReel(reel)}
-                              >
-                                  <div className={`${styles.reelRing} ${isSeen ? styles.reelRingSeen : styles.reelRingNew}`}>
-                                      <div className={styles.reelImageWrap}>
-                                          <img 
-                                            src={reel.shopLogo} 
-                                            alt={reel.shopName} 
-                                            loading="lazy"
-                                            decoding="async"
-                                            className={`${styles.reelImage} ${isSeen ? styles.reelImageSeen : styles.reelImageNew}`} 
-                                          />
-                                      </div>
-                                  </div>
-                                  <span className={`${styles.reelName} ${isSeen ? styles.reelNameSeen : styles.reelNameNew}`}>
-                                      {reel.shopName}
-                                  </span>
-                                  <span className={styles.reelViews}>{reel.views || 0} vistas</span>
-                              </div>
-                          );
-                      })}
-                  </div>
-              </div>
-          </div>
-      )}
-
-      <div className={styles.reelsBanner} aria-label="Beneficios de la plataforma">
-          {(() => {
-              const current = bannerMessages[bannerIndex % bannerMessages.length];
-              return (
-                <div className={styles.reelsBannerInner}>
-                  <span
-                    key={`${current.id}-${bannerIndex}`}
-                    className={`${styles.reelsBannerText} ${
-                      current.isBrand ? styles.reelsBannerBrand : ""
-                    }`}
-                    style={
-                      {
-                        "--banner-duration": `${current.duration}ms`,
-                      } as React.CSSProperties
-                    }
-                  >
-                    {current.text}
-                  </span>
-                </div>
-              );
-          })()}
-      </div>
+      {queueSlot}
 
       {/* FEATURED LIVE SECTION (CAROUSEL) */}
       {activeStream && (

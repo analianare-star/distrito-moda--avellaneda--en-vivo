@@ -25,28 +25,27 @@ export const ClientShopsPage: React.FC<ClientShopsPageProps> = ({
 }) => {
   return (
     <section aria-label="Listado de tiendas">
-      <div className={styles.section}>
-        <div className={styles.searchBar}>
-          <Search size={16} className={styles.searchIcon} />
-          <input
-            type="search"
-            value={shopQuery}
-            onChange={(event) => onShopQueryChange(event.target.value)}
-            placeholder="Buscar tiendas, zonas o rubros"
-            className={styles.searchInput}
-          />
-          {shopQuery && (
-            <button
-              onClick={onClearShopQuery}
-              className={styles.clearButton}
-            >
-              Borrar
-            </button>
-          )}
-        </div>
-      </div>
-
       <div className={styles.listWrap}>
+        <div className={styles.searchSticky}>
+          <div className={styles.searchBar}>
+            <Search size={16} className={styles.searchIcon} />
+            <input
+              type="search"
+              value={shopQuery}
+              onChange={(event) => onShopQueryChange(event.target.value)}
+              placeholder="Buscar tiendas, zonas o rubros"
+              className={styles.searchInput}
+            />
+            {shopQuery && (
+              <button
+                onClick={onClearShopQuery}
+                className={styles.clearButton}
+              >
+                Borrar
+              </button>
+            )}
+          </div>
+        </div>
         <div className={styles.listHeader}>
           <h2 className={styles.listTitle}>Tiendas</h2>
           <div className={styles.listCount}>

@@ -12,15 +12,15 @@
   @apply absolute inset-0;
   background: linear-gradient(
     180deg,
-    rgba(216, 237, 244, 0.35) 0%,
-    rgba(255, 255, 255, 0) 70%
+    rgba(216, 237, 244, 0.55) 0%,
+    rgba(255, 255, 255, 0) 72%
   );
   pointer-events: none;
   z-index: -1;
 }
 
 .showcaseHeader {
-  @apply w-full pt-4 pb-3 flex items-end justify-between gap-4;
+  @apply w-full pt-3 pb-2 flex items-end justify-between gap-4;
   position: relative;
   z-index: 1;
   padding-left: 15px;
@@ -98,15 +98,10 @@
 }
 
 .reelsWrap {
-  @apply relative w-full pt-6 pb-6 animate-in slide-in-from-top-2 fade-in duration-500;
+  @apply relative w-full pt-0 pb-0 animate-in slide-in-from-top-2 fade-in duration-500;
   isolation: isolate;
-  color: #fff;
-  background: linear-gradient(
-    180deg,
-    #0b0b0d 0%,
-    #1c2128 45%,
-    #c9cfd7 100%
-  );
+  color: inherit;
+  background: transparent;
 }
 
 .reelsWrap::before {

@@ -9,3 +9,7 @@
 .mainPreview {
   @apply pt-24;
 }
+
+.mainNoChrome {
+  @apply pt-0 pb-0;
+}

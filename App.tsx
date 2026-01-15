@@ -365,6 +365,7 @@ const App: React.FC = () => {
   const [accountTab, setAccountTab] = useState<
     "RESUMEN" | "NOTIFICATIONS" | "REMINDERS"
   >("RESUMEN");
+  const [isLiveQueueOpen, setIsLiveQueueOpen] = useState(false);
   const [shopQuery, setShopQuery] = useState("");
   const [calendarPromptStream, setCalendarPromptStream] =
     useState<Stream | null>(null);
@@ -2069,6 +2070,7 @@ const App: React.FC = () => {
                 ) : null
               }
               isPreview={Boolean(adminPreview)}
+              hideChrome={isLiveQueueOpen}
             >
               <ClientView
                 activeBottomNav={activeBottomNav}
@@ -2118,6 +2120,7 @@ const App: React.FC = () => {
                 onLogout={handleToggleClientLogin}
                 onNotify={notify}
                 onOpenCalendarInvite={handleOpenCalendarInvite}
+                onQueueModalChange={setIsLiveQueueOpen}
                 streams={allStreams}
                 queueStreamsSource={queueStreamsSource}
               />

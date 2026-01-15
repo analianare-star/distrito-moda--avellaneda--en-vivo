@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { CalendarCheck, Radio, Sparkles } from "lucide-react";
 import { HeroSection } from "../../HeroSection";
+import { ReelsStrip } from "../../ReelsStrip";
 import { StreamCard } from "../../StreamCard";
 import { EmptyState } from "../../EmptyState";
 import { Reel, Shop, Stream, StreamStatus, UserContext } from "../../../types";
@@ -30,6 +31,7 @@ interface ClientHomePageProps {
   onDownloadCard: (stream: Stream) => void;
   onNotify: (title: string, message: string, tone?: "info" | "success" | "warning" | "error") => void;
   onOpenLogin: () => void;
+  onQueueModalChange: (isOpen: boolean) => void;
 }
 
 export const ClientHomePage: React.FC<ClientHomePageProps> = ({
@@ -52,8 +54,12 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
   onDownloadCard,
   onNotify,
   onOpenLogin,
+  onQueueModalChange,
 }) => {
   const [queueStream, setQueueStream] = useState<Stream | null>(null);
+  useEffect(() => {
+    onQueueModalChange(Boolean(queueStream));
+  }, [queueStream, onQueueModalChange]);
   const visibleStreams = filteredStreams.slice(0, 6);
   const streamLayout = ["wide", "small", "small", "wide", "small", "small"];
   const isMockStream = (streamId: string) => streamId.startsWith("mock-stream-");
@@ -95,10 +101,11 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
         title: "COMPRÁ DIRECTO A FÁBRICAS",
         icon: Radio,
         theme: {
-          bg: "#ff2f55",
-          edge: "#cc1035",
+          bg: "rgba(237, 22, 80, 0.5)",
+          edge: "rgba(197, 18, 68, 0.5)",
           text: "#ffffff",
-          muted: "#ffe3ea",
+          muted: "#ffe1ea",
+          stroke: "#0b0b0d",
         },
         onClick: () => onSelectBottomNav("live"),
       },
@@ -108,10 +115,11 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
         title: "REELS ACTIVOS POR 24 HORAS",
         icon: Sparkles,
         theme: {
-          bg: "#34b6d8",
-          edge: "#1f8fb0",
+          bg: "rgba(106, 94, 86, 0.5)",
+          edge: "rgba(84, 75, 69, 0.5)",
           text: "#ffffff",
-          muted: "#d9f4fb",
+          muted: "#eadfd6",
+          stroke: "#0b0b0d",
         },
         onClick: openFirstReel,
       },
@@ -121,10 +129,11 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
         title: "RECORDÁ TUS VIVOS FAVORITOS",
         icon: CalendarCheck,
         theme: {
-          bg: "#f8b22d",
-          edge: "#db8a0e",
-          text: "#1f1300",
-          muted: "#fff4db",
+          bg: "rgba(193, 181, 171, 0.5)",
+          edge: "rgba(166, 156, 147, 0.5)",
+          text: "#2b211b",
+          muted: "#f4ece6",
+          stroke: "transparent",
         },
         onClick: () => onSelectBottomNav("reminders"),
       },
@@ -142,86 +151,100 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
     return () => window.clearInterval(timer);
   }, [promoBanners.length]);
 
+  const promoStrip =
+    promoBanners.length > 0 ? (
+      <div className={styles.promoStrip} aria-label="Promociones destacadas">
+        {(() => {
+          const banner = promoBanners[promoIndex % promoBanners.length];
+          const Icon = banner.icon;
+          return (
+            <button
+              key={banner.id}
+              className={styles.promoBanner}
+              style={
+                {
+                  "--promo-bg": banner.theme.bg,
+                  "--promo-edge": banner.theme.edge,
+                  "--promo-text": banner.theme.text,
+                  "--promo-muted": banner.theme.muted,
+                  "--promo-stroke": banner.theme.stroke,
+                } as React.CSSProperties
+              }
+              type="button"
+              onClick={banner.onClick}
+            >
+              <span className={styles.promoIcon}>
+                <Icon size={16} />
+              </span>
+              <div className={styles.promoText}>
+                <span className={styles.promoEyebrow}>{banner.eyebrow}</span>
+                <span className={styles.promoTitle}>{banner.title}</span>
+              </div>
+            </button>
+          );
+        })()}
+      </div>
+    ) : null;
+
+  const queueSection =
+    queueStreams.length > 0 ? (
+      <div className={styles.queueSection} aria-label="En vivo y próximos">
+        <div className={styles.queueRow}>
+          {queueStreams.map((stream) => {
+            const isLive = stream.status === StreamStatus.LIVE;
+            const coverImage = stream.shop.coverUrl || stream.shop.logoUrl;
+            return (
+              <button
+                key={stream.id}
+                className={styles.queueCard}
+                onClick={() => setQueueStream(stream)}
+              >
+                <div
+                  className={styles.queueBackdrop}
+                  style={{ backgroundImage: `url(${coverImage})` }}
+                  aria-hidden="true"
+                />
+                <div className={styles.queueGlass} aria-hidden="true" />
+                <div className={styles.queueContent}>
+                  <LogoBubble
+                    src={stream.shop.logoUrl}
+                    alt={stream.shop.name}
+                    size={50}
+                    seed={stream.shop.id || stream.shop.name}
+                    className={styles.queueLogo}
+                  />
+                  <span className={styles.queueName}>{stream.shop.name}</span>
+                </div>
+                {isLive ? (
+                  <span className={styles.queueLiveBadge}>
+                    <span className={styles.queueLiveText}>EN VIVO</span>
+                    <span className={styles.queueLiveDot} />
+                  </span>
+                ) : (
+                  <span className={styles.queueUpcoming}>{formatUpcoming()}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    ) : null;
+
+  const bannerAndQueue = promoStrip || queueSection ? (
+    <>
+      {promoStrip}
+      {queueSection}
+    </>
+  ) : null;
+
   return (
     <section className={styles.section} aria-label="Contenido principal">
       <div className={styles.content}>
-        {queueStreams.length > 0 && (
-          <div className={styles.queueSection} aria-label="En vivo y próximos">
-            <div className={styles.queueRow}>
-              {queueStreams.map((stream) => {
-                const isLive = stream.status === StreamStatus.LIVE;
-                const coverImage = stream.shop.coverUrl || stream.shop.logoUrl;
-                return (
-                  <button
-                    key={stream.id}
-                    className={styles.queueCard}
-                    onClick={() => setQueueStream(stream)}
-                  >
-                    <div
-                      className={styles.queueBackdrop}
-                      style={{ backgroundImage: `url(${coverImage})` }}
-                      aria-hidden="true"
-                    />
-                    <div className={styles.queueGlass} aria-hidden="true" />
-                    <div className={styles.queueContent}>
-                      <LogoBubble
-                        src={stream.shop.logoUrl}
-                        alt={stream.shop.name}
-                        size={50}
-                        seed={stream.shop.id || stream.shop.name}
-                        className={styles.queueLogo}
-                      />
-                      <span className={styles.queueName}>{stream.shop.name}</span>
-                    </div>
-                    {isLive ? (
-                      <span className={styles.queueLiveBadge}>
-                        <span className={styles.queueLiveText}>EN VIVO</span>
-                        <span className={styles.queueLiveDot} />
-                      </span>
-                    ) : (
-                      <span className={styles.queueUpcoming}>
-                        {formatUpcoming()}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {promoBanners.length > 0 && (
-          <div className={styles.promoStrip} aria-label="Promociones destacadas">
-            {(() => {
-              const banner = promoBanners[promoIndex % promoBanners.length];
-              const Icon = banner.icon;
-              return (
-                <button
-                  key={banner.id}
-                  className={styles.promoBanner}
-                  style={
-                    {
-                      "--promo-bg": banner.theme.bg,
-                      "--promo-edge": banner.theme.edge,
-                      "--promo-text": banner.theme.text,
-                      "--promo-muted": banner.theme.muted,
-                    } as React.CSSProperties
-                  }
-                  type="button"
-                  onClick={banner.onClick}
-                >
-                  <span className={styles.promoIcon}>
-                    <Icon size={16} />
-                  </span>
-                  <div className={styles.promoText}>
-                    <span className={styles.promoEyebrow}>{banner.eyebrow}</span>
-                    <span className={styles.promoTitle}>{banner.title}</span>
-                  </div>
-                </button>
-              );
-            })()}
-          </div>
-        )}
+        <ReelsStrip
+          activeReels={activeReels}
+          viewedReels={user.viewedReels}
+          onViewReel={onViewReel}
+        />
 
         <HeroSection
           activeFilter={activeFilter}
@@ -232,8 +255,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
           onViewReel={onViewReel}
           viewedReels={user.viewedReels}
           onOpenShop={onOpenShop}
-          isLoggedIn={user.isLoggedIn}
-          onOpenLogin={onOpenLogin}
+          queueSlot={bannerAndQueue}
         />
 
         <div className={styles.schedule}>
