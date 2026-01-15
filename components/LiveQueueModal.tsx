@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Calendar, X } from "lucide-react";
-import { Stream, StreamStatus, UserContext } from "../types";
+import { Shop, Stream, StreamStatus, UserContext } from "../types";
 import { StreamCard } from "./StreamCard";
 import styles from "./LiveQueueModal.module.css";
 
@@ -19,7 +19,7 @@ interface LiveQueueModalProps {
   user: UserContext;
   canClientInteract: boolean;
   onClose: () => void;
-  onOpenShop: (stream: Stream) => void;
+  onOpenShop: (shop: Shop, options?: { navigate?: boolean }) => void;
   onReport: (streamId: string) => void;
   onToggleReminder: (streamId: string) => void;
   onLike?: (streamId: string) => void;
@@ -178,7 +178,7 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
                   user={user}
                   canClientInteract={canClientInteract}
                   onNotify={onNotify}
-                  onOpenShop={() => onOpenShop(stream)}
+                  onOpenShop={() => onOpenShop(stream.shop, { navigate: false })}
                   onReport={onReport}
                   onToggleReminder={onToggleReminder}
                   onLike={onLike}

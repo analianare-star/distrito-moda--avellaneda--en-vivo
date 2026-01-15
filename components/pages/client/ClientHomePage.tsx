@@ -22,7 +22,7 @@ interface ClientHomePageProps {
   canClientInteract: boolean;
   onFilterChange: (value: string) => void;
   onSelectBottomNav: (value: string) => void;
-  onOpenShop: (shop: Shop) => void;
+  onOpenShop: (shop: Shop, options?: { navigate?: boolean }) => void;
   onViewReel: (reel: Reel) => void;
   onReport: (stream: Stream) => void;
   onToggleReminder: (streamId: string) => void;
@@ -254,7 +254,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
           featuredShops={featuredShops}
           onViewReel={onViewReel}
           viewedReels={user.viewedReels}
-          onOpenShop={onOpenShop}
+          onOpenShop={(stream) => onOpenShop(stream.shop, { navigate: false })}
           queueSlot={bannerAndQueue}
         />
 

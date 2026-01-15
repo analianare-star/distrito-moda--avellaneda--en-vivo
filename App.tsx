@@ -22,6 +22,7 @@ import { AuthModal } from "./components/layout/AuthModal";
 import { ClientLayout } from "./components/layout/ClientLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { MerchantLayout } from "./components/layout/MerchantLayout";
+import { ClientShopSearchBar } from "./components/pages/client/ClientShopSearchBar";
 import { ShopCard } from "./components/ShopCard";
 import { ResetView } from "./components/layout/ResetView";
 import { ClientView } from "./components/views/ClientView";
@@ -111,6 +112,31 @@ const BRAND_LOGO = new URL("./img/logo.svg", import.meta.url).href;
 const MOCK_REEL_COUNT = 10;
 const MOCK_REEL_TTL_HOURS = 2;
 const MOCK_STREAM_COUNT = 10;
+const DAILY_MOCK_SEED = new Date().toLocaleDateString("en-CA");
+
+const createSeededRandom = (seed: string) => {
+  let hash = 2166136261;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return () => {
+    hash += 0x6d2b79f5;
+    let t = Math.imul(hash ^ (hash >>> 15), 1 | hash);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
+const shuffleWithSeed = <T,>(items: T[], seed: string) => {
+  const rng = createSeededRandom(seed);
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rng() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+};
 
 const normalizeInstagramUrl = (value?: string) => {
   if (!value) return "";
@@ -138,37 +164,58 @@ const buildMockStreams = (shops: Shop[], streams: Stream[], count: number) => {
   if (shops.length === 0) return [];
   const usedShopIds = new Set(streams.map((stream) => stream.shopId));
   const candidates = shops.filter((shop) => !usedShopIds.has(shop.id));
-  const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+  const shuffled = shuffleWithSeed(candidates, `${DAILY_MOCK_SEED}-streams`);
   const liveCount = Math.min(3, count);
-  const now = Date.now();
+  const upcomingCount = Math.min(4, count - liveCount);
+  const finishedCount = Math.max(count - liveCount - upcomingCount, 0);
+  const dayBase = new Date();
+  dayBase.setHours(9, 0, 0, 0);
+  const baseTime = dayBase.getTime();
 
   return shuffled.slice(0, count).map((shop, index) => {
     const isLive = index < liveCount;
-    const baseTime = isLive
-      ? new Date(now - 5 * 60 * 1000)
-      : new Date(now + (index + 1) * 60 * 60 * 1000);
-    const scheduledTime = baseTime.toLocaleTimeString("es-AR", {
+    const isUpcoming = index >= liveCount && index < liveCount + upcomingCount;
+    const isFinished = index >= liveCount + upcomingCount;
+    const slotOffset = isLive
+      ? index * 15 * 60 * 1000
+      : isUpcoming
+        ? (index + 1) * 60 * 60 * 1000
+        : -1 * (index - liveCount - upcomingCount + 1) * 90 * 60 * 1000;
+    const streamTime = new Date(baseTime + slotOffset);
+    const scheduledTime = streamTime.toLocaleTimeString("es-AR", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
     });
+    const rng = createSeededRandom(`${DAILY_MOCK_SEED}-stream-${shop.id}`);
+    const likes = Math.floor(rng() * 40) + 5;
+    const views = Math.floor(rng() * 180) + 20;
+    const status = isLive
+      ? StreamStatus.LIVE
+      : isUpcoming
+        ? StreamStatus.UPCOMING
+        : StreamStatus.FINISHED;
     return {
       id: `mock-stream-${shop.id}`,
       shop,
       shopId: shop.id,
-      title: isLive ? `Vivo de ${shop.name}` : `Próximo vivo de ${shop.name}`,
+      title: isLive
+        ? `Vivo de ${shop.name}`
+        : isUpcoming
+          ? `Próximo vivo de ${shop.name}`
+          : `Vivo finalizado de ${shop.name}`,
       coverImage: shop.coverUrl || shop.logoUrl,
-      status: isLive ? StreamStatus.LIVE : StreamStatus.UPCOMING,
+      status,
       extensionCount: 0,
       scheduledTime,
-      fullDateISO: baseTime.toISOString(),
-      startedAt: isLive ? now - 5 * 60 * 1000 : undefined,
+      fullDateISO: streamTime.toISOString(),
+      startedAt: isLive ? streamTime.getTime() - 5 * 60 * 1000 : undefined,
       platform: "Instagram",
       url: resolveCatalogUrl(shop) || "https://www.distritomoda.com.ar",
-      views: Math.floor(Math.random() * 180) + 20,
+      views,
       reportCount: 0,
       isVisible: true,
-      likes: Math.floor(Math.random() * 40),
+      likes,
       rating: shop.ratingAverage || 5,
     };
   });
@@ -188,7 +235,7 @@ const enrichReelsWithShop = (reels: Reel[], shops: Shop[]) =>
 const buildMockReels = (shops: Shop[], reels: Reel[], targetCount: number) => {
   const usedShopIds = new Set(reels.map((reel) => reel.shopId));
   const candidates = shops.filter((shop) => !usedShopIds.has(shop.id));
-  const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+  const shuffled = shuffleWithSeed(candidates, `${DAILY_MOCK_SEED}-reels`);
   const count = Math.min(targetCount, shuffled.length);
   const now = Date.now();
 
@@ -204,7 +251,7 @@ const buildMockReels = (shops: Shop[], reels: Reel[], targetCount: number) => {
     status: "ACTIVE",
     origin: "PLAN",
     platform: "Instagram",
-    views: Math.floor(Math.random() * 120) + 1,
+    views: Math.floor(createSeededRandom(`${DAILY_MOCK_SEED}-reel-${shop.id}`)() * 120) + 1,
     shopMapsUrl: buildMapsUrl(shop),
     shopCatalogUrl: resolveCatalogUrl(shop),
   }));
@@ -1391,11 +1438,13 @@ const App: React.FC = () => {
     navigateTo(`/tiendas/${stream.shop.id}`);
   };
 
-  const handleOpenShop = (shop: Shop) => {
+  const handleOpenShop = (shop: Shop, options?: { navigate?: boolean }) => {
     setShopModalTab("INFO");
     setSelectedShopForModal(shop);
     setActiveShopCardId(null);
-    if (effectiveViewMode === "CLIENT") {
+    const shouldNavigate =
+      options?.navigate ?? effectiveViewMode === "CLIENT";
+    if (shouldNavigate) {
       navigateTo(`/tiendas/${shop.id}`);
     }
     if (user.isLoggedIn && authProfile?.userType === "CLIENT") {
@@ -1420,8 +1469,8 @@ const App: React.FC = () => {
     }
   };
 
-  const getFilteredStreams = () => {
-    let filtered = allStreams.filter((s) => s.isVisible);
+  const getFilteredStreams = (source: Stream[]) => {
+    let filtered = source.filter((s) => s.isVisible);
     filtered = filtered.filter((s) => s.shop?.status === "ACTIVE");
     filtered = filtered.filter(
       (s) =>
@@ -1474,22 +1523,6 @@ const App: React.FC = () => {
     return 1;
   };
 
-  const liveStreams = allStreams.filter(
-    (s) =>
-      s.status === StreamStatus.LIVE &&
-      s.isVisible &&
-      s.shop?.status === "ACTIVE"
-  );
-  const sortedLiveStreams = [...liveStreams].sort((a, b) => {
-    const weightA = planWeight(a.shop.plan);
-    const weightB = planWeight(b.shop.plan);
-    if (weightA !== weightB) return weightB - weightA;
-    if (a.shop.ratingAverage !== b.shop.ratingAverage)
-      return b.shop.ratingAverage - a.shop.ratingAverage;
-    return (b.views || 0) - (a.views || 0);
-  });
-  const filteredStreams = getFilteredStreams();
-
   const isPublicShop = (shop: Shop) => {
     if (!shop.status) return true;
     return shop.status === "ACTIVE";
@@ -1518,10 +1551,26 @@ const App: React.FC = () => {
     () => buildMockStreams(publicShops, allStreams, MOCK_STREAM_COUNT),
     [publicShops, allStreams]
   );
-  const queueStreamsSource = useMemo(
+  const streamSource = useMemo(
     () => [...allStreams, ...mockStreams],
     [allStreams, mockStreams]
   );
+  const liveStreams = streamSource.filter(
+    (s) =>
+      s.status === StreamStatus.LIVE &&
+      s.isVisible &&
+      s.shop?.status === "ACTIVE"
+  );
+  const sortedLiveStreams = [...liveStreams].sort((a, b) => {
+    const weightA = planWeight(a.shop.plan);
+    const weightB = planWeight(b.shop.plan);
+    if (weightA !== weightB) return weightB - weightA;
+    if (a.shop.ratingAverage !== b.shop.ratingAverage)
+      return b.shop.ratingAverage - a.shop.ratingAverage;
+    return (b.views || 0) - (a.views || 0);
+  });
+  const filteredStreams = getFilteredStreams(streamSource);
+  const queueStreamsSource = streamSource;
   const normalizedShopQuery = shopQuery.trim().toLowerCase();
   const filterShopsByQuery = (shops: Shop[]) => {
     if (!normalizedShopQuery) return shops;
@@ -1888,6 +1937,7 @@ const App: React.FC = () => {
 
   const canClientInteract =
     user.isLoggedIn && authProfile?.userType === "CLIENT";
+  const isClientShopRoute = location.pathname.startsWith("/tiendas");
 
   if (isResetView) {
     return (
@@ -2017,25 +2067,34 @@ const App: React.FC = () => {
         <Route
           path="/*"
           element={
-            <ClientLayout
-              header={
-                <AppHeader
-                  brandLogo={BRAND_LOGO}
-                  bottomNavItems={bottomNavItems}
-                  activeBottomNav={activeBottomNav}
-                  isDesktopMenuOpen={isDesktopMenuOpen}
-                  onToggleDesktopMenu={() => setIsDesktopMenuOpen((prev) => !prev)}
-                  onCloseDesktopMenu={() => setIsDesktopMenuOpen(false)}
-                  userName={user.isLoggedIn ? user.name || "Cliente" : "Invitado"}
-                  isLoggedIn={user.isLoggedIn}
-                  onLogout={handleToggleClientLogin}
-                />
-              }
-              authModal={
-                <AuthModal
-                  isOpen={
-                    effectiveViewMode === "CLIENT" && !user.isLoggedIn && showLoginPrompt
-                  }
+              <ClientLayout
+                header={
+                  <AppHeader
+                    brandLogo={BRAND_LOGO}
+                    bottomNavItems={bottomNavItems}
+                    activeBottomNav={activeBottomNav}
+                    isDesktopMenuOpen={isDesktopMenuOpen}
+                    onToggleDesktopMenu={() => setIsDesktopMenuOpen((prev) => !prev)}
+                    onCloseDesktopMenu={() => setIsDesktopMenuOpen(false)}
+                    userName={user.isLoggedIn ? user.name || "Cliente" : "Invitado"}
+                    isLoggedIn={user.isLoggedIn}
+                    onLogout={handleToggleClientLogin}
+                  />
+                }
+                headerAccessory={
+                  isClientShopRoute ? (
+                    <ClientShopSearchBar
+                      shopQuery={shopQuery}
+                      onShopQueryChange={setShopQuery}
+                      onClearShopQuery={() => setShopQuery("")}
+                    />
+                  ) : null
+                }
+                authModal={
+                  <AuthModal
+                    isOpen={
+                      effectiveViewMode === "CLIENT" && !user.isLoggedIn && showLoginPrompt
+                    }
                   loginStep={loginStep}
                   clientEmailMode={clientEmailMode}
                   loginEmail={loginEmail}
@@ -2072,29 +2131,26 @@ const App: React.FC = () => {
               isPreview={Boolean(adminPreview)}
               hideChrome={isLiveQueueOpen}
             >
-              <ClientView
-                activeBottomNav={activeBottomNav}
-                activeFilter={activeFilter}
-                savedTab={savedTab}
-                shopQuery={shopQuery}
-                filteredStreams={filteredStreams}
-                sortedLiveStreams={sortedLiveStreams}
-                activeReels={activeReels}
-                featuredShops={featuredShops}
-                filteredPublicShops={filteredPublicShops}
+                <ClientView
+                  activeBottomNav={activeBottomNav}
+                  activeFilter={activeFilter}
+                  savedTab={savedTab}
+                  filteredStreams={filteredStreams}
+                  sortedLiveStreams={sortedLiveStreams}
+                  activeReels={activeReels}
+                  featuredShops={featuredShops}
+                  filteredPublicShops={filteredPublicShops}
                 filteredFavoriteShops={filteredFavoriteShops}
                 reminderStreams={reminderStreams}
                 selectedShopForModal={selectedShopForModal}
                 selectedReel={selectedReel}
                 shopModalTab={shopModalTab}
-                user={user}
-                canClientInteract={canClientInteract}
-                renderShopCard={renderShopCard}
-                onShopQueryChange={setShopQuery}
-                onClearShopQuery={() => setShopQuery("")}
-                onFilterChange={setActiveFilter}
-                onSelectBottomNav={handleClientNav}
-                onRefreshData={refreshData}
+                  user={user}
+                  canClientInteract={canClientInteract}
+                  renderShopCard={renderShopCard}
+                  onFilterChange={setActiveFilter}
+                  onSelectBottomNav={handleClientNav}
+                  onRefreshData={refreshData}
                 onOpenShop={handleOpenShop}
                 onViewReel={handleViewReel}
                 onReport={handleReportStream}

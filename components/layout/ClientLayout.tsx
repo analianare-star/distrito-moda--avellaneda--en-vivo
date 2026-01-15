@@ -5,6 +5,7 @@ import styles from "./ClientLayout.module.css";
 // ClientLayout envuelve la interfaz publica/cliente y el contenido.
 interface ClientLayoutProps {
   header: React.ReactNode;
+  headerAccessory?: React.ReactNode;
   footer: React.ReactNode;
   authModal?: React.ReactNode;
   previewBanner?: React.ReactNode;
@@ -15,6 +16,7 @@ interface ClientLayoutProps {
 
 export const ClientLayout: React.FC<ClientLayoutProps> = ({
   header,
+  headerAccessory,
   footer,
   authModal,
   previewBanner,
@@ -26,6 +28,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({
     <div className={styles.layout}>
       {!hideChrome && header}
       {!hideChrome && previewBanner}
+      {!hideChrome && headerAccessory}
       <main
         className={`${styles.main} ${isPreview ? styles.mainPreview : ""} ${
           hideChrome ? styles.mainNoChrome : ""

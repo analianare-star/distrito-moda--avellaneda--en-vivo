@@ -35,8 +35,26 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   isLoggedIn,
   onLogout,
 }) => {
+  const headerRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useLayoutEffect(() => {
+    const updateHeaderHeight = () => {
+      if (!headerRef.current) {
+        return;
+      }
+      document.documentElement.style.setProperty(
+        "--app-header-height",
+        `${headerRef.current.offsetHeight}px`
+      );
+    };
+
+    updateHeaderHeight();
+    window.addEventListener("resize", updateHeaderHeight);
+    return () => window.removeEventListener("resize", updateHeaderHeight);
+  }, []);
+
   return (
-    <header className={styles.header}>
+    <header className={styles.header} ref={headerRef}>
       <nav
         className={styles.nav}
         aria-label="Navegación principal"

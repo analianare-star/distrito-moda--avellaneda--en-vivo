@@ -14,7 +14,6 @@ interface ClientViewProps {
   activeBottomNav: string;
   activeFilter: string;
   savedTab: "FAVORITES" | "REMINDERS";
-  shopQuery: string;
   filteredStreams: Stream[];
   sortedLiveStreams: Stream[];
   activeReels: Reel[];
@@ -28,8 +27,6 @@ interface ClientViewProps {
   user: UserContext;
   canClientInteract: boolean;
   renderShopCard: (shop: Shop) => React.ReactNode;
-  onShopQueryChange: (value: string) => void;
-  onClearShopQuery: () => void;
   onFilterChange: (value: string) => void;
   onSelectBottomNav: (value: string) => void;
   onRefreshData: () => void;
@@ -59,7 +56,6 @@ export const ClientView: React.FC<ClientViewProps> = ({
   activeBottomNav,
   activeFilter,
   savedTab,
-  shopQuery,
   filteredStreams,
   sortedLiveStreams,
   activeReels,
@@ -73,8 +69,6 @@ export const ClientView: React.FC<ClientViewProps> = ({
   user,
   canClientInteract,
   renderShopCard,
-  onShopQueryChange,
-  onClearShopQuery,
   onFilterChange,
   onSelectBottomNav,
   onRefreshData,
@@ -186,11 +180,8 @@ export const ClientView: React.FC<ClientViewProps> = ({
           path="/tiendas"
           element={
             <ClientShopsPage
-              shopQuery={shopQuery}
               filteredPublicShops={filteredPublicShops}
               renderShopCard={renderShopCard}
-              onShopQueryChange={onShopQueryChange}
-              onClearShopQuery={onClearShopQuery}
               onRefreshData={onRefreshData}
             />
           }
@@ -199,11 +190,8 @@ export const ClientView: React.FC<ClientViewProps> = ({
           path="/tiendas/:shopId"
           element={
             <ClientShopsPage
-              shopQuery={shopQuery}
               filteredPublicShops={filteredPublicShops}
               renderShopCard={renderShopCard}
-              onShopQueryChange={onShopQueryChange}
-              onClearShopQuery={onClearShopQuery}
               onRefreshData={onRefreshData}
             />
           }
