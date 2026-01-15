@@ -1,5 +1,7 @@
 .searchBar {
   @apply flex items-center gap-3 rounded-full border border-gray-200 bg-white px-4 py-2.5 shadow-sm;
+  max-width: 80rem;
+  width: 100%;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
@@ -22,27 +24,33 @@
 
 .listWrap {
   @apply mx-auto max-w-7xl px-4 pb-10;
-  --header-offset: 92px;
-  padding-top: calc(var(--header-offset) - 64px);
+  --header-offset: var(--app-header-height, 112px);
+  --search-offset: 64px;
+  padding-top: calc(var(--header-offset) + var(--search-offset));
 }
 
 @media (min-width: 768px) {
   .listWrap {
-    --header-offset: 104px;
-    padding-top: calc(var(--header-offset) - 64px);
+    --search-offset: 70px;
   }
 }
 
 .searchSticky {
-  position: sticky;
+  position: fixed;
   top: calc(var(--header-offset) + env(safe-area-inset-top, 0px));
-  z-index: 60;
-  padding: 6px 0 10px;
+  left: 0;
+  right: 0;
+  margin-top: 92px;
+  z-index: 70;
+  display: flex;
+  justify-content: center;
+  padding: 6px 16px 10px;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(15, 23, 42, 0.12);
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
 }
+
 
 .listHeader {
   @apply mb-6 flex items-center justify-between;
