@@ -22,8 +22,9 @@ type MapShop = {
 };
 
 const DATA_URL = '/data/datos_convertidos.json';
-const DEFAULT_CENTER: [number, number] = [-34.627079, -58.473744];
-const DEFAULT_ZOOM = 17;
+const DEFAULT_CENTER: [number, number] = [-34.6275057, -58.4752695];
+const DEFAULT_ZOOM = 15;
+const FOCUS_ZOOM = 16;
 
 const parseNumber = (value: unknown) => {
   if (value === null || value === undefined) return null;
@@ -114,6 +115,7 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
+  const zoomTimerRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -152,8 +154,15 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
   useEffect(() => {
     if (!open || !mapRef.current || !markersRef.current) return;
 
+    if (zoomTimerRef.current) {
+      window.clearTimeout(zoomTimerRef.current);
+      zoomTimerRef.current = null;
+    }
+
     setLoading(true);
     setError(null);
+
+    let isCancelled = false;
 
     fetch(DATA_URL)
       .then((res) => {
@@ -161,6 +170,7 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
         return res.json();
       })
       .then((data) => {
+        if (isCancelled) return;
         const rows: RawShop[] = Array.isArray(data) ? data : [];
         const shops = rows
           .map(toMapShop)
@@ -175,7 +185,6 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
           ? shops.find((shop) => normalizeValue(shop.name) === focusKey || normalizeValue(shop.uid) === focusKey)
           : null;
 
-        const bounds = L.latLngBounds([] as L.LatLngExpression[]);
         let focusMarker: L.Marker | null = null;
 
         shops.forEach((shop) => {
@@ -193,19 +202,17 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
           const marker = L.marker([shop.lat, shop.lng], { icon });
           marker.bindPopup(buildPopupHtml(shop), { closeButton: true });
           marker.addTo(layer);
-          bounds.extend([shop.lat, shop.lng]);
           if (isFocus) focusMarker = marker;
         });
 
         if (mapRef.current) {
+          mapRef.current.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
           if (focusShop) {
-            const focusCircle = L.circle([focusShop.lat, focusShop.lng], { radius: 400 });
-            mapRef.current.fitBounds(focusCircle.getBounds(), { padding: [40, 40], maxZoom: 17 });
-          } else if (bounds.isValid()) {
-            mapRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-          }
-          if (focusMarker) {
-            focusMarker.openPopup();
+            const target: [number, number] = [focusShop.lat, focusShop.lng];
+            zoomTimerRef.current = window.setTimeout(() => {
+              mapRef.current?.flyTo(target, FOCUS_ZOOM, { duration: 1.2 });
+              focusMarker?.openPopup();
+            }, 2000);
           }
         }
         if (mapRef.current) {
@@ -216,6 +223,13 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
         setError('No se pudo cargar el mapa');
       })
       .finally(() => setLoading(false));
+    return () => {
+      isCancelled = true;
+      if (zoomTimerRef.current) {
+        window.clearTimeout(zoomTimerRef.current);
+        zoomTimerRef.current = null;
+      }
+    };
   }, [open, focusName]);
 
   if (!open) return null;
