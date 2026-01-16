@@ -25,6 +25,17 @@ const DATA_URL = '/data/datos_convertidos.json';
 const DEFAULT_CENTER: [number, number] = [-34.6275057, -58.4752695];
 const DEFAULT_ZOOM = 15;
 const FOCUS_ZOOM = 16;
+const MAX_RADIUS_METERS = 2500;
+const LOW_ZOOM_CLUSTER_LIMIT = 5;
+
+type Cluster = {
+  key: string;
+  lat: number;
+  lng: number;
+  count: number;
+  shops: MapShop[];
+  containsFocus: boolean;
+};
 
 const parseNumber = (value: unknown) => {
   if (value === null || value === undefined) return null;
@@ -75,12 +86,92 @@ const toMapShop = (row: RawShop): MapShop | null => {
   };
 };
 
+const projectPoint = (lat: number, lng: number) =>
+  L.CRS.EPSG3857.project(L.latLng(lat, lng));
+
+const distanceMeters = (lat: number, lng: number, center: [number, number]) => {
+  const centerPoint = projectPoint(center[0], center[1]);
+  const point = projectPoint(lat, lng);
+  return centerPoint.distanceTo(point);
+};
+
+const getClusterConfig = (zoom: number) => {
+  if (zoom <= 15) return { gridSize: 500, maxClusters: LOW_ZOOM_CLUSTER_LIMIT };
+  if (zoom <= 16) return { gridSize: 300 };
+  if (zoom <= 17) return { gridSize: 200 };
+  return { gridSize: 0 };
+};
+
+const buildClusters = (
+  shops: MapShop[],
+  gridSize: number,
+  focusShop: MapShop | null
+): Cluster[] => {
+  const focusName = focusShop ? normalizeValue(focusShop.name) : "";
+  const focusUid = focusShop?.uid;
+  const buckets = new Map<string, Cluster>();
+
+  shops.forEach((shop) => {
+    const point = projectPoint(shop.lat, shop.lng);
+    const key = `${Math.floor(point.x / gridSize)}:${Math.floor(point.y / gridSize)}`;
+    const isFocus =
+      Boolean(focusShop) &&
+      ((focusUid && shop.uid === focusUid) ||
+        normalizeValue(shop.name) === focusName);
+
+    const existing = buckets.get(key);
+    if (existing) {
+      existing.shops.push(shop);
+      existing.count += 1;
+      existing.lat += shop.lat;
+      existing.lng += shop.lng;
+      if (isFocus) existing.containsFocus = true;
+      return;
+    }
+
+    buckets.set(key, {
+      key,
+      lat: shop.lat,
+      lng: shop.lng,
+      count: 1,
+      shops: [shop],
+      containsFocus: isFocus,
+    });
+  });
+
+  return Array.from(buckets.values()).map((cluster) => ({
+    ...cluster,
+    lat: cluster.lat / cluster.count,
+    lng: cluster.lng / cluster.count,
+  }));
+};
+
 const buildIconHtml = (shop: MapShop, isFocus: boolean) => {
   const markerClass = isFocus ? `${styles.marker} ${styles.markerSelected}` : styles.marker;
   if (shop.logoUrl) {
     return `<div class="${markerClass}"><img class="${styles.markerLogo}" src="${shop.logoUrl}" alt="" /></div>`;
   }
   return `<div class="${markerClass}"><span class="${styles.markerFallback}">DM</span></div>`;
+};
+
+const buildClusterHtml = (cluster: Cluster) => {
+  const clusterClass = cluster.containsFocus
+    ? `${styles.clusterMarker} ${styles.clusterSelected}`
+    : styles.clusterMarker;
+  return `<div class="${clusterClass}"><span class="${styles.clusterCount}">${cluster.count}</span></div>`;
+};
+
+const buildClusterPopupHtml = (cluster: Cluster) => {
+  const message = cluster.containsFocus
+    ? 'Zona con tu tienda seleccionada'
+    : 'Zona con tiendas cercanas';
+  return `
+    <div class="${styles.popup}">
+      <div class="${styles.popupName}">${message}</div>
+      <div class="${styles.popupMeta}">${cluster.count} tiendas en esta zona</div>
+      <div class="${styles.popupMeta}">Acercá el mapa para ver más detalle</div>
+    </div>
+  `;
 };
 
 const buildPopupHtml = (shop: MapShop) => {
@@ -163,6 +254,8 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
     setError(null);
 
     let isCancelled = false;
+    const mapInstance = mapRef.current;
+    const layer = markersRef.current;
 
     fetch(DATA_URL)
       .then((res) => {
@@ -176,8 +269,7 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
           .map(toMapShop)
           .filter((shop): shop is MapShop => Boolean(shop));
 
-        const layer = markersRef.current;
-        if (!layer) return;
+        if (!layer || !mapInstance) return;
         layer.clearLayers();
 
         const focusKey = focusName ? normalizeValue(focusName) : '';
@@ -185,39 +277,84 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
           ? shops.find((shop) => normalizeValue(shop.name) === focusKey || normalizeValue(shop.uid) === focusKey)
           : null;
 
+        const shopsInRadius = shops.filter(
+          (shop) => distanceMeters(shop.lat, shop.lng, DEFAULT_CENTER) <= MAX_RADIUS_METERS
+        );
+
         let focusMarker: L.Marker | null = null;
 
-        shops.forEach((shop) => {
-          const isFocus =
-            Boolean(focusShop) &&
-            ((focusShop?.uid && shop.uid === focusShop.uid) ||
-              normalizeValue(shop.name) === normalizeValue(focusShop?.name || ''));
-          const icon = L.divIcon({
-            html: buildIconHtml(shop, isFocus),
-            className: styles.markerWrapper,
-            iconSize: isFocus ? [54, 54] : [44, 44],
-            iconAnchor: isFocus ? [27, 27] : [22, 22],
-            popupAnchor: isFocus ? [0, -27] : [0, -22],
-          });
-          const marker = L.marker([shop.lat, shop.lng], { icon });
-          marker.bindPopup(buildPopupHtml(shop), { closeButton: true });
-          marker.addTo(layer);
-          if (isFocus) focusMarker = marker;
-        });
+        const updateMarkers = () => {
+          if (!mapInstance || !layer) return;
+          layer.clearLayers();
 
-        if (mapRef.current) {
-          mapRef.current.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-          if (focusShop) {
-            const target: [number, number] = [focusShop.lat, focusShop.lng];
-            zoomTimerRef.current = window.setTimeout(() => {
-              mapRef.current?.flyTo(target, FOCUS_ZOOM, { duration: 1.2 });
-              focusMarker?.openPopup();
-            }, 2000);
+          const zoom = mapInstance.getZoom();
+          const { gridSize, maxClusters } = getClusterConfig(zoom);
+          const visibleShops = shopsInRadius;
+
+          if (gridSize > 0) {
+            let clusters = buildClusters(visibleShops, gridSize, focusShop);
+            clusters.sort((a, b) => b.count - a.count);
+
+            if (maxClusters && clusters.length > maxClusters) {
+              const focusIndex = clusters.findIndex((cluster) => cluster.containsFocus);
+              if (focusIndex >= maxClusters) {
+                const focusCluster = clusters[focusIndex];
+                clusters = clusters.slice(0, maxClusters - 1).concat(focusCluster);
+              } else {
+                clusters = clusters.slice(0, maxClusters);
+              }
+            }
+
+            clusters.forEach((cluster) => {
+              const icon = L.divIcon({
+                html: buildClusterHtml(cluster),
+                className: styles.markerWrapper,
+                iconSize: cluster.containsFocus ? [64, 64] : [56, 56],
+                iconAnchor: cluster.containsFocus ? [32, 32] : [28, 28],
+                popupAnchor: cluster.containsFocus ? [0, -32] : [0, -28],
+              });
+              const marker = L.marker([cluster.lat, cluster.lng], { icon });
+              marker.bindPopup(buildClusterPopupHtml(cluster), { closeButton: true });
+              marker.addTo(layer);
+              if (cluster.containsFocus) focusMarker = marker;
+            });
+          } else {
+            visibleShops.forEach((shop) => {
+              const isFocus =
+                Boolean(focusShop) &&
+                ((focusShop?.uid && shop.uid === focusShop.uid) ||
+                  normalizeValue(shop.name) === normalizeValue(focusShop?.name || ''));
+              const icon = L.divIcon({
+                html: buildIconHtml(shop, isFocus),
+                className: styles.markerWrapper,
+                iconSize: isFocus ? [54, 54] : [44, 44],
+                iconAnchor: isFocus ? [27, 27] : [22, 22],
+                popupAnchor: isFocus ? [0, -27] : [0, -22],
+              });
+              const marker = L.marker([shop.lat, shop.lng], { icon });
+              marker.bindPopup(buildPopupHtml(shop), { closeButton: true });
+              marker.addTo(layer);
+              if (isFocus) focusMarker = marker;
+            });
           }
+        };
+
+        updateMarkers();
+        mapInstance.on('zoomend moveend', updateMarkers);
+
+        mapInstance.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+        if (focusShop) {
+          const target: [number, number] = [focusShop.lat, focusShop.lng];
+          zoomTimerRef.current = window.setTimeout(() => {
+            mapRef.current?.flyTo(target, FOCUS_ZOOM, { duration: 1.2 });
+            focusMarker?.openPopup();
+          }, 2000);
         }
-        if (mapRef.current) {
-          requestAnimationFrame(() => mapRef.current?.invalidateSize());
-        }
+        requestAnimationFrame(() => mapInstance.invalidateSize());
+
+        return () => {
+          mapInstance.off('zoomend moveend', updateMarkers);
+        };
       })
       .catch(() => {
         setError('No se pudo cargar el mapa');

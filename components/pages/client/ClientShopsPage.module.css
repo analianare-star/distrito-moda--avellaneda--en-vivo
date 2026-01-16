@@ -38,11 +38,12 @@
 
 .searchSticky {
   --search-offset: 6px;
+  --header-offset: var(--app-header-height, 112px);
   position: fixed;
   top: calc(var(--header-offset) + var(--search-offset) + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
-  margin-top: 0;
+  margin-top: 92px;
   z-index: 40;
   display: flex;
   justify-content: center;

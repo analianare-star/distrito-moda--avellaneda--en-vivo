@@ -168,6 +168,32 @@
   letter-spacing: 0.08em;
 }
 
+.clusterMarker {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 2px solid #ed1650;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 22px rgba(237, 22, 80, 0.2);
+}
+
+.clusterSelected {
+  border-color: #39ff14;
+  box-shadow:
+    0 0 0 4px rgba(57, 255, 20, 0.25),
+    0 10px 22px rgba(57, 255, 20, 0.35);
+}
+
+.clusterCount {
+  font-size: 14px;
+  font-weight: 800;
+  color: #2f2a27;
+  letter-spacing: 0.04em;
+}
+
 .popup {
   font-family: 'Manrope', sans-serif;
   min-width: 210px;
