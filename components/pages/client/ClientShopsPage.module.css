@@ -26,7 +26,8 @@
   @apply mx-auto max-w-7xl px-4 pb-10;
   --header-offset: var(--app-header-height, 112px);
   --search-offset: 6px;
-  padding-top: calc(var(--header-offset) + var(--search-offset));
+  --search-height: 58px;
+  padding-top: calc(var(--header-offset) + var(--search-height) + var(--search-offset));
 }
 
 @media (min-width: 768px) {
@@ -36,9 +37,12 @@
 }
 
 .searchSticky {
-  position: sticky;
-  top: calc(var(--header-offset) + env(safe-area-inset-top, 0px));
-  margin-top: 92px;
+  --search-offset: 6px;
+  position: fixed;
+  top: calc(var(--header-offset) + var(--search-offset) + env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  margin-top: 0;
   z-index: 40;
   display: flex;
   justify-content: center;

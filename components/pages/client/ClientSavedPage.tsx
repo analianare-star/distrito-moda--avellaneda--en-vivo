@@ -14,7 +14,7 @@ interface ClientSavedPageProps {
   onSetSavedTab: (value: "FAVORITES" | "REMINDERS") => void;
   onSelectBottomNav: (value: string) => void;
   onRequireLogin: () => void;
-  onOpenShop: (shop: Shop) => void;
+  onOpenShop: (shop: Shop, options?: { navigate?: boolean }) => void;
   onToggleReminder: (streamId: string) => void;
   onOpenCalendarInvite: (stream: Stream) => void;
 }

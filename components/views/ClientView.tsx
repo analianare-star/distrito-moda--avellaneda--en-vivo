@@ -30,7 +30,7 @@ interface ClientViewProps {
   onFilterChange: (value: string) => void;
   onSelectBottomNav: (value: string) => void;
   onRefreshData: () => void;
-  onOpenShop: (shop: Shop) => void;
+  onOpenShop: (shop: Shop, options?: { navigate?: boolean }) => void;
   onViewReel: (reel: Reel) => void;
   onReport: (stream: Stream) => void;
   onToggleReminder: (streamId: string) => void;

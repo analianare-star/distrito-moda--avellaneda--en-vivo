@@ -47,30 +47,6 @@
   padding-right: 15px;
 }
 
-.showcaseGrid::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.7) 0%,
-    rgba(255, 255, 255, 0) 35%
-  );
-  pointer-events: none;
-  z-index: 2;
-}
-
-.showcaseGrid > :last-child::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.7) 0%,
-    rgba(255, 255, 255, 0) 55%
-  );
-  pointer-events: none;
-}
 
 .showcaseTile {
   @apply relative overflow-hidden rounded-2xl border border-gray-100 bg-gray-100 shadow-sm text-left transition-transform duration-300 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-dm-crimson/60;

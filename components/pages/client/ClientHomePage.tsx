@@ -254,7 +254,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
           featuredShops={featuredShops}
           onViewReel={onViewReel}
           viewedReels={user.viewedReels}
-          onOpenShop={(stream) => onOpenShop(stream.shop, { navigate: false })}
+          onOpenShop={(shop) => onOpenShop(shop, { navigate: false })}
           queueSlot={bannerAndQueue}
         />
 

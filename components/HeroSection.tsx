@@ -16,7 +16,7 @@ interface HeroSectionProps {
     featuredShops: Shop[];
     onViewReel: (reel: Reel) => void; 
     viewedReels: string[];
-    onOpenShop: (shop: Stream['shop']) => void;
+    onOpenShop: (shop: Stream['shop'], options?: { navigate?: boolean }) => void;
     queueSlot?: React.ReactNode;
 }
 
@@ -137,7 +137,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <button
                   key={shop.id}
                   className={`${styles.showcaseTile} ${tileClass}`}
-                  onClick={() => onOpenShop(shop)}
+                  onClick={() => onOpenShop(shop, { navigate: false })}
                 >
                   <img
                     src={shop.coverUrl || shop.logoUrl}
@@ -208,7 +208,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                       {/* Info Container */}
                       <div className={styles.liveInfo}>
-                          <div className={styles.liveShop}>
+                              <div className={styles.liveShop}>
                               <LogoBubble
                                 src={activeStream.shop.logoUrl}
                                 alt={activeStream.shop.name}
@@ -216,7 +216,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                                 seed={activeStream.shop.id || activeStream.shop.name}
                               />
                               <div>
-                                  <h3 className={styles.liveShopName}>{activeStream.shop.name}</h3>
+                                  <h3
+                                    className={styles.liveShopName}
+                                    onClick={() => onOpenShop(activeStream.shop, { navigate: false })}
+                                  >
+                                    {activeStream.shop.name}
+                                  </h3>
                                   <p className={styles.liveShopTag}>Avellaneda en Vivo</p>
                               </div>
                           </div>

@@ -9,7 +9,7 @@ interface ShopCardProps {
   shop: Shop;
   isActive: boolean;
   onToggleActive: (shopId: string) => void;
-  onOpenShop: (shop: Shop) => void;
+  onOpenShop: (shop: Shop, options?: { navigate?: boolean }) => void;
   onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>, shopId: string) => void;
 }
 
