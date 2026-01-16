@@ -6,6 +6,7 @@ import styles from './ShopMapModal.module.css';
 interface ShopMapModalProps {
   open: boolean;
   onClose: () => void;
+  focusName?: string;
 }
 
 type RawShop = Record<string, unknown>;
@@ -15,6 +16,7 @@ type MapShop = {
   name: string;
   logoUrl: string | null;
   catalogUrl: string | null;
+  address: string | null;
   lat: number;
   lng: number;
 };
@@ -27,6 +29,13 @@ const parseNumber = (value: unknown) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 };
+
+const normalizeValue = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
 
 const escapeHtml = (value: string) =>
   value
@@ -44,32 +53,44 @@ const toMapShop = (row: RawShop): MapShop | null => {
   const logoUrl = String(row['Logo_URL'] || row['logourl'] || row['logoUrl'] || '').trim();
   const catalogUrl = String(row['url_catalogo'] || '').trim();
   const uid = String(row['Uid'] || row['UID'] || row['uid'] || '').trim();
+  const addressParts = [
+    row['Calle'],
+    row['Ciudad'],
+    row['Provincia'],
+    row['Código postal'] ?? row['Codigo postal'],
+  ]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+  const address = addressParts.length > 0 ? addressParts.join(', ') : null;
   return {
     uid,
     name,
     logoUrl: logoUrl || null,
     catalogUrl: catalogUrl || null,
+    address,
     lat,
     lng,
   };
 };
 
-const buildIconHtml = (shop: MapShop) => {
+const buildIconHtml = (shop: MapShop, isFocus: boolean) => {
+  const markerClass = isFocus ? `${styles.marker} ${styles.markerSelected}` : styles.marker;
   if (shop.logoUrl) {
-    return `<div class="${styles.marker}"><img class="${styles.markerLogo}" src="${shop.logoUrl}" alt="" /></div>`;
+    return `<div class="${markerClass}"><img class="${styles.markerLogo}" src="${shop.logoUrl}" alt="" /></div>`;
   }
-  return `<div class="${styles.marker}"><span class="${styles.markerFallback}">DM</span></div>`;
+  return `<div class="${markerClass}"><span class="${styles.markerFallback}">DM</span></div>`;
 };
 
 const buildPopupHtml = (shop: MapShop) => {
   const name = escapeHtml(shop.name || 'Tienda');
   const uid = shop.uid ? `UID ${escapeHtml(shop.uid)}` : 'Tienda Avellaneda';
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`;
+  const mapsQuery = shop.address ? shop.address : `${shop.lat},${shop.lng}`;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`;
   const logoMarkup = shop.logoUrl
     ? `<img class="${styles.popupLogo}" src="${shop.logoUrl}" alt="${name}" />`
     : `<div class="${styles.popupLogoFallback}">DM</div>`;
   const catalogButton = shop.catalogUrl
-    ? `<a class="${styles.popupButton}" target="_blank" rel="noreferrer" href="${shop.catalogUrl}">Catálogo</a>`
+    ? `<a class="${styles.popupButton}" target="_blank" rel="noreferrer" href="${shop.catalogUrl}">Ver catálogo DM</a>`
     : '';
   return `
     <div class="${styles.popup}">
@@ -88,7 +109,7 @@ const buildPopupHtml = (shop: MapShop) => {
   `;
 };
 
-export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose }) => {
+export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focusName }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
@@ -148,24 +169,43 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose }) => 
         if (!layer) return;
         layer.clearLayers();
 
+        const focusKey = focusName ? normalizeValue(focusName) : '';
+        const focusShop = focusKey
+          ? shops.find((shop) => normalizeValue(shop.name) === focusKey || normalizeValue(shop.uid) === focusKey)
+          : null;
+
         const bounds = L.latLngBounds([] as L.LatLngExpression[]);
+        let focusMarker: L.Marker | null = null;
 
         shops.forEach((shop) => {
+          const isFocus =
+            Boolean(focusShop) &&
+            ((focusShop?.uid && shop.uid === focusShop.uid) ||
+              normalizeValue(shop.name) === normalizeValue(focusShop?.name || ''));
           const icon = L.divIcon({
-            html: buildIconHtml(shop),
+            html: buildIconHtml(shop, isFocus),
             className: styles.markerWrapper,
-            iconSize: [44, 44],
-            iconAnchor: [22, 22],
-            popupAnchor: [0, -22],
+            iconSize: isFocus ? [54, 54] : [44, 44],
+            iconAnchor: isFocus ? [27, 27] : [22, 22],
+            popupAnchor: isFocus ? [0, -27] : [0, -22],
           });
           const marker = L.marker([shop.lat, shop.lng], { icon });
           marker.bindPopup(buildPopupHtml(shop), { closeButton: true });
           marker.addTo(layer);
           bounds.extend([shop.lat, shop.lng]);
+          if (isFocus) focusMarker = marker;
         });
 
-        if (bounds.isValid() && mapRef.current) {
-          mapRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+        if (mapRef.current) {
+          if (focusShop) {
+            const focusCircle = L.circle([focusShop.lat, focusShop.lng], { radius: 2000 });
+            mapRef.current.fitBounds(focusCircle.getBounds(), { padding: [40, 40], maxZoom: 15 });
+          } else if (bounds.isValid()) {
+            mapRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+          }
+          if (focusMarker) {
+            focusMarker.openPopup();
+          }
         }
         if (mapRef.current) {
           requestAnimationFrame(() => mapRef.current?.invalidateSize());
@@ -175,7 +215,7 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose }) => 
         setError('No se pudo cargar el mapa');
       })
       .finally(() => setLoading(false));
-  }, [open]);
+  }, [open, focusName]);
 
   if (!open) return null;
 

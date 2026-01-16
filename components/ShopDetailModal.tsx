@@ -244,7 +244,7 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
         </div>
       </div>
       </div>
-      <ShopMapModal open={isMapOpen} onClose={() => setIsMapOpen(false)} />
+      <ShopMapModal open={isMapOpen} onClose={() => setIsMapOpen(false)} focusName={shop.name} />
     </>
   );
 };

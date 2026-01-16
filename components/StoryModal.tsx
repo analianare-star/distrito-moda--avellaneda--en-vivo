@@ -237,7 +237,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
                     </div>
                 </div>
             </div>
-            <ShopMapModal open={isMapOpen} onClose={() => setIsMapOpen(false)} />
+            <ShopMapModal open={isMapOpen} onClose={() => setIsMapOpen(false)} focusName={reel.shopName} />
         </div>
     );
 };
