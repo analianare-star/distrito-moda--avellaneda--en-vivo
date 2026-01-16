@@ -22,7 +22,8 @@ type MapShop = {
 };
 
 const DATA_URL = '/data/datos_convertidos.json';
-const DEFAULT_CENTER: [number, number] = [-34.6619, -58.3663];
+const DEFAULT_CENTER: [number, number] = [-34.627079, -58.473744];
+const DEFAULT_ZOOM = 17;
 
 const parseNumber = (value: unknown) => {
   if (value === null || value === undefined) return null;
@@ -131,7 +132,7 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
     }).addTo(map);
 
     markersRef.current = L.layerGroup().addTo(map);
-    map.setView(DEFAULT_CENTER, 12);
+    map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
     map.whenReady(() => {
       map.invalidateSize();
     });
@@ -198,8 +199,8 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
 
         if (mapRef.current) {
           if (focusShop) {
-            const focusCircle = L.circle([focusShop.lat, focusShop.lng], { radius: 2000 });
-            mapRef.current.fitBounds(focusCircle.getBounds(), { padding: [40, 40], maxZoom: 15 });
+            const focusCircle = L.circle([focusShop.lat, focusShop.lng], { radius: 400 });
+            mapRef.current.fitBounds(focusCircle.getBounds(), { padding: [40, 40], maxZoom: 17 });
           } else if (bounds.isValid()) {
             mapRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
           }
