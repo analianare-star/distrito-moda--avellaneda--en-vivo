@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Reel } from '../types';
 import { X, ExternalLink, Clock, Share2, Eye, Heart, MapPin, BookOpen } from 'lucide-react';
 import { Button } from './Button';
+import { ShopMapModal } from './ShopMapModal';
 import styles from './StoryModal.module.css';
 
 interface StoryModalProps {
@@ -24,11 +25,9 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
     const minutesLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     const storyImage = reel.thumbnail || reel.shopLogo;
     const hasMedia = Boolean(storyImage);
-    const mapsUrl =
-        reel.shopMapsUrl ||
-        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(reel.shopName)}`;
     const catalogUrl = reel.shopCatalogUrl || '';
     const [liked, setLiked] = useState(false);
+    const [isMapOpen, setIsMapOpen] = useState(false);
     const [progress, setProgress] = useState(0);
     const reelIndex = Math.max(0, reels.findIndex((item) => item.id === reel.id));
     const totalReels = reels.length;
@@ -38,8 +37,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
     };
 
     const handleOpenMaps = () => {
-        if (!mapsUrl) return;
-        window.open(mapsUrl, '_blank');
+        setIsMapOpen(true);
     };
 
     const handleOpenCatalog = () => {
@@ -239,6 +237,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
                     </div>
                 </div>
             </div>
+            <ShopMapModal open={isMapOpen} onClose={() => setIsMapOpen(false)} />
         </div>
     );
 };

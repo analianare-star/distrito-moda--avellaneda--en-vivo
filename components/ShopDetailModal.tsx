@@ -3,6 +3,7 @@ import { Shop, UserContext, Stream, StreamStatus } from '../types';
 import { Button } from './Button';
 import { ShareableCard } from './ShareableCard';
 import { LogoBubble } from './LogoBubble';
+import { ShopMapModal } from './ShopMapModal';
 import { X, MapPin, Globe, Instagram, Phone, UserPlus, Check, AlertOctagon, Clock } from 'lucide-react';
 import styles from './ShopDetailModal.module.css';
 
@@ -21,6 +22,7 @@ interface ShopDetailModalProps {
 
 export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStreams = [], user, canClientInteract, initialTab, onClose, onToggleFavorite, onRequireLogin, onNotify }) => {
   const [activeTab, setActiveTab] = useState<'INFO' | 'CARD'>(initialTab ?? 'INFO');
+  const [isMapOpen, setIsMapOpen] = useState(false);
 
   useEffect(() => {
       if (initialTab) {
@@ -44,16 +46,8 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
       if(shop.website) window.open(shop.website, '_blank');
   };
 
-  const mapsUrl = shop.addressDetails?.mapsUrl;
-  const hasMap = Boolean(mapsUrl || shop.address);
   const handleMaps = () => {
-      if (mapsUrl) {
-          window.open(mapsUrl, '_blank');
-          return;
-      }
-      if (shop.address) {
-          window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.address)}`, '_blank');
-      }
+      setIsMapOpen(true);
   };
 
   const whatsappLimit = shop.plan === 'Maxima Visibilidad' ? 3 : shop.plan === 'Alta Visibilidad' ? 2 : 1;
@@ -62,8 +56,9 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
   const waLines = shop.whatsappLines ? shop.whatsappLines.filter(l => l.number && l.number.trim() !== '').slice(0, whatsappLimit) : [];
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.card}>
+    <>
+      <div className={styles.overlay}>
+        <div className={styles.card}>
         
         {/* Header */}
         <div className={styles.header}>
@@ -212,7 +207,6 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                                 variant="outline" 
                                 className="w-full justify-start text-xs h-10 px-2"
                                 onClick={handleMaps}
-                                disabled={!hasMap}
                             >
                                 <MapPin size={14} className="mr-1.5" /> Mapa
                             </Button>
@@ -249,6 +243,8 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
             )}
         </div>
       </div>
-    </div>
+      </div>
+      <ShopMapModal open={isMapOpen} onClose={() => setIsMapOpen(false)} />
+    </>
   );
 };
