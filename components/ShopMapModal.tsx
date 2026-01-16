@@ -254,6 +254,11 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
               </div>
             </div>
           )}
+          <div className={styles.footerGlass} aria-hidden="true">
+            <div className={styles.footerText}>
+              AVELLANEDA EN VIV<span className={styles.footerRec}>O</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
