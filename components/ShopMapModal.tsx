@@ -206,9 +206,11 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
+  const userMarkerRef = useRef<L.CircleMarker | null>(null);
   const zoomTimerRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     if (!open || !mapContainerRef.current) return undefined;
@@ -218,6 +220,7 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
       attributionControl: true,
     });
     mapRef.current = map;
+    setMapReady(true);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
@@ -236,11 +239,50 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
 
     return () => {
       window.clearTimeout(resizeTimer);
+      setMapReady(false);
       map.remove();
       mapRef.current = null;
       markersRef.current = null;
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !mapReady || !mapRef.current) return;
+    if (!('geolocation' in navigator)) return;
+
+    const mapInstance = mapRef.current;
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        if (!mapInstance) return;
+        const latlng: [number, number] = [position.coords.latitude, position.coords.longitude];
+        if (userMarkerRef.current) {
+          userMarkerRef.current.setLatLng(latlng);
+          return;
+        }
+        userMarkerRef.current = L.circleMarker(latlng, {
+          radius: 6,
+          color: '#1d4ed8',
+          weight: 2,
+          fillColor: '#3b82f6',
+          fillOpacity: 0.9,
+        }).addTo(mapInstance);
+      },
+      () => {},
+      {
+        enableHighAccuracy: true,
+        maximumAge: 10_000,
+        timeout: 10_000,
+      }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+      }
+    };
+  }, [open, mapReady]);
 
   useEffect(() => {
     if (!open || !mapRef.current || !markersRef.current) return;

@@ -28,6 +28,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
     const catalogUrl = reel.shopCatalogUrl || '';
     const [liked, setLiked] = useState(false);
     const [isMapOpen, setIsMapOpen] = useState(false);
+    const [mapFocusName, setMapFocusName] = useState<string | null>(null);
     const [progress, setProgress] = useState(0);
     const reelIndex = Math.max(0, reels.findIndex((item) => item.id === reel.id));
     const totalReels = reels.length;
@@ -37,6 +38,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
     };
 
     const handleOpenMaps = () => {
+        setMapFocusName(reel.shopName);
         setIsMapOpen(true);
     };
 
@@ -101,6 +103,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
     }, [onClose, onNavigate, reelIndex, reels, totalReels]);
 
     useEffect(() => {
+        if (isMapOpen) return;
         setProgress(0);
         const timer = window.setInterval(() => {
             setProgress((value) => {
@@ -113,7 +116,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
             });
         }, 100);
         return () => window.clearInterval(timer);
-    }, [reel.id, handleNext]);
+    }, [reel.id, handleNext, isMapOpen]);
 
     const progressBars = useMemo(
         () =>
@@ -237,7 +240,14 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
                     </div>
                 </div>
             </div>
-            <ShopMapModal open={isMapOpen} onClose={() => setIsMapOpen(false)} focusName={reel.shopName} />
+            <ShopMapModal
+                open={isMapOpen}
+                onClose={() => {
+                    setIsMapOpen(false);
+                    setMapFocusName(null);
+                }}
+                focusName={mapFocusName ?? reel.shopName}
+            />
         </div>
     );
 };
