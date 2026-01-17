@@ -322,6 +322,15 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
         const shopsInRadius = shops.filter(
           (shop) => distanceMeters(shop.lat, shop.lng, DEFAULT_CENTER) <= MAX_RADIUS_METERS
         );
+        if (focusShop) {
+          const focusId = focusShop.uid || normalizeValue(focusShop.name);
+          const alreadyIncluded = shopsInRadius.some(
+            (shop) => (shop.uid || normalizeValue(shop.name)) === focusId
+          );
+          if (!alreadyIncluded) {
+            shopsInRadius.push(focusShop);
+          }
+        }
 
         let focusMarker: L.Marker | null = null;
 
