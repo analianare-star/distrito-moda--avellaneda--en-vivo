@@ -43,7 +43,7 @@
   top: calc(var(--header-offset) + var(--search-offset) + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
-  margin-top: 92px;
+  margin-top: -8px;
   z-index: 40;
   display: flex;
   justify-content: center;
