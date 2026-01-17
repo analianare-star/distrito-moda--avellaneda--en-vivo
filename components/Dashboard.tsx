@@ -29,6 +29,7 @@ interface DashboardProps {
     onMarkNotificationRead?: (id: string) => void;
     onMarkAllNotificationsRead?: () => void;
     isPreview?: boolean;
+    adminOverride?: boolean;
 }
 
 type Tab = 'RESUMEN' | 'REDES' | 'VIVOS' | 'REELS' | 'PERFIL';
@@ -53,7 +54,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
     notifications = [],
     onMarkNotificationRead,
     onMarkAllNotificationsRead,
-    isPreview = false
+    isPreview = false,
+    adminOverride = false
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('RESUMEN');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -365,7 +367,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
           });
           return;
       }
-      const result = await api.createReel(currentShop.id, reelUrl, reelPlatform as SocialPlatform);
+      const result = await api.createReel(
+          currentShop.id,
+          reelUrl,
+          reelPlatform as SocialPlatform,
+          { isAdminOverride: adminOverride }
+      );
       if (result.success) {
           setNotice({
               title: 'Historia publicada',

@@ -424,6 +424,9 @@ const App: React.FC = () => {
       ? "CLIENT"
       : authProfile?.userType
     : authProfile?.userType;
+  const isClientSession = user.isLoggedIn || adminPreview?.mode === "CLIENT";
+  const isAdminOverride =
+    authProfile?.userType === "ADMIN" && adminPreview?.mode === "MERCHANT";
   const notify = (
     title: string,
     message: string,
@@ -484,11 +487,11 @@ const App: React.FC = () => {
     openLoginModal();
   };
   const requireClient = () => {
-    if (!user.isLoggedIn) {
+    if (!isClientSession) {
       requireLogin();
       return false;
     }
-    if (authProfile?.userType && authProfile.userType !== "CLIENT") {
+    if (effectiveUserType && effectiveUserType !== "CLIENT") {
       setNotice({
         title: "Solo clientes",
         message: "Esta acción está disponible solo para cuentas cliente.",
@@ -723,7 +726,10 @@ const App: React.FC = () => {
   const handleStreamCreate = async (newStream: Stream) => {
     if (blockPreviewAction()) return false;
     try {
-      const result = await api.createStream(newStream);
+      const result = await api.createStream({
+        ...newStream,
+        isAdminOverride,
+      });
       if (!result.success) {
         setNotice({
           title: "No se pudo agendar",
@@ -748,7 +754,10 @@ const App: React.FC = () => {
   const handleStreamUpdate = async (updatedStream: Stream) => {
     if (blockPreviewAction()) return false;
     try {
-      await api.updateStream(updatedStream);
+      await api.updateStream({
+        ...updatedStream,
+        isAdminOverride,
+      });
       await refreshData();
       return true;
     } catch (error) {
@@ -1146,7 +1155,7 @@ const App: React.FC = () => {
   const blockPreviewAction = (
     message = "Acción bloqueada en modo vista técnica."
   ) => {
-    if (!adminPreview) return false;
+    if (!adminPreview || isAdminOverride) return false;
     setNotice({
       title: "Modo vista",
       message,
@@ -1447,7 +1456,7 @@ const App: React.FC = () => {
     if (shouldNavigate) {
       navigateTo(`/tiendas/${shop.id}`);
     }
-    if (user.isLoggedIn && authProfile?.userType === "CLIENT") {
+    if (isClientSession && effectiveUserType === "CLIENT") {
       pushHistory(`Visitaste: ${shop.name}`);
     }
   };
@@ -1455,7 +1464,7 @@ const App: React.FC = () => {
   const handleViewReel = (reel: Reel) => {
     const isMockReel = reel.id.startsWith("mock-");
     setSelectedReel(reel);
-    if (user.isLoggedIn && authProfile?.userType === "CLIENT") {
+    if (isClientSession && effectiveUserType === "CLIENT") {
       if (!user.viewedReels.includes(reel.id)) {
         setUser((prev) => ({
           ...prev,
@@ -1936,7 +1945,7 @@ const App: React.FC = () => {
       ];
 
   const canClientInteract =
-    user.isLoggedIn && authProfile?.userType === "CLIENT";
+    isClientSession && effectiveUserType === "CLIENT";
   const isClientShopRoute = location.pathname.startsWith("/tiendas");
 
   if (isResetView) {
@@ -2056,7 +2065,8 @@ const App: React.FC = () => {
                   notifications={notifications}
                   onMarkNotificationRead={handleMarkNotificationRead}
                   onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
-                  isPreview={Boolean(adminPreview)}
+                  isPreview={Boolean(adminPreview && !isAdminOverride)}
+                  adminOverride={isAdminOverride}
                 />
               </MerchantLayout>
             ) : (

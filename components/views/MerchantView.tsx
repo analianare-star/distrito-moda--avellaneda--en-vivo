@@ -24,6 +24,7 @@ interface MerchantViewProps {
   onMarkNotificationRead: (id: string) => void;
   onMarkAllNotificationsRead: () => void;
   isPreview: boolean;
+  adminOverride?: boolean;
 }
 
 export const MerchantView: React.FC<MerchantViewProps> = ({
@@ -43,6 +44,7 @@ export const MerchantView: React.FC<MerchantViewProps> = ({
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
   isPreview,
+  adminOverride,
 }) => {
   return (
     <section aria-label="Panel de tienda">
@@ -68,6 +70,7 @@ export const MerchantView: React.FC<MerchantViewProps> = ({
               onMarkNotificationRead={onMarkNotificationRead}
               onMarkAllNotificationsRead={onMarkAllNotificationsRead}
               isPreview={isPreview}
+              adminOverride={adminOverride}
             />
           }
         />
@@ -92,6 +95,7 @@ export const MerchantView: React.FC<MerchantViewProps> = ({
               onMarkNotificationRead={onMarkNotificationRead}
               onMarkAllNotificationsRead={onMarkAllNotificationsRead}
               isPreview={isPreview}
+              adminOverride={adminOverride}
             />
           }
         />
@@ -116,6 +120,7 @@ export const MerchantView: React.FC<MerchantViewProps> = ({
               onMarkNotificationRead={onMarkNotificationRead}
               onMarkAllNotificationsRead={onMarkAllNotificationsRead}
               isPreview={isPreview}
+              adminOverride={adminOverride}
             />
           }
         />
@@ -140,6 +145,7 @@ export const MerchantView: React.FC<MerchantViewProps> = ({
               onMarkNotificationRead={onMarkNotificationRead}
               onMarkAllNotificationsRead={onMarkAllNotificationsRead}
               isPreview={isPreview}
+              adminOverride={adminOverride}
             />
           }
         />
@@ -164,6 +170,7 @@ export const MerchantView: React.FC<MerchantViewProps> = ({
               onMarkNotificationRead={onMarkNotificationRead}
               onMarkAllNotificationsRead={onMarkAllNotificationsRead}
               isPreview={isPreview}
+              adminOverride={adminOverride}
             />
           }
         />

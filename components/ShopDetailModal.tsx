@@ -4,7 +4,8 @@ import { Button } from './Button';
 import { ShareableCard } from './ShareableCard';
 import { LogoBubble } from './LogoBubble';
 import { ShopMapModal } from './ShopMapModal';
-import { X, MapPin, Globe, Instagram, Phone, UserPlus, Check, AlertOctagon, Clock } from 'lucide-react';
+import { X, MapPin, Globe, UserPlus, Check, AlertOctagon, Clock } from 'lucide-react';
+import { FaWhatsapp, FaInstagram, FaFacebookF, FaYoutube, FaTiktok } from 'react-icons/fa6';
 import styles from './ShopDetailModal.module.css';
 
 // ShopDetailModal presents the shop profile with contact and agenda actions.
@@ -38,12 +39,26 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
   const upcomingStream = shopStreams.find(s => s.status === StreamStatus.UPCOMING);
   const priorityStream = liveStream || upcomingStream || shopStreams[0];
 
-  const handleInstagram = () => {
-      if(shop.socialHandles.instagram) window.open(`https://instagram.com/${shop.socialHandles.instagram}`, '_blank');
+  const openSocial = (platform: 'instagram' | 'tiktok' | 'facebook' | 'youtube', handle?: string) => {
+      if (!handle) return;
+      const value = handle.trim();
+      if (!value) return;
+      if (/^https?:\/\//i.test(value)) {
+          window.open(value, '_blank');
+          return;
+      }
+      if (platform === 'instagram') window.open(`https://instagram.com/${value.replace(/^@/, '')}`, '_blank');
+      if (platform === 'tiktok') window.open(`https://tiktok.com/@${value.replace(/^@/, '')}`, '_blank');
+      if (platform === 'facebook') window.open(`https://facebook.com/${value}`, '_blank');
+      if (platform === 'youtube') window.open(`https://youtube.com/${value}`, '_blank');
   };
   
   const handleWeb = () => {
-      if(shop.website) window.open(shop.website, '_blank');
+      if (!shop.website) return;
+      const value = shop.website.trim();
+      if (!value) return;
+      const url = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+      window.open(url, '_blank');
   };
 
   const handleMaps = () => {
@@ -165,39 +180,39 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                                     <Button 
                                         key={idx}
                                         variant="outline" 
-                                        className="w-full justify-between text-xs border-green-500 text-green-600 hover:bg-green-50 h-10"
+                                        className={`${styles.whatsappButton} border-green-500 text-green-600 hover:bg-green-50`}
                                         onClick={() => window.open(`https://wa.me/${line.number}`, '_blank')}
                                     >
-                                        <span className="flex items-center"><Phone size={14} className="mr-2" /> WhatsApp ({line.label})</span>
+                                        <span className="flex items-center"><FaWhatsapp className={styles.iconWhatsapp} /> WhatsApp ({line.label})</span>
                                     </Button>
                                 ))
                             ) : (
-                                <Button variant="outline" className="w-full justify-start text-xs border-gray-200 text-gray-400 h-10 cursor-not-allowed" disabled>
-                                    <Phone size={14} className="mr-2" /> WhatsApp no disponible
+                                <Button variant="outline" className={`${styles.whatsappButton} ${styles.socialDisabled}`} disabled>
+                                    <FaWhatsapp className={styles.iconWhatsappMuted} /> WhatsApp no disponible
                                 </Button>
                             )
                         ) : (
                             <Button
                                 variant="outline"
-                                className="w-full justify-start text-xs border-gray-200 text-gray-400 h-10"
+                                className={`${styles.whatsappButton} ${styles.socialDisabled}`}
                                 onClick={onRequireLogin}
                             >
-                                <Phone size={14} className="mr-2" /> Solo clientes
+                                <FaWhatsapp className={styles.iconWhatsappMuted} /> Solo clientes
                             </Button>
                         )}
 
                         <div className={styles.linkGrid}>
                              <Button 
                                 variant="outline" 
-                                className="w-full justify-start text-xs h-10 px-2"
-                                onClick={handleInstagram}
+                                className={`${styles.socialButton} ${shop.socialHandles.instagram ? styles.socialInstagram : styles.socialDisabled}`}
+                                onClick={() => openSocial('instagram', shop.socialHandles.instagram)}
                                 disabled={!shop.socialHandles.instagram}
                             >
-                                <Instagram size={14} className="mr-1.5" /> IG
+                                <FaInstagram className={styles.iconInstagram} /> IG
                             </Button>
                             <Button 
                                 variant="outline" 
-                                className="w-full justify-start text-xs h-10 px-2"
+                                className={`${styles.socialButton} ${shop.website ? styles.socialWeb : styles.socialDisabled}`}
                                 onClick={handleWeb}
                                 disabled={!shop.website}
                             >
@@ -205,7 +220,31 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                             </Button>
                             <Button 
                                 variant="outline" 
-                                className="w-full justify-start text-xs h-10 px-2"
+                                className={`${styles.socialButton} ${shop.socialHandles.tiktok ? styles.socialTikTok : styles.socialDisabled}`}
+                                onClick={() => openSocial('tiktok', shop.socialHandles.tiktok)}
+                                disabled={!shop.socialHandles.tiktok}
+                            >
+                                <FaTiktok className={styles.iconTikTok} /> TikTok
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                className={`${styles.socialButton} ${shop.socialHandles.facebook ? styles.socialFacebook : styles.socialDisabled}`}
+                                onClick={() => openSocial('facebook', shop.socialHandles.facebook)}
+                                disabled={!shop.socialHandles.facebook}
+                            >
+                                <FaFacebookF className={styles.iconFacebook} /> Facebook
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                className={`${styles.socialButton} ${shop.socialHandles.youtube ? styles.socialYoutube : styles.socialDisabled}`}
+                                onClick={() => openSocial('youtube', shop.socialHandles.youtube)}
+                                disabled={!shop.socialHandles.youtube}
+                            >
+                                <FaYoutube className={styles.iconYoutube} /> YouTube
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                className={`${styles.socialButton} ${styles.socialMap}`}
                                 onClick={handleMaps}
                             >
                                 <MapPin size={14} className="mr-1.5" /> Mapa

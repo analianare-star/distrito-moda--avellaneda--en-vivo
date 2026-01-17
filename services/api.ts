@@ -58,29 +58,60 @@ const normalizeShopStatus = (value: unknown) => {
   return 'ACTIVE';
 };
 
-const mapSocialHandles = (handles: any[]): SocialHandles => {
+const mapSocialHandles = (handles: unknown): SocialHandles => {
   const result: SocialHandles = {};
-  if (!Array.isArray(handles)) return result;
+  if (!handles) return result;
 
-  handles.forEach((handle) => {
-    const key = typeof handle?.platform === 'string' ? handle.platform.toLowerCase() : '';
-    if (key === 'instagram') result.instagram = handle.handle;
-    if (key === 'tiktok') result.tiktok = handle.handle;
-    if (key === 'facebook') result.facebook = handle.handle;
-    if (key === 'youtube') result.youtube = handle.handle;
-  });
+  if (Array.isArray(handles)) {
+    handles.forEach((handle) => {
+      const key = typeof handle?.platform === 'string' ? handle.platform.toLowerCase() : '';
+      if (key === 'instagram') result.instagram = handle.handle;
+      if (key === 'tiktok') result.tiktok = handle.handle;
+      if (key === 'facebook') result.facebook = handle.handle;
+      if (key === 'youtube') result.youtube = handle.handle;
+    });
+    return result;
+  }
+
+  if (typeof handles === 'object') {
+    const obj = handles as Record<string, unknown>;
+    if (typeof obj.instagram === 'string') result.instagram = obj.instagram.trim();
+    if (typeof obj.tiktok === 'string') result.tiktok = obj.tiktok.trim();
+    if (typeof obj.facebook === 'string') result.facebook = obj.facebook.trim();
+    if (typeof obj.youtube === 'string') result.youtube = obj.youtube.trim();
+  }
 
   return result;
 };
 
-const mapWhatsappLines = (lines: any[]): WhatsappLine[] => {
-  if (!Array.isArray(lines)) return [];
-  return lines
-    .filter((line) => line?.number)
-    .map((line) => ({
-      label: line.label,
-      number: line.number,
-    }));
+const normalizeWhatsappNumber = (value: unknown) => {
+  if (typeof value !== 'string') return '';
+  return value.replace(/\D/g, '');
+};
+
+const mapWhatsappLines = (lines: unknown): WhatsappLine[] => {
+  if (!lines) return [];
+  if (Array.isArray(lines)) {
+    return lines
+      .filter((line) => line?.number)
+      .map((line) => ({
+        label: (line.label || 'Ventas por mayor') as WhatsappLine['label'],
+        number: normalizeWhatsappNumber(line.number),
+      }))
+      .filter((line) => line.number);
+  }
+  if (typeof lines === 'string') {
+    const number = normalizeWhatsappNumber(lines);
+    return number ? [{ label: 'Ventas por mayor', number }] : [];
+  }
+  if (typeof lines === 'object') {
+    const obj = lines as Record<string, unknown>;
+    const number = normalizeWhatsappNumber(obj.number ?? obj.phone ?? obj.whatsapp);
+    if (!number) return [];
+    const label = (typeof obj.label === 'string' && obj.label.trim() ? obj.label : 'Ventas por mayor') as WhatsappLine['label'];
+    return [{ label, number }];
+  }
+  return [];
 };
 
 const mapShop = (shop: any): Shop => {
@@ -114,8 +145,8 @@ const mapShop = (shop: any): Shop => {
     extraQuota: quotaWallet ? liveExtraBalance : Number(shop?.extraQuota ?? 0),
     reelsExtraQuota: quotaWallet ? reelExtraBalance : Number(shop?.reelQuota ?? shop?.reelsExtraQuota ?? 0),
     paymentMethods: shop?.paymentMethods || [],
-    whatsappLines: mapWhatsappLines(shop?.whatsappLines || []),
-    socialHandles: mapSocialHandles(shop?.socialHandles || []),
+    whatsappLines: mapWhatsappLines(shop?.whatsappLines ?? shop?.whatsapp ?? shop?.whatsappLine ?? []),
+    socialHandles: mapSocialHandles(shop?.socialHandles ?? shop?.socials ?? []),
     dataIntegrity: shop?.dataIntegrity || 'MINIMAL',
     isPenalized: Boolean((shop?.isPenalized ?? penalties.some((p: any) => p?.active)) || status === 'AGENDA_SUSPENDED'),
     penalties: penalties.map((p: any) => ({
@@ -432,6 +463,7 @@ export const api = {
         url: payload.url,
         isVisible: payload.isVisible,
         extensionCount: payload.extensionCount ?? 0,
+        isAdminOverride: payload.isAdminOverride,
       };
 
       const res = await fetchWithAuth('/streams', {
@@ -729,12 +761,22 @@ export const api = {
     }
   },
 
-  createReel: async (shopId: string, url: string, platform: SocialPlatform) => {
+  createReel: async (
+    shopId: string,
+    url: string,
+    platform: SocialPlatform,
+    options?: { isAdminOverride?: boolean }
+  ) => {
     try {
       const res = await fetchWithAuth('/reels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shopId, url, platform }),
+        body: JSON.stringify({
+          shopId,
+          url,
+          platform,
+          isAdminOverride: options?.isAdminOverride,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Error al crear reel');

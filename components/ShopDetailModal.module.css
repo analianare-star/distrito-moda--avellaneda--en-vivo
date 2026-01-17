@@ -100,6 +100,72 @@
   @apply grid grid-cols-3 gap-2;
 }
 
+.socialButton {
+  @apply w-full justify-start text-xs h-10 px-2 border-2 bg-white;
+}
+
+.socialDisabled {
+  @apply border-gray-200 text-gray-300 cursor-not-allowed;
+}
+
+.socialInstagram {
+  @apply border-[#E1306C] text-[#E1306C];
+}
+
+.socialTikTok {
+  @apply border-[#010101] text-[#010101];
+}
+
+.socialFacebook {
+  @apply border-[#1877F2] text-[#1877F2];
+}
+
+.socialYoutube {
+  @apply border-[#FF0000] text-[#FF0000];
+}
+
+.socialWeb {
+  @apply border-[#6A5E56] text-[#6A5E56];
+}
+
+.socialMap {
+  @apply border-[#ED1650] text-[#ED1650];
+}
+
+.whatsappButton {
+  @apply w-full justify-start text-xs h-10 px-2 border-2;
+}
+
+.iconWhatsapp {
+  @apply mr-2;
+  color: #25D366;
+}
+
+.iconWhatsappMuted {
+  @apply mr-2;
+  color: #9CA3AF;
+}
+
+.iconInstagram {
+  @apply mr-1.5;
+  color: #E1306C;
+}
+
+.iconTikTok {
+  @apply mr-1.5;
+  color: #010101;
+}
+
+.iconFacebook {
+  @apply mr-1.5;
+  color: #1877F2;
+}
+
+.iconYoutube {
+  @apply mr-1.5;
+  color: #FF0000;
+}
+
 .cardSection {
   @apply flex flex-col items-center pt-2;
 }

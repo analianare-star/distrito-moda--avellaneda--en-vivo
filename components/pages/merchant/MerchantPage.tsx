@@ -24,6 +24,7 @@ interface MerchantPageProps {
   onMarkNotificationRead: (id: string) => void;
   onMarkAllNotificationsRead: () => void;
   isPreview: boolean;
+  adminOverride?: boolean;
 }
 
 export const MerchantPage: React.FC<MerchantPageProps> = ({
@@ -44,6 +45,7 @@ export const MerchantPage: React.FC<MerchantPageProps> = ({
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
   isPreview,
+  adminOverride,
 }) => {
   useEffect(() => {
     if (activeTab !== tab) {
@@ -69,6 +71,7 @@ export const MerchantPage: React.FC<MerchantPageProps> = ({
       onMarkNotificationRead={onMarkNotificationRead}
       onMarkAllNotificationsRead={onMarkAllNotificationsRead}
       isPreview={isPreview}
+      adminOverride={adminOverride}
     />
   );
 };
