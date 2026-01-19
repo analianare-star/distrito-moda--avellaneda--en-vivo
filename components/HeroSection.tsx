@@ -17,6 +17,8 @@ interface HeroSectionProps {
     onViewReel: (reel: Reel) => void; 
     viewedReels: string[];
     onOpenShop: (shop: Stream['shop'], options?: { navigate?: boolean }) => void;
+    canClientInteract?: boolean;
+    onRequireLogin?: () => void;
     queueSlot?: React.ReactNode;
 }
 
@@ -29,6 +31,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     onViewReel,
     viewedReels,
     onOpenShop,
+    canClientInteract,
+    onRequireLogin,
     queueSlot
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -108,6 +112,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       setCurrentIndex((prev) => (prev - 1 + liveStreams.length) % liveStreams.length);
   };
 
+  const guardShopAccess = () => {
+    if (canClientInteract === false) {
+      onRequireLogin?.();
+      return false;
+    }
+    return true;
+  };
+
   return (
     <div className={styles.root}>
       {showcaseShops.length > 0 && (
@@ -137,7 +149,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <button
                   key={shop.id}
                   className={`${styles.showcaseTile} ${tileClass}`}
-                  onClick={() => onOpenShop(shop, { navigate: false })}
+                  onClick={() => {
+                    if (!guardShopAccess()) return;
+                    onOpenShop(shop, { navigate: false });
+                  }}
                 >
                   <img
                     src={shop.coverUrl || shop.logoUrl}
@@ -218,7 +233,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                               <div>
                                   <h3
                                     className={styles.liveShopName}
-                                    onClick={() => onOpenShop(activeStream.shop, { navigate: false })}
+                                    onClick={() => {
+                                      if (!guardShopAccess()) return;
+                                      onOpenShop(activeStream.shop, { navigate: false });
+                                    }}
                                   >
                                     {activeStream.shop.name}
                                   </h3>
@@ -242,7 +260,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                               <Button
                                 variant="outline"
                                 className={styles.liveSecondaryButton}
-                                onClick={() => onOpenShop(activeStream.shop)}
+                                onClick={() => {
+                                  if (!guardShopAccess()) return;
+                                  onOpenShop(activeStream.shop);
+                                }}
                               >
                                   Ver Perfil
                               </Button>

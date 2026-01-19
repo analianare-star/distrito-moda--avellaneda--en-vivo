@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Shop, Stream } from "../../types";
-import { AdminPage } from "../pages/admin/AdminPage";
+import { AdminPage } from "../../components/pages/admin/AdminPage";
 
 // AdminView envuelve el panel admin con semantica clara.
 // AdminView wraps the admin dashboard with semantic structure.
@@ -31,7 +31,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
   onShopUpdate,
 }) => {
   return (
-    <section aria-label="Panel de administración">
+    <section aria-label="Panel de administracion">
       <Routes>
         <Route
           index

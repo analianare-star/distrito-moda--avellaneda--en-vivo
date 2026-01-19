@@ -316,10 +316,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   // --- HELPERS ---
+  const isProfileLocked = !adminOverride;
+  const guardProfileEdit = () => {
+      if (!isProfileLocked) return false;
+      setNotice({
+          title: 'Edicion restringida',
+          message: 'Estos datos son validados por administracion. Contacta soporte para cambios.',
+          tone: 'warning',
+      });
+      return true;
+  };
   const handleInputChange = (field: keyof Shop, value: any) => {
+      if (isProfileLocked) return;
       setShopForm(prev => ({ ...prev, [field]: value }));
   };
   const handleAddressChange = (field: string, value: string) => {
+      if (isProfileLocked) return;
       setShopForm(prev => ({
           ...prev,
           addressDetails: {
@@ -329,6 +341,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       }));
   };
   const handleAddressSelect = (details: { street: string; number: string; city: string; province: string; zip: string }) => {
+      if (isProfileLocked) return;
       const existingMapsUrl = (shopForm.addressDetails || currentShop.addressDetails || {}).mapsUrl || '';
       setShopForm(prev => ({
           ...prev,
@@ -337,6 +350,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       }));
   };
   const togglePaymentMethod = (method: string) => {
+      if (guardProfileEdit()) return;
       const current = shopForm.paymentMethods || [];
       const updated = current.includes(method) ? current.filter(m => m !== method) : [...current, method];
       handleInputChange('paymentMethods', updated);
@@ -344,6 +358,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const saveShopProfile = async (e: React.FormEvent) => {
       e.preventDefault();
       if (blockPreviewAction()) return;
+      if (guardProfileEdit()) return;
       const newAddress = shopForm.addressDetails 
         ? `${shopForm.addressDetails.street} ${shopForm.addressDetails.number}, ${shopForm.addressDetails.city}`
         : currentShop.address;
@@ -492,6 +507,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const saveSocials = async (e: React.FormEvent) => {
       e.preventDefault();
       if (blockPreviewAction()) return;
+      if (guardProfileEdit()) return;
       const validWaLines: WhatsappLine[] = [];
       for (const line of waLines.slice(0, whatsappLimit)) {
           if (line.number.trim()) {
@@ -1054,6 +1070,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <header className={styles.socialsHeader}>
                       <h1 className={styles.socialsTitle}>Mis Redes</h1>
                       <p className={styles.socialsSubtitle}>Configura dónde transmitirás tus vivos y cómo te contactan.</p>
+                      {isProfileLocked && (
+                          <div className={styles.profileLockedNote}>
+                              <Lock size={14} />
+                              <span>Datos validados por administracion. Solo lectura.</span>
+                          </div>
+                      )}
                   </header>
                   <div className={styles.socialsCard}>
                       <form onSubmit={saveSocials} className={styles.socialsForm}>
@@ -1070,7 +1092,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                 newLines[idx].label = e.target.value as WhatsappLabel;
                                                 setWaLines(newLines);
                                             }}
-                                            disabled={isDisabled}
+                                            disabled={isDisabled || isProfileLocked}
                                             className={styles.socialsSelect}
                                        >
                                            <option value="">Etiqueta...</option>
@@ -1084,7 +1106,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                 newLines[idx].number = e.target.value;
                                                 setWaLines(newLines);
                                             }}
-                                            disabled={isDisabled}
+                                            disabled={isDisabled || isProfileLocked}
                                             className={styles.socialsInput}
                                             placeholder="54911..."
                                         />
@@ -1096,19 +1118,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                <div className={styles.socialsGrid}>
                                    <label className={styles.socialsItem}>
                                        <div className={`${styles.profileSocialIcon} ${styles.profileSocialInstagram}`}><Instagram size={16}/></div>
-                                       <input type="text" value={socials.instagram || ''} onChange={e => setSocials({...socials, instagram: e.target.value})} className={styles.socialsInput} placeholder="Usuario Instagram (sin @)" />
+                                       <input type="text" value={socials.instagram || ''} onChange={e => setSocials({...socials, instagram: e.target.value})} className={styles.socialsInput} placeholder="Usuario Instagram (sin @)" disabled={isProfileLocked} />
                                    </label>
                                    <label className={styles.socialsItem}>
                                        <div className={`${styles.profileSocialIcon} ${styles.profileSocialTiktok}`}><span className={styles.profileSocialTiktokLabel}>Tk</span></div>
-                                       <input type="text" value={socials.tiktok || ''} onChange={e => setSocials({...socials, tiktok: e.target.value})} className={styles.socialsInput} placeholder="Usuario TikTok (sin @)" />
+                                       <input type="text" value={socials.tiktok || ''} onChange={e => setSocials({...socials, tiktok: e.target.value})} className={styles.socialsInput} placeholder="Usuario TikTok (sin @)" disabled={isProfileLocked} />
                                    </label>
                                    <label className={styles.socialsItem}>
                                        <div className={`${styles.profileSocialIcon} ${styles.profileSocialFacebook}`}><Facebook size={16}/></div>
-                                       <input type="text" value={socials.facebook || ''} onChange={e => setSocials({...socials, facebook: e.target.value})} className={styles.socialsInput} placeholder="Página Facebook" />
+                                       <input type="text" value={socials.facebook || ''} onChange={e => setSocials({...socials, facebook: e.target.value})} className={styles.socialsInput} placeholder="Página Facebook" disabled={isProfileLocked} />
                                    </label>
                                    <label className={styles.socialsItem}>
                                        <div className={`${styles.profileSocialIcon} ${styles.profileSocialYoutube}`}><Video size={16}/></div>
-                                       <input type="text" value={socials.youtube || ''} onChange={e => setSocials({...socials, youtube: e.target.value})} className={styles.socialsInput} placeholder="Canal YouTube" />
+                                       <input type="text" value={socials.youtube || ''} onChange={e => setSocials({...socials, youtube: e.target.value})} className={styles.socialsInput} placeholder="Canal YouTube" disabled={isProfileLocked} />
                                    </label>
                                    <label className={styles.socialsItem}>
                                        <div className={`${styles.profileSocialIcon} ${styles.profileSocialWeb}`}><ExternalLink size={16}/></div>
@@ -1118,12 +1140,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                            onChange={e => setShopForm(prev => ({ ...prev, website: e.target.value }))}
                                            className={styles.socialsInput}
                                            placeholder="https://tuweb.com"
+                                           disabled={isProfileLocked}
                                        />
                                    </label>
                                </div>
                            </div>
                            <div className={styles.socialsActionRow}>
-                               <Button type="submit"><Save size={16} className={styles.buttonIcon}/> Guardar Cambios</Button>
+                               <Button type="submit" disabled={isProfileLocked}><Save size={16} className={styles.buttonIcon}/> Guardar Cambios</Button>
                            </div>
                       </form>
                   </div>
@@ -1372,6 +1395,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <header className={styles.profileHeader}>
                       <h1 className={styles.profileTitle}>Datos de Tienda</h1>
                       <p className={styles.profileSubtitle}>Información legal, ubicación y condiciones de venta.</p>
+                      {isProfileLocked && (
+                          <div className={styles.profileLockedNote}>
+                              <Lock size={14} />
+                              <span>Datos validados por administracion. Solo lectura.</span>
+                          </div>
+                      )}
                   </header>
                   <div className={styles.profileCard}>
                       <p className={styles.profileLabel}>Vista pública</p>
@@ -1414,15 +1443,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           <div className={styles.profileGridTwo}>
                               <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>Nombre de Fantasía</span>
-                                  <input type="text" value={shopForm.name || ''} onChange={e => handleInputChange('name', e.target.value)} className={styles.profileInputMuted} />
+                                  <input type="text" value={shopForm.name || ''} onChange={e => handleInputChange('name', e.target.value)} className={styles.profileInputMuted} readOnly={isProfileLocked} />
                               </label>
                               <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>Razón Social</span>
-                                  <input type="text" value={shopForm.razonSocial || ''} onChange={e => handleInputChange('razonSocial', e.target.value)} className={styles.profileInput} />
+                                  <input type="text" value={shopForm.razonSocial || ''} onChange={e => handleInputChange('razonSocial', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
                               </label>
                               <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>CUIT</span>
-                                  <input type="text" value={shopForm.cuit || ''} onChange={e => handleInputChange('cuit', e.target.value)} className={styles.profileInput} />
+                                  <input type="text" value={shopForm.cuit || ''} onChange={e => handleInputChange('cuit', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
                               </label>
                           </div>
                       </section>
@@ -1431,27 +1460,36 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           <div className={styles.profileGridThree}>
                               <div className={styles.profileFieldWide}>
                                   <label className={styles.profileInputLabel}>Buscador (Google Maps Simulado)</label>
-                                  <AddressAutocomplete onSelect={handleAddressSelect} />
+                                  {isProfileLocked ? (
+                                      <input
+                                          type="text"
+                                          value={shopForm.address || currentShop.address || ''}
+                                          className={styles.profileInput}
+                                          readOnly
+                                      />
+                                  ) : (
+                                      <AddressAutocomplete onSelect={handleAddressSelect} />
+                                  )}
                               </div>
                               <label className={styles.profileFieldSpanTwo}>
                                   <span className={styles.profileInputLabel}>Calle</span>
-                                  <input type="text" value={shopForm.addressDetails?.street || ''} onChange={e => handleAddressChange('street', e.target.value)} className={styles.profileInput} />
+                                  <input type="text" value={shopForm.addressDetails?.street || ''} onChange={e => handleAddressChange('street', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
                               </label>
                               <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>Número</span>
-                                  <input type="text" value={shopForm.addressDetails?.number || ''} onChange={e => handleAddressChange('number', e.target.value)} className={styles.profileInput} />
+                                  <input type="text" value={shopForm.addressDetails?.number || ''} onChange={e => handleAddressChange('number', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
                               </label>
                               <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>Localidad / Barrio</span>
-                                  <input type="text" value={shopForm.addressDetails?.city || ''} onChange={e => handleAddressChange('city', e.target.value)} className={styles.profileInput} />
+                                  <input type="text" value={shopForm.addressDetails?.city || ''} onChange={e => handleAddressChange('city', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
                               </label>
                               <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>Provincia</span>
-                                  <input type="text" value={shopForm.addressDetails?.province || ''} onChange={e => handleAddressChange('province', e.target.value)} className={styles.profileInput} />
+                                  <input type="text" value={shopForm.addressDetails?.province || ''} onChange={e => handleAddressChange('province', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
                               </label>
                               <label className={styles.profileField}>
                                   <span className={styles.profileInputLabel}>CP</span>
-                                  <input type="text" value={shopForm.addressDetails?.zip || ''} onChange={e => handleAddressChange('zip', e.target.value)} className={styles.profileInput} />
+                                  <input type="text" value={shopForm.addressDetails?.zip || ''} onChange={e => handleAddressChange('zip', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
                               </label>
                               <label className={styles.profileFieldSpanThree}>
                                   <span className={styles.profileInputLabel}>Link Google Maps</span>
@@ -1461,6 +1499,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                       onChange={e => handleAddressChange('mapsUrl', e.target.value)}
                                       className={styles.profileInput}
                                       placeholder="https://maps.google.com/..."
+                                      readOnly={isProfileLocked}
                                   />
                               </label>
                           </div>
@@ -1473,7 +1512,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                       <span className={styles.profileInputLabel}>Monto Mínimo de Compra ($)</span>
                                       <div className={styles.profileFieldRelative}>
                                           <span className={styles.profilePricePrefix}>$</span>
-                                          <input type="number" value={shopForm.minimumPurchase || ''} onChange={e => handleInputChange('minimumPurchase', parseInt(e.target.value))} className={`${styles.profileInput} pl-6`} />
+                                          <input type="number" value={shopForm.minimumPurchase || ''} onChange={e => handleInputChange('minimumPurchase', parseInt(e.target.value))} className={`${styles.profileInput} pl-6`} readOnly={isProfileLocked} />
                                       </div>
                                   </label>
                               </div>
@@ -1489,6 +1528,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                 checked={(shopForm.paymentMethods || []).includes(method)}
                                                 onChange={() => togglePaymentMethod(method)}
                                                 className={styles.profileCheckboxInput}
+                                                disabled={isProfileLocked}
                                               />
                                               <span>{method}</span>
                                           </label>
@@ -1498,7 +1538,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           </div>
                       </section>
                       <div className={styles.profileActions}>
-                          <Button type="submit"><Save size={16} className={styles.buttonIcon}/> Guardar Perfil</Button>
+                          <Button type="submit" disabled={isProfileLocked}><Save size={16} className={styles.buttonIcon}/> Guardar Perfil</Button>
                       </div>
                   </form>
               </div>

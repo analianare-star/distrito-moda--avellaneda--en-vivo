@@ -255,6 +255,8 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
           onViewReel={onViewReel}
           viewedReels={user.viewedReels}
           onOpenShop={(shop) => onOpenShop(shop, { navigate: false })}
+          canClientInteract={canClientInteract}
+          onRequireLogin={onOpenLogin}
           queueSlot={bannerAndQueue}
         />
 
@@ -280,6 +282,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
                     user={user}
                     canClientInteract={canClientInteract}
                     onNotify={onNotify}
+                    onRequireLogin={onOpenLogin}
                     onOpenShop={() => onOpenShop(stream.shop)}
                     onReport={onReport}
                     onToggleReminder={onToggleReminder}
@@ -327,6 +330,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
             }
             onToggleReminder(streamId);
           }}
+          onRequireLogin={onOpenLogin}
           onLike={(streamId) => {
             if (isMockStream(streamId)) {
               blockMockAction();

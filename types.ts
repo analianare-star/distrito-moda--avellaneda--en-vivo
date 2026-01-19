@@ -127,6 +127,15 @@ export interface Shop {
       province: string;
       zip: string;
       mapsUrl?: string;
+      lat?: number;
+      lng?: number;
+      catalogUrl?: string;
+      storeImageUrl?: string;
+      imageUrl?: string;
+      legacyUid?: string;
+      legacyUserType?: string;
+      legacyUser?: string;
+      contactName?: string;
   };
   socialHandles: SocialHandles;
   

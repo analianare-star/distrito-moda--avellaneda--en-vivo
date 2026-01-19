@@ -9,24 +9,20 @@ interface AuthModalProps {
   isOpen: boolean;
   loginStep: "ENTRY" | "AUDIENCE" | "SHOP" | "CLIENT" | "CLIENT_EMAIL";
   clientEmailMode: "REGISTER" | "LOGIN";
-  loginEmail: string;
-  loginPassword: string;
   loginError: string;
   loginBusy: boolean;
   resetBusy: boolean;
   onClose: () => void;
   onContinueAsGuest: () => void;
   onOpenAudienceSelection: () => void;
-  onEmailLogin: () => void;
-  onEmailRegister: () => void;
+  onEmailLogin: (email: string, password: string) => void;
+  onEmailRegister: (email: string, password: string) => void;
   onGoogleLogin: () => void;
-  onPasswordReset: () => void;
+  onPasswordReset: (email: string) => void;
   onSetLoginStep: (value: "ENTRY" | "AUDIENCE" | "SHOP" | "CLIENT" | "CLIENT_EMAIL") => void;
   onSetLoginMode: (value: "GOOGLE" | "EMAIL") => void;
   onSetLoginAudience: (value: "SHOP" | null) => void;
   onSetClientEmailMode: (value: "REGISTER" | "LOGIN") => void;
-  onSetLoginEmail: (value: string) => void;
-  onSetLoginPassword: (value: string) => void;
   onSetLoginError: (value: string) => void;
 }
 
@@ -55,8 +51,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   loginStep,
   clientEmailMode,
-  loginEmail,
-  loginPassword,
   loginError,
   loginBusy,
   resetBusy,
@@ -71,11 +65,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onSetLoginMode,
   onSetLoginAudience,
   onSetClientEmailMode,
-  onSetLoginEmail,
-  onSetLoginPassword,
   onSetLoginError,
 }) => {
   if (!isOpen) return null;
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+
+  React.useEffect(() => {
+    setEmail("");
+    setPassword("");
+  }, [clientEmailMode, isOpen, loginStep]);
 
   return (
     <div className={styles.overlay}>
@@ -147,7 +146,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             className={styles.form}
             onSubmit={(event) => {
               event.preventDefault();
-              onEmailLogin();
+              onEmailLogin(email, password);
             }}
           >
             <p className={styles.formHint}>
@@ -159,8 +158,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <Mail size={14} className="text-gray-400" />
                 <input
                   type="email"
-                  value={loginEmail}
-                  onChange={(event) => onSetLoginEmail(event.target.value)}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   className={styles.input}
                   placeholder="correo de la tienda"
                   autoComplete="email"
@@ -174,8 +173,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <Key size={14} className="text-gray-400" />
                 <input
                   type="password"
-                  value={loginPassword}
-                  onChange={(event) => onSetLoginPassword(event.target.value)}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   className={styles.input}
                   placeholder="Tu contraseña"
                   autoComplete="current-password"
@@ -194,7 +193,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <button
               type="button"
               disabled={resetBusy}
-              onClick={onPasswordReset}
+              onClick={() => onPasswordReset(email)}
               className={styles.secondaryButton}
             >
               {resetBusy ? "Enviando enlace..." : "Olvidé mi contraseña"}
@@ -267,9 +266,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             onSubmit={(event) => {
               event.preventDefault();
               if (clientEmailMode === "REGISTER") {
-                onEmailRegister();
+                onEmailRegister(email, password);
               } else {
-                onEmailLogin();
+                onEmailLogin(email, password);
               }
             }}
           >
@@ -284,8 +283,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <Mail size={14} className="text-gray-400" />
                 <input
                   type="email"
-                  value={loginEmail}
-                  onChange={(event) => onSetLoginEmail(event.target.value)}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   className={styles.input}
                   placeholder="tu@email.com"
                   autoComplete="email"
@@ -299,8 +298,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <Key size={14} className="text-gray-400" />
                 <input
                   type="password"
-                  value={loginPassword}
-                  onChange={(event) => onSetLoginPassword(event.target.value)}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   className={styles.input}
                   placeholder="Tu contraseña"
                   autoComplete={
@@ -330,7 +329,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 type="button"
                 disabled={resetBusy}
-                onClick={onPasswordReset}
+                onClick={() => onPasswordReset(email)}
                 className={styles.secondaryButton}
               >
                 {resetBusy ? "Enviando enlace..." : "Olvidé mi contraseña"}

@@ -22,6 +22,7 @@ interface LiveQueueModalProps {
   onOpenShop: (shop: Shop, options?: { navigate?: boolean }) => void;
   onReport: (streamId: string) => void;
   onToggleReminder: (streamId: string) => void;
+  onRequireLogin?: () => void;
   onLike?: (streamId: string) => void;
   onRate?: (streamId: string, rating: number) => void;
   onDownloadCard?: (stream: Stream) => void;
@@ -37,6 +38,7 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
   onOpenShop,
   onReport,
   onToggleReminder,
+  onRequireLogin,
   onLike,
   onRate,
   onDownloadCard,
@@ -166,7 +168,13 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
                     <button
                       type="button"
                       className={styles.calendarButton}
-                      onClick={() => onToggleReminder(stream.id)}
+                      onClick={() => {
+                        if (!canClientInteract) {
+                          onRequireLogin?.();
+                          return;
+                        }
+                        onToggleReminder(stream.id);
+                      }}
                       aria-label="Agendar recordatorio"
                     >
                       <Calendar size={16} />
@@ -178,6 +186,7 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
                   user={user}
                   canClientInteract={canClientInteract}
                   onNotify={onNotify}
+                  onRequireLogin={onRequireLogin}
                   onOpenShop={() => onOpenShop(stream.shop, { navigate: false })}
                   onReport={onReport}
                   onToggleReminder={onToggleReminder}

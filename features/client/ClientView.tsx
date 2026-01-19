@@ -1,12 +1,12 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { ShopDetailModal } from "../ShopDetailModal";
-import { StoryModal } from "../StoryModal";
-import { Shop, Stream, Reel, UserContext } from "../../types";
-import { ClientHomePage } from "../pages/client/ClientHomePage";
-import { ClientShopsPage } from "../pages/client/ClientShopsPage";
-import { ClientSavedPage } from "../pages/client/ClientSavedPage";
-import { ClientAccountPage } from "../pages/client/ClientAccountPage";
+import { ShopDetailModal } from "../../components/ShopDetailModal";
+import { StoryModal } from "../../components/StoryModal";
+import { Shop, Stream, Reel, UserContext, NotificationItem } from "../../types";
+import { ClientHomePage } from "../../components/pages/client/ClientHomePage";
+import { ClientShopsPage } from "../../components/pages/client/ClientShopsPage";
+import { ClientSavedPage } from "../../components/pages/client/ClientSavedPage";
+import { ClientAccountPage } from "../../components/pages/client/ClientAccountPage";
 
 // ClientView muestra la experiencia publica y de cliente.
 // ClientView renders the public and client experience.
@@ -21,6 +21,7 @@ interface ClientViewProps {
   filteredPublicShops: Shop[];
   filteredFavoriteShops: Shop[];
   reminderStreams: Stream[];
+  notifications: NotificationItem[];
   selectedShopForModal: Shop | null;
   selectedReel: Reel | null;
   shopModalTab: "INFO" | "CARD";
@@ -63,6 +64,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
   filteredPublicShops,
   filteredFavoriteShops,
   reminderStreams,
+  notifications,
   selectedShopForModal,
   selectedReel,
   shopModalTab,
@@ -237,7 +239,10 @@ export const ClientView: React.FC<ClientViewProps> = ({
           element={
             <ClientAccountPage
               isLoggedIn={user.isLoggedIn}
-              onRequireLogin={onRequireLogin}
+              user={user}
+              notifications={notifications}
+              reminderStreams={reminderStreams}
+              onOpenCalendarInvite={onOpenCalendarInvite}
             />
           }
         />

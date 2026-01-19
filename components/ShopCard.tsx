@@ -11,6 +11,8 @@ interface ShopCardProps {
   onToggleActive: (shopId: string) => void;
   onOpenShop: (shop: Shop, options?: { navigate?: boolean }) => void;
   onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>, shopId: string) => void;
+  canClientInteract?: boolean;
+  onRequireLogin?: () => void;
 }
 
 export const ShopCard: React.FC<ShopCardProps> = ({
@@ -19,14 +21,23 @@ export const ShopCard: React.FC<ShopCardProps> = ({
   onToggleActive,
   onOpenShop,
   onKeyDown,
+  canClientInteract,
+  onRequireLogin,
 }) => {
   const hasCover = Boolean(shop.coverUrl);
+  const handleOpenShop = () => {
+    if (canClientInteract === false) {
+      onRequireLogin?.();
+      return;
+    }
+    onOpenShop(shop);
+  };
 
   if (!hasCover) {
     return (
       <button
         key={shop.id}
-        onClick={() => onOpenShop(shop)}
+        onClick={handleOpenShop}
         className={styles.card}
       >
         <div className={styles.header}>
@@ -116,7 +127,7 @@ export const ShopCard: React.FC<ShopCardProps> = ({
               <button
                 onClick={(event) => {
                   event.stopPropagation();
-                  onOpenShop(shop);
+                  handleOpenShop();
                 }}
                 className={styles.activeButton}
               >

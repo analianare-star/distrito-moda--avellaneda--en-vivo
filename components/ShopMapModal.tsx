@@ -7,6 +7,7 @@ interface ShopMapModalProps {
   open: boolean;
   onClose: () => void;
   focusName?: string;
+  focusKeys?: string[];
 }
 
 type RawShop = Record<string, unknown>;
@@ -22,6 +23,8 @@ type MapShop = {
 };
 
 const DATA_URL = '/data/datos_convertidos.json';
+const API_URL = import.meta.env.VITE_API_URL;
+const MAP_API_URL = API_URL ? `${API_URL}/shops/map-data` : DATA_URL;
 const DEFAULT_CENTER: [number, number] = [-34.6275057, -58.4752695];
 const DEFAULT_ZOOM = 15;
 const FOCUS_ZOOM = 16;
@@ -202,7 +205,12 @@ const buildPopupHtml = (shop: MapShop) => {
   `;
 };
 
-export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focusName }) => {
+export const ShopMapModal: React.FC<ShopMapModalProps> = ({
+  open,
+  onClose,
+  focusName,
+  focusKeys,
+}) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
@@ -211,6 +219,7 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const focusSignature = (focusKeys && focusKeys.length > 0 ? focusKeys.join('|') : focusName || '');
 
   useEffect(() => {
     if (!open || !mapContainerRef.current) return undefined;
@@ -299,13 +308,16 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
     const mapInstance = mapRef.current;
     const layer = markersRef.current;
 
-    fetch(DATA_URL)
-      .then((res) => {
+    const loadData = (url: string) =>
+      fetch(url).then((res) => {
         if (!res.ok) throw new Error('fetch_failed');
         return res.json();
-      })
+      });
+
+    loadData(MAP_API_URL)
+      .catch(() => (MAP_API_URL !== DATA_URL ? loadData(DATA_URL) : Promise.reject()))
       .then((data) => {
-        if (isCancelled) return;
+        if (isCancelled || !data) return;
         const rows: RawShop[] = Array.isArray(data) ? data : [];
         const shops = rows
           .map(toMapShop)
@@ -314,9 +326,23 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
         if (!layer || !mapInstance) return;
         layer.clearLayers();
 
-        const focusKey = focusName ? normalizeValue(focusName) : '';
-        const focusShop = focusKey
-          ? shops.find((shop) => normalizeValue(shop.name) === focusKey || normalizeValue(shop.uid) === focusKey)
+        const normalizedKeys = (focusKeys?.length ? focusKeys : focusName ? [focusName] : [])
+          .map((value) => normalizeValue(String(value)))
+          .filter(Boolean);
+        const focusShop = normalizedKeys.length
+          ? shops.find((shop) =>
+              normalizedKeys.some((key) => {
+                const nameKey = normalizeValue(shop.name || '');
+                const uidKey = normalizeValue(shop.uid || '');
+                const isExactMatch = nameKey === key || (uidKey && uidKey === key);
+                if (isExactMatch) return true;
+                if (key.length < 4) return false;
+                return (
+                  (nameKey && nameKey.includes(key)) ||
+                  (key.includes(nameKey) && nameKey.length >= 4)
+                );
+              })
+            )
           : null;
 
         const shopsInRadius = shops.filter(
@@ -418,7 +444,7 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({ open, onClose, focus
         zoomTimerRef.current = null;
       }
     };
-  }, [open, focusName]);
+  }, [open, focusSignature]);
 
   if (!open) return null;
 

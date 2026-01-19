@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { NotificationItem, Shop, Stream } from "../../types";
-import { MerchantPage } from "../pages/merchant/MerchantPage";
+import { MerchantPage } from "../../components/pages/merchant/MerchantPage";
 
 // MerchantView envuelve el panel de tienda con semantica clara.
 // MerchantView wraps the shop dashboard with semantic structure.

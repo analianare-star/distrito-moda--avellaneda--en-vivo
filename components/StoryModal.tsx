@@ -247,6 +247,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
                     setMapFocusName(null);
                 }}
                 focusName={mapFocusName ?? reel.shopName}
+                focusKeys={[mapFocusName ?? reel.shopName].filter(Boolean) as string[]}
             />
         </div>
     );

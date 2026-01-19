@@ -99,7 +99,13 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                 />
                 
                 <button 
-                    onClick={() => canClientInteract && onToggleFavorite(shop.id)}
+                    onClick={() => {
+                        if (!canClientInteract) {
+                            onRequireLogin();
+                            return;
+                        }
+                        onToggleFavorite(shop.id);
+                    }}
                     className={`${styles.followButton} ${
                         canClientInteract
                           ? isFollowing
@@ -107,9 +113,9 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                             : styles.followInactive
                           : styles.followDisabled
                     }`}
-                    disabled={!canClientInteract}
                     aria-pressed={isFollowing}
                     aria-label={isFollowing ? 'Dejar de seguir tienda' : 'Seguir tienda'}
+                    aria-disabled={!canClientInteract}
                 >
                     {canClientInteract ? (
                         isFollowing ? (
@@ -283,7 +289,18 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
         </div>
       </div>
       </div>
-      <ShopMapModal open={isMapOpen} onClose={() => setIsMapOpen(false)} focusName={shop.name} />
+      <ShopMapModal
+        open={isMapOpen}
+        onClose={() => setIsMapOpen(false)}
+        focusName={shop.name}
+        focusKeys={[
+          shop.name,
+          shop.razonSocial,
+          shop.cuit,
+          shop.addressDetails?.legacyUser,
+          shop.addressDetails?.legacyUid,
+        ].filter(Boolean) as string[]}
+      />
     </>
   );
 };

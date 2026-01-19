@@ -11,6 +11,7 @@ interface StreamCardProps {
   user: UserContext;
   canClientInteract: boolean;
   onNotify?: (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => void;
+  onRequireLogin?: () => void;
   onOpenShop: () => void;
   onReport: (streamId: string) => void;
   onToggleReminder: (streamId: string) => void;
@@ -24,6 +25,7 @@ export const StreamCard: React.FC<StreamCardProps> = ({
     user, 
     canClientInteract,
     onNotify,
+    onRequireLogin,
     onOpenShop, 
     onReport, 
     onToggleReminder,
@@ -91,6 +93,16 @@ export const StreamCard: React.FC<StreamCardProps> = ({
     }
   };
 
+  const blockIfGuest = (message?: string) => {
+    if (canClientInteract) return false;
+    if (!user.isLoggedIn) {
+      onRequireLogin?.();
+    } else {
+      onNotify?.('Solo clientes', message || 'Accion disponible solo para cuentas cliente.', 'warning');
+    }
+    return true;
+  };
+
   return (
     <div 
         className={`${styles.card} group`}
@@ -122,7 +134,11 @@ export const StreamCard: React.FC<StreamCardProps> = ({
              {/* Shop Identity (Small) */}
              <div 
                 className={styles.shopChip}
-                onClick={(e) => { e.stopPropagation(); onOpenShop(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (blockIfGuest('Inicia sesion para ver el perfil.')) return;
+                  onOpenShop();
+                }}
             >
                  <LogoBubble
                    src={stream.shop.logoUrl}
@@ -202,19 +218,17 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                     Finalizado
                  </Button>
             ) : isUpcoming ? (
-                canClientInteract ? (
-                  <Button 
-                      variant={reminderSet ? 'secondary' : 'outline'} 
-                      className={`w-full ${reminderSet ? 'bg-dm-dark text-white' : 'border-dm-dark text-dm-dark hover:bg-dm-dark hover:text-white'}`}
-                      onClick={() => onToggleReminder(stream.id)}
-                  >
-                      {reminderSet ? <><Check size={14} className="mr-2"/> Agendado</> : <><Clock size={14} className="mr-2"/> Recordarme</>}
-                  </Button>
-                ) : (
-                  <Button variant="outline" className="w-full border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed" disabled>
-                      {reminderBlockedLabel}
-                  </Button>
-                )
+                <Button 
+                    variant={reminderSet ? 'secondary' : 'outline'} 
+                    className={`w-full ${reminderSet ? 'bg-dm-dark text-white' : 'border-dm-dark text-dm-dark hover:bg-dm-dark hover:text-white'} ${!canClientInteract ? 'border-gray-200 text-gray-400 bg-gray-50' : ''}`}
+                    onClick={() => {
+                      if (blockIfGuest()) return;
+                      onToggleReminder(stream.id);
+                    }}
+                    aria-disabled={!canClientInteract}
+                >
+                    {reminderSet ? <><Check size={14} className="mr-2"/> Agendado</> : <><Clock size={14} className="mr-2"/> Recordarme</>}
+                </Button>
             ) : (
                  <Button variant="outline" className="w-full border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed">
                     No Disponible
@@ -225,7 +239,10 @@ export const StreamCard: React.FC<StreamCardProps> = ({
             <div className={`${styles.actionRow} border-t border-gray-100 pt-2.5`}>
                  <div className="flex gap-1">
                     <button 
-                        onClick={() => canClientInteract && onLike && onLike(stream.id)} 
+                        onClick={() => {
+                          if (blockIfGuest('Inicia sesion para dar me gusta.')) return;
+                          onLike?.(stream.id);
+                        }} 
                         className={`p-2 rounded-full transition-colors ${
                           canClientInteract
                             ? isLiked
@@ -234,9 +251,9 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                             : 'text-gray-300 cursor-not-allowed'
                         }`}
                         title="Me gusta"
-                        disabled={!canClientInteract}
                         aria-label="Me gusta"
                         aria-pressed={isLiked}
+                        aria-disabled={!canClientInteract}
                     >
                         <Heart size={18} className={isLiked ? 'fill-dm-crimson text-dm-crimson' : ''} />
                     </button>
@@ -249,11 +266,14 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                         <Share2 size={18} />
                     </button>
                     <button 
-                        onClick={() => canClientInteract && onDownloadCard && onDownloadCard(stream)}
+                        onClick={() => {
+                          if (blockIfGuest('Inicia sesion para descargar la tarjeta.')) return;
+                          onDownloadCard?.(stream);
+                        }}
                         className={`p-2 rounded-full transition-colors ${canClientInteract ? 'text-gray-500 hover:text-dm-dark hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                         title="Descargar Tarjeta"
-                        disabled={!canClientInteract}
                         aria-label="Descargar tarjeta"
+                        aria-disabled={!canClientInteract}
                     >
                         <Download size={18} />
                     </button>

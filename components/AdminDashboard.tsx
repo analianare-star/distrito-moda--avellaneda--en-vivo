@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from './Button';
-import { LayoutDashboard, Radio, Store, AlertTriangle, CheckCircle, XCircle, Edit, AlertOctagon, BarChart3, Search, Eye, EyeOff, PlayCircle, StopCircle, X, Film, Plus, Save, MapPin, CreditCard, User, Lock, ShoppingBag, Calendar } from 'lucide-react';
+import { LayoutDashboard, Radio, Store, AlertTriangle, CheckCircle, XCircle, Edit, AlertOctagon, BarChart3, Search, Eye, EyeOff, PlayCircle, StopCircle, X, Film, Plus, Save, MapPin, CreditCard, User, Lock, ShoppingBag, Calendar, Globe } from 'lucide-react';
 import { StreamStatus, DataIntegrityStatus, Stream, Shop, Reel } from '../types';
 import { api } from '../services/api';
 
@@ -127,7 +127,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       email: '',
       password: '',
       plan: 'BASIC' as 'BASIC' | 'PREMIUM' | 'PRO',
+      status: 'PENDING_VERIFICATION' as 'PENDING_VERIFICATION' | 'ACTIVE',
       logoUrl: '',
+      coverUrl: '',
+      website: '',
+      catalogUrl: '',
+      phone: '',
+      instagram: '',
+      tiktok: '',
+      facebook: '',
+      youtube: '',
+      mapsUrl: '',
+      lat: '',
+      lng: '',
+      imageUrl: '',
+      storeImageUrl: '',
+      legacyUid: '',
+      legacyUserType: '',
+      legacyUser: '',
+      contactName: '',
       streamQuota: 0,
       reelQuota: 0
   });
@@ -577,24 +595,55 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           return;
       }
 
+      const latValue = formData.lat.trim();
+      const lngValue = formData.lng.trim();
+      const lat = latValue ? Number(latValue) : undefined;
+      const lng = lngValue ? Number(lngValue) : undefined;
+      const addressDetails = {
+          street: formData.street,
+          number: formData.number,
+          city: formData.city,
+          province: formData.province,
+          zip: formData.zip,
+          mapsUrl: formData.mapsUrl || undefined,
+          lat: Number.isFinite(lat) ? lat : undefined,
+          lng: Number.isFinite(lng) ? lng : undefined,
+          catalogUrl: formData.catalogUrl || undefined,
+          storeImageUrl: formData.storeImageUrl || undefined,
+          imageUrl: formData.imageUrl || undefined,
+          legacyUid: formData.legacyUid || undefined,
+          legacyUserType: formData.legacyUserType || undefined,
+          legacyUser: formData.legacyUser || undefined,
+          contactName: formData.contactName || undefined,
+      };
+      const socialHandles = {
+          instagram: formData.instagram || '',
+          tiktok: formData.tiktok || '',
+          facebook: formData.facebook || '',
+          youtube: formData.youtube || '',
+      };
+      const whatsappLines = formData.phone
+          ? [{ label: 'Ventas por mayor', number: formData.phone }]
+          : [];
+
       const payload = {
           name: formData.name,
           razonSocial: formData.razonSocial,
           cuit: formData.cuit,
           address: `${formData.street} ${formData.number}, ${formData.city}`,
-          addressDetails: {
-              street: formData.street,
-              number: formData.number,
-              city: formData.city,
-              province: formData.province,
-              zip: formData.zip
-          },
+          addressDetails,
           minimumPurchase: formData.minimumPurchase,
           paymentMethods: formData.paymentMethods,
           email: formData.email,
           password: formData.password,
           plan: formData.plan,
+          status: formData.status,
+          active: formData.status === 'ACTIVE',
           logoUrl: formData.logoUrl,
+          coverUrl: formData.coverUrl,
+          website: formData.website,
+          socialHandles,
+          whatsappLines,
           streamQuota: formData.streamQuota,
           reelQuota: formData.reelQuota,
           slug: formData.name.toLowerCase().replace(/\s+/g, '-')
@@ -610,9 +659,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           setIsCreateModalOpen(false);
           // Reset
           setFormData({
-              name: '', razonSocial: '', cuit: '', street: '', number: '', city: '', province: '', zip: '',
-              minimumPurchase: 0, paymentMethods: [], email: '', password: '',
-              plan: 'BASIC', logoUrl: '', streamQuota: 0, reelQuota: 0
+              name: '',
+              razonSocial: '',
+              cuit: '',
+              street: '',
+              number: '',
+              city: '',
+              province: '',
+              zip: '',
+              minimumPurchase: 0,
+              paymentMethods: [],
+              email: '',
+              password: '',
+              plan: 'BASIC',
+              status: 'PENDING_VERIFICATION',
+              logoUrl: '',
+              coverUrl: '',
+              website: '',
+              catalogUrl: '',
+              phone: '',
+              instagram: '',
+              tiktok: '',
+              facebook: '',
+              youtube: '',
+              mapsUrl: '',
+              lat: '',
+              lng: '',
+              imageUrl: '',
+              storeImageUrl: '',
+              legacyUid: '',
+              legacyUserType: '',
+              legacyUser: '',
+              contactName: '',
+              streamQuota: 0,
+              reelQuota: 0
           });
           onRefreshData();
       }
@@ -2193,7 +2273,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <div>
                             <h2 className={styles.createModalHeaderTitle}>Alta de Nueva Tienda</h2>
                             <p className={styles.createModalHeaderSubtitle}>Registro Administrativo</p>
-                            <p className={styles.createModalHeaderMeta}>Estado inicial: PENDING_VERIFICATION</p>
+                            <p className={styles.createModalHeaderMeta}>Estado inicial: {formData.status}</p>
                         </div>
                       </div>
                       <button onClick={() => setIsCreateModalOpen(false)} className={styles.createModalClose}>
@@ -2234,6 +2314,46 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                       type="text" required value={formData.cuit}
                                       onChange={(e) => setFormData({...formData, cuit: e.target.value})}
                                       placeholder="30-XXXXXXXX-X"
+                                      className={styles.createModalInput}
+                                  />
+                              </div>
+                              <div>
+                                  <label className={styles.createModalLabel}>Nombre completo (contacto)</label>
+                                  <input
+                                      type="text"
+                                      value={formData.contactName}
+                                      onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                                      placeholder="Nombre de contacto"
+                                      className={styles.createModalInput}
+                                  />
+                              </div>
+                              <div>
+                                  <label className={styles.createModalLabel}>UID (importacion)</label>
+                                  <input
+                                      type="text"
+                                      value={formData.legacyUid}
+                                      onChange={(e) => setFormData({ ...formData, legacyUid: e.target.value })}
+                                      placeholder="UID externo"
+                                      className={styles.createModalInput}
+                                  />
+                              </div>
+                              <div>
+                                  <label className={styles.createModalLabel}>Usuario (importacion)</label>
+                                  <input
+                                      type="text"
+                                      value={formData.legacyUser}
+                                      onChange={(e) => setFormData({ ...formData, legacyUser: e.target.value })}
+                                      placeholder="Usuario externo"
+                                      className={styles.createModalInput}
+                                  />
+                              </div>
+                              <div>
+                                  <label className={styles.createModalLabel}>Tipo de usuario (importacion)</label>
+                                  <input
+                                      type="text"
+                                      value={formData.legacyUserType}
+                                      onChange={(e) => setFormData({ ...formData, legacyUserType: e.target.value })}
+                                      placeholder="Tipo externo"
                                       className={styles.createModalInput}
                                   />
                               </div>
@@ -2292,6 +2412,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         />
                                     </div>
                                </div>
+                               <div className={styles.createModalGridThree}>
+                                    <div className={styles.createModalSpanTwo}>
+                                        <label className={styles.createModalLabel}>URL de Maps</label>
+                                        <input
+                                            type="text"
+                                            value={formData.mapsUrl}
+                                            onChange={(e) => setFormData({ ...formData, mapsUrl: e.target.value })}
+                                            placeholder="https://maps.google.com/..."
+                                            className={styles.createModalInput}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={styles.createModalLabel}>Lat</label>
+                                        <input
+                                            type="text"
+                                            value={formData.lat}
+                                            onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
+                                            placeholder="-34.XXXX"
+                                            className={styles.createModalInput}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={styles.createModalLabel}>Lng</label>
+                                        <input
+                                            type="text"
+                                            value={formData.lng}
+                                            onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
+                                            placeholder="-58.XXXX"
+                                            className={styles.createModalInput}
+                                        />
+                                    </div>
+                               </div>
                           </div>
                       </section>
 
@@ -2329,16 +2481,87 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                   </div>
                               </div>
                           </div>
+                          <div className={styles.createModalGridTwo}>
+                              <div>
+                                  <label className={styles.createModalLabel}>URL tienda (sitio web)</label>
+                                  <input
+                                      type="text"
+                                      value={formData.website}
+                                      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                      placeholder="https://..."
+                                      className={styles.createModalInput}
+                                  />
+                              </div>
+                              <div>
+                                  <label className={styles.createModalLabel}>URL catalogo</label>
+                                  <input
+                                      type="text"
+                                      value={formData.catalogUrl}
+                                      onChange={(e) => setFormData({ ...formData, catalogUrl: e.target.value })}
+                                      placeholder="https://..."
+                                      className={styles.createModalInput}
+                                  />
+                              </div>
+                          </div>
                       </section>
 
-                      {/* Section 4: Contacto Administrativo & Cuenta */}
+                      {/* Section 4: Redes y enlaces */}
                       <section className={styles.createModalSection}>
                           <h3 className={styles.createModalSectionTitle}>
-                              <User size={16} className={styles.adminSectionIcon} /> 4. Contacto & Cuenta
+                              <Globe size={16} className={styles.adminSectionIcon} /> 4. Redes y enlaces
+                          </h3>
+                          <div className={styles.createModalGridThree}>
+                              <div>
+                                  <label className={styles.createModalLabel}>Instagram URL</label>
+                                  <input
+                                      type="text"
+                                      value={formData.instagram}
+                                      onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+                                      placeholder="https://instagram.com/..."
+                                      className={styles.createModalInput}
+                                  />
+                              </div>
+                              <div>
+                                  <label className={styles.createModalLabel}>TikTok URL</label>
+                                  <input
+                                      type="text"
+                                      value={formData.tiktok}
+                                      onChange={(e) => setFormData({ ...formData, tiktok: e.target.value })}
+                                      placeholder="https://tiktok.com/@..."
+                                      className={styles.createModalInput}
+                                  />
+                              </div>
+                              <div>
+                                  <label className={styles.createModalLabel}>Facebook URL</label>
+                                  <input
+                                      type="text"
+                                      value={formData.facebook}
+                                      onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
+                                      placeholder="https://facebook.com/..."
+                                      className={styles.createModalInput}
+                                  />
+                              </div>
+                              <div>
+                                  <label className={styles.createModalLabel}>YouTube URL</label>
+                                  <input
+                                      type="text"
+                                      value={formData.youtube}
+                                      onChange={(e) => setFormData({ ...formData, youtube: e.target.value })}
+                                      placeholder="https://youtube.com/..."
+                                      className={styles.createModalInput}
+                                  />
+                              </div>
+                          </div>
+                      </section>
+
+                      {/* Section 5: Contacto Administrativo & Cuenta */}
+                      <section className={styles.createModalSection}>
+                          <h3 className={styles.createModalSectionTitle}>
+                              <User size={16} className={styles.adminSectionIcon} /> 5. Contacto & Cuenta
                           </h3>
                           <div className={styles.createModalGridTwo}>
                               <div className={styles.createModalSpanTwo}>
-                                  <label className={styles.createModalLabel}>Email administrativo (inicio de sesión) *</label>
+                                  <label className={styles.createModalLabel}>Email administrativo (inicio de sesion) *</label>
                                   <input 
                                       type="email" required value={formData.email}
                                       onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -2347,7 +2570,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                   />
                               </div>
                               <div>
-                                  <label className={styles.createModalLabel}>Contraseña Inicial *</label>
+                                  <label className={styles.createModalLabel}>Contrasena inicial *</label>
                                   <div className={styles.createModalField}>
                                       <Lock size={14} className={styles.adminLockIcon} />
                                       <input 
@@ -2358,21 +2581,42 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                   </div>
                               </div>
                               <div>
-                                  <label className={styles.createModalLabel}>Plan de Suscripción</label>
+                                  <label className={styles.createModalLabel}>Celular / WhatsApp</label>
+                                  <input
+                                      type="text"
+                                      value={formData.phone}
+                                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                      placeholder="+54..."
+                                      className={styles.createModalInput}
+                                  />
+                              </div>
+                              <div>
+                                  <label className={styles.createModalLabel}>Plan de suscripcion</label>
                                   <select 
                                       value={formData.plan}
                                       onChange={(e) => setFormData({...formData, plan: e.target.value as any})}
                                       className={`${styles.createModalSelect} font-bold text-dm-dark bg-gray-50`}
                                   >
-                                      <option value="BASIC">ESTÁNDAR (BASIC)</option>
+                                      <option value="BASIC">ESTANDAR (BASIC)</option>
                                       <option value="PREMIUM">ALTA VISIBILIDAD (PREMIUM)</option>
-                                      <option value="PRO">MÁXIMA VISIBILIDAD (PRO)</option>
+                                      <option value="PRO">MAXIMA VISIBILIDAD (PRO)</option>
+                                  </select>
+                              </div>
+                              <div>
+                                  <label className={styles.createModalLabel}>Estado inicial</label>
+                                  <select
+                                      value={formData.status}
+                                      onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                                      className={`${styles.createModalSelect} bg-gray-50`}
+                                  >
+                                      <option value="PENDING_VERIFICATION">PENDIENTE</option>
+                                      <option value="ACTIVE">ACTIVA</option>
                                   </select>
                               </div>
                           </div>
                       </section>
 
-                      {/* Section 5: Configuración Técnica (Oculta/Dashboard) */}
+                      {/* Section 6: Configuración Técnica (Oculta/Dashboard) */}
                       <section className={styles.createModalDivider}>
                           <h3 className={styles.createModalDividerTitle}>
                               Configuración de Cuotas Iniciales
@@ -2388,6 +2632,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     placeholder="https://..."
                                   />
                                </div>
+                               <div>
+                                  <label className={styles.createModalTinyLabel}>Imagen destacada URL</label>
+                                  <input
+                                    type="text"
+                                    value={formData.coverUrl}
+                                    onChange={(e) => setFormData({...formData, coverUrl: e.target.value})}
+                                    className={styles.createModalTinyInput}
+                                    placeholder="https://..."
+                                  />
+                               </div>
+                               <div>
+                                  <label className={styles.createModalTinyLabel}>Imagen tienda URL</label>
+                                  <input
+                                    type="text"
+                                    value={formData.storeImageUrl}
+                                    onChange={(e) => setFormData({...formData, storeImageUrl: e.target.value})}
+                                    className={styles.createModalTinyInput}
+                                    placeholder="https://..."
+                                  />
+                               </div>
+                               <div>
+                                  <label className={styles.createModalTinyLabel}>URL imagen</label>
+                                  <input
+                                    type="text"
+                                    value={formData.imageUrl}
+                                    onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
+                                    className={styles.createModalTinyInput}
+                                    placeholder="https://..."
+                                  />
+                               </div>
+
                                <div>
                                   <label className={styles.createModalTinyLabel}>Cupos Vivos</label>
                                   <input
