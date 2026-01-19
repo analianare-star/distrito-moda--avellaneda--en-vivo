@@ -22,7 +22,8 @@ type MapShop = {
   lng: number;
 };
 
-const DATA_URL = '/data/datos_convertidos.json';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const MAP_API_URL = `${API_URL}/shops/map-data`;
 const API_URL = import.meta.env.VITE_API_URL;
 const MAP_API_URL = API_URL ? `${API_URL}/shops/map-data` : DATA_URL;
 const DEFAULT_CENTER: [number, number] = [-34.6275057, -58.4752695];
@@ -308,14 +309,11 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({
     const mapInstance = mapRef.current;
     const layer = markersRef.current;
 
-    const loadData = (url: string) =>
-      fetch(url).then((res) => {
+    fetch(MAP_API_URL)
+      .then((res) => {
         if (!res.ok) throw new Error('fetch_failed');
         return res.json();
-      });
-
-    loadData(MAP_API_URL)
-      .catch(() => (MAP_API_URL !== DATA_URL ? loadData(DATA_URL) : Promise.reject()))
+      })
       .then((data) => {
         if (isCancelled || !data) return;
         const rows: RawShop[] = Array.isArray(data) ? data : [];
