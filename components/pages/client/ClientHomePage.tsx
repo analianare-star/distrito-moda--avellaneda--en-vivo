@@ -5,6 +5,7 @@ import { ReelsStrip } from "../../ReelsStrip";
 import { StreamCard } from "../../StreamCard";
 import { EmptyState } from "../../EmptyState";
 import { Reel, Shop, Stream, StreamStatus, UserContext } from "../../../types";
+import { getShopCoverUrl } from "../../../utils/shopMedia";
 import { LiveQueueModal } from "../../LiveQueueModal";
 import { LogoBubble } from "../../LogoBubble";
 import styles from "./ClientHomePage.module.css";
@@ -192,7 +193,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
         <div className={styles.queueRow}>
           {queueStreams.map((stream) => {
             const isLive = stream.status === StreamStatus.LIVE;
-            const coverImage = stream.shop.coverUrl || stream.shop.logoUrl;
+            const coverImage = getShopCoverUrl(stream.shop);
             return (
               <button
                 key={stream.id}

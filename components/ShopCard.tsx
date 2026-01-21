@@ -1,6 +1,7 @@
 import React from "react";
 import { Shop } from "../types";
 import { LogoBubble } from "./LogoBubble";
+import { getShopCoverUrl } from "../utils/shopMedia";
 import styles from "./ShopCard.module.css";
 
 // ShopCard renders a store card with optional cover overlay.
@@ -24,12 +25,9 @@ export const ShopCard: React.FC<ShopCardProps> = ({
   canClientInteract,
   onRequireLogin,
 }) => {
-  const hasCover = Boolean(shop.coverUrl);
+  const coverUrl = getShopCoverUrl(shop);
+  const hasCover = Boolean(coverUrl);
   const handleOpenShop = () => {
-    if (canClientInteract === false) {
-      onRequireLogin?.();
-      return;
-    }
     onOpenShop(shop);
   };
 
@@ -76,7 +74,7 @@ export const ShopCard: React.FC<ShopCardProps> = ({
       className={`${styles.coverCard} group`}
     >
       <img
-        src={shop.coverUrl}
+        src={coverUrl}
         alt={`Portada ${shop.name}`}
         className={styles.coverImage}
         loading="lazy"

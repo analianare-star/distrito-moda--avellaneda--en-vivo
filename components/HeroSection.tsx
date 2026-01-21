@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Stream, Reel, Shop } from '../types';
+import { getShopCoverUrl } from '../utils/shopMedia';
 import { FILTERS } from '../constants';
 import { Button } from './Button';
 import { LogoBubble } from './LogoBubble';
@@ -39,9 +40,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   const showcasePool = useMemo(
     () =>
-      featuredShops.filter(
-        (shop) => (shop.coverUrl && shop.coverUrl.trim()) || shop.logoUrl
-      ),
+      featuredShops.filter((shop) => Boolean(getShopCoverUrl(shop))),
     [featuredShops]
   );
   const [showcaseShops, setShowcaseShops] = useState<Shop[]>([]);
@@ -103,6 +102,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   const hasLive = liveStreams.length > 0;
   const activeStream = hasLive ? liveStreams[currentIndex] : null;
+  const activeCover = activeStream
+    ? activeStream.coverImage || getShopCoverUrl(activeStream.shop)
+    : "";
 
   const nextSlide = () => {
       setCurrentIndex((prev) => (prev + 1) % liveStreams.length);
@@ -112,13 +114,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       setCurrentIndex((prev) => (prev - 1 + liveStreams.length) % liveStreams.length);
   };
 
-  const guardShopAccess = () => {
-    if (canClientInteract === false) {
-      onRequireLogin?.();
-      return false;
-    }
-    return true;
-  };
+  const guardShopAccess = () => true;
 
   return (
     <div className={styles.root}>
@@ -155,7 +151,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   }}
                 >
                   <img
-                    src={shop.coverUrl || shop.logoUrl}
+                    src={getShopCoverUrl(shop)}
                     alt={shop.name}
                     loading="lazy"
                     decoding="async"
@@ -183,7 +179,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               
               {/* Dynamic Background Blur */}
               <div key={activeStream.id + '-bg'} className={styles.liveBackdrop}>
-                  <img src={activeStream.coverImage} className={styles.liveBackdropImage} alt={activeStream.title} />
+                  <img src={activeCover} className={styles.liveBackdropImage} alt={activeStream.title} />
                   <div className={styles.liveBackdropOverlay}></div>
               </div>
               
@@ -205,7 +201,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       
                       {/* Video/Image Container */}
                       <div className={`${styles.liveMedia} group`} onClick={() => window.open(activeStream.url, '_blank')}>
-                          <img src={activeStream.coverImage} alt={activeStream.title} className={styles.liveMediaImage}/>
+                          <img src={activeCover} alt={activeStream.title} className={styles.liveMediaImage}/>
                           
                           <div className={styles.liveMediaOverlay}>
                               <PlayCircle size={64} className="text-white opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all drop-shadow-lg"/>

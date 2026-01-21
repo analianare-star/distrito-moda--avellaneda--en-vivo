@@ -1,6 +1,7 @@
 // StreamCard renders a live card with CTA actions and state badges.
 import React, { useState, useEffect } from 'react';
 import { Stream, StreamStatus, UserContext } from '../types';
+import { getShopCoverUrl } from '../utils/shopMedia';
 import { Button } from './Button';
 import { LogoBubble } from './LogoBubble';
 import { Instagram, Video, Flag, Clock, Heart, Share2, Check, Download, Star, MoreHorizontal, MessageCircle, UserPlus } from 'lucide-react';
@@ -50,7 +51,7 @@ export const StreamCard: React.FC<StreamCardProps> = ({
   
   // Shop Rating Display
   const shopRating = stream.shop.ratingAverage || 5.0;
-  const coverImage = stream.coverImage?.trim();
+  const coverImage = stream.coverImage?.trim() || getShopCoverUrl(stream.shop);
   const hasCoverImage = Boolean(coverImage);
 
   // --- TIME FORMATTING ---
@@ -77,6 +78,7 @@ export const StreamCard: React.FC<StreamCardProps> = ({
   };
 
   const handleShare = async () => {
+    if (blockIfGuest('Inicia sesion para compartir.')) return;
     if (navigator.share) {
         try {
             await navigator.share({
@@ -136,7 +138,6 @@ export const StreamCard: React.FC<StreamCardProps> = ({
                 className={styles.shopChip}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (blockIfGuest('Inicia sesion para ver el perfil.')) return;
                   onOpenShop();
                 }}
             >

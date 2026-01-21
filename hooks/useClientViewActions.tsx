@@ -15,8 +15,6 @@ type UseClientViewActionsArgs = {
   setSelectedReel: (reel: Reel | null) => void;
   setUser: (updater: (prev: UserContext) => UserContext) => void;
   pushHistory: (label: string) => void;
-  requireClientForRoute: (redirectPath?: string) => boolean;
-  requireLogin: () => void;
   navigateTo: (path: string, replace?: boolean) => void;
   canClientInteract: boolean;
 };
@@ -33,14 +31,11 @@ export const useClientViewActions = ({
   setSelectedReel,
   setUser,
   pushHistory,
-  requireClientForRoute,
-  requireLogin,
   navigateTo,
   canClientInteract,
 }: UseClientViewActionsArgs) => {
   const handleOpenShop = useCallback(
     (shop: Shop, options?: { navigate?: boolean }) => {
-      if (!requireClientForRoute(`/tiendas/${shop.id}`)) return;
       setShopModalTab("INFO");
       setSelectedShopForModal(shop);
       setActiveShopCardId(null);
@@ -58,7 +53,6 @@ export const useClientViewActions = ({
       isClientSession,
       navigateTo,
       pushHistory,
-      requireClientForRoute,
       setActiveShopCardId,
       setSelectedShopForModal,
       setShopModalTab,
@@ -119,7 +113,6 @@ export const useClientViewActions = ({
         onOpenShop={handleOpenShop}
         onKeyDown={handleShopCardKeyDown}
         canClientInteract={canClientInteract}
-        onRequireLogin={requireLogin}
       />
     ),
     [
@@ -127,7 +120,6 @@ export const useClientViewActions = ({
       canClientInteract,
       handleOpenShop,
       handleShopCardKeyDown,
-      requireLogin,
       toggleShopCard,
     ]
   );

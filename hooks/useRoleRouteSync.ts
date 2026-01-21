@@ -23,7 +23,6 @@ type UseRoleRouteSyncArgs = {
   isShopRoute: (path: string) => boolean;
   getShopIdFromPath: (path: string) => string | null;
   getStreamIdFromPath: (path: string) => string | null;
-  requireClientForRoute: (redirectPath?: string) => boolean;
   setAdminPreview: Dispatch<SetStateAction<{ mode: string } | null>>;
   setViewMode: (mode: "CLIENT" | "MERCHANT" | "ADMIN") => void;
   setActiveBottomNav: (id: string) => void;
@@ -48,7 +47,6 @@ export const useRoleRouteSync = ({
   isShopRoute,
   getShopIdFromPath,
   getStreamIdFromPath,
-  requireClientForRoute,
   setAdminPreview,
   setViewMode,
   setActiveBottomNav,
@@ -95,12 +93,6 @@ export const useRoleRouteSync = ({
     const shopIdFromPath = getShopIdFromPath(path);
     const streamIdFromPath = getStreamIdFromPath(path);
     if (shopIdFromPath) {
-      if (!requireClientForRoute(`/tiendas/${shopIdFromPath}`)) {
-        setSelectedShopForModal(null);
-        setActiveBottomNav("home");
-        navigateTo("/", true);
-        return;
-      }
       setActiveBottomNav("shops");
       const match = allShops.find((shop) => shop.id === shopIdFromPath);
       if (match && selectedShopId !== match.id) {
@@ -110,12 +102,6 @@ export const useRoleRouteSync = ({
       return;
     }
     if (streamIdFromPath) {
-      if (!requireClientForRoute(`/en-vivo/${streamIdFromPath}`)) {
-        setSelectedShopForModal(null);
-        setActiveBottomNav("home");
-        navigateTo("/", true);
-        return;
-      }
       setActiveBottomNav("live");
       setActiveFilter("En Vivo");
       const streamMatch = allStreams.find(
@@ -153,7 +139,6 @@ export const useRoleRouteSync = ({
     isShopRoute,
     locationPath,
     navigateTo,
-    requireClientForRoute,
     selectedShopId,
     setActiveBottomNav,
     setActiveFilter,

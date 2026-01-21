@@ -276,6 +276,8 @@ export const ClientView: React.FC<ClientViewProps> = ({
           onClose={onCloseReel}
           onNotify={onNotify}
           isSeen={user.viewedReels.includes(selectedReel.id)}
+          canClientInteract={canClientInteract}
+          onRequireLogin={onRequireLogin}
         />
       )}
     </section>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Shop, UserContext, Stream, StreamStatus } from '../types';
+import { getShopCoverUrl } from '../utils/shopMedia';
 import { Button } from './Button';
 import { ShareableCard } from './ShareableCard';
 import { LogoBubble } from './LogoBubble';
@@ -24,6 +25,7 @@ interface ShopDetailModalProps {
 export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStreams = [], user, canClientInteract, initialTab, onClose, onToggleFavorite, onRequireLogin, onNotify }) => {
   const [activeTab, setActiveTab] = useState<'INFO' | 'CARD'>(initialTab ?? 'INFO');
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const coverUrl = getShopCoverUrl(shop);
 
   useEffect(() => {
       if (initialTab) {
@@ -52,8 +54,23 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
       if (platform === 'facebook') window.open(`https://facebook.com/${value}`, '_blank');
       if (platform === 'youtube') window.open(`https://youtube.com/${value}`, '_blank');
   };
+
+  const handleSocial = (
+    platform: 'instagram' | 'tiktok' | 'facebook' | 'youtube',
+    handle?: string
+  ) => {
+    if (!canClientInteract) {
+      onRequireLogin();
+      return;
+    }
+    openSocial(platform, handle);
+  };
   
   const handleWeb = () => {
+      if (!canClientInteract) {
+          onRequireLogin();
+          return;
+      }
       if (!shop.website) return;
       const value = shop.website.trim();
       if (!value) return;
@@ -77,10 +94,10 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
         
         {/* Header */}
         <div className={styles.header}>
-            {shop.coverUrl && (
+            {coverUrl && (
                 <div
                     className={styles.headerCover}
-                    style={{ backgroundImage: `url(${shop.coverUrl})` }}
+                    style={{ backgroundImage: `url(${coverUrl})` }}
                 />
             )}
             <button 
@@ -208,17 +225,17 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                         )}
 
                         <div className={styles.linkGrid}>
-                             <Button 
+                            <Button 
                                 variant="outline" 
-                                className={`${styles.socialButton} ${shop.socialHandles.instagram ? styles.socialInstagram : styles.socialDisabled}`}
-                                onClick={() => openSocial('instagram', shop.socialHandles.instagram)}
+                                className={`${styles.socialButton} ${shop.socialHandles.instagram && canClientInteract ? styles.socialInstagram : styles.socialDisabled}`}
+                                onClick={() => handleSocial('instagram', shop.socialHandles.instagram)}
                                 disabled={!shop.socialHandles.instagram}
                             >
                                 <FaInstagram className={styles.iconInstagram} /> IG
                             </Button>
                             <Button 
                                 variant="outline" 
-                                className={`${styles.socialButton} ${shop.website ? styles.socialWeb : styles.socialDisabled}`}
+                                className={`${styles.socialButton} ${shop.website && canClientInteract ? styles.socialWeb : styles.socialDisabled}`}
                                 onClick={handleWeb}
                                 disabled={!shop.website}
                             >
@@ -226,24 +243,24 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                             </Button>
                             <Button 
                                 variant="outline" 
-                                className={`${styles.socialButton} ${shop.socialHandles.tiktok ? styles.socialTikTok : styles.socialDisabled}`}
-                                onClick={() => openSocial('tiktok', shop.socialHandles.tiktok)}
+                                className={`${styles.socialButton} ${shop.socialHandles.tiktok && canClientInteract ? styles.socialTikTok : styles.socialDisabled}`}
+                                onClick={() => handleSocial('tiktok', shop.socialHandles.tiktok)}
                                 disabled={!shop.socialHandles.tiktok}
                             >
                                 <FaTiktok className={styles.iconTikTok} /> TikTok
                             </Button>
                             <Button 
                                 variant="outline" 
-                                className={`${styles.socialButton} ${shop.socialHandles.facebook ? styles.socialFacebook : styles.socialDisabled}`}
-                                onClick={() => openSocial('facebook', shop.socialHandles.facebook)}
+                                className={`${styles.socialButton} ${shop.socialHandles.facebook && canClientInteract ? styles.socialFacebook : styles.socialDisabled}`}
+                                onClick={() => handleSocial('facebook', shop.socialHandles.facebook)}
                                 disabled={!shop.socialHandles.facebook}
                             >
                                 <FaFacebookF className={styles.iconFacebook} /> Facebook
                             </Button>
                             <Button 
                                 variant="outline" 
-                                className={`${styles.socialButton} ${shop.socialHandles.youtube ? styles.socialYoutube : styles.socialDisabled}`}
-                                onClick={() => openSocial('youtube', shop.socialHandles.youtube)}
+                                className={`${styles.socialButton} ${shop.socialHandles.youtube && canClientInteract ? styles.socialYoutube : styles.socialDisabled}`}
+                                onClick={() => handleSocial('youtube', shop.socialHandles.youtube)}
                                 disabled={!shop.socialHandles.youtube}
                             >
                                 <FaYoutube className={styles.iconYoutube} /> YouTube

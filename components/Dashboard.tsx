@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './Button';
+import { getShopCoverUrl } from '../utils/shopMedia';
 import { Plus, X, Instagram, Facebook, Video, AlertOctagon, Check, Save, Lock, RefreshCw, Pencil, Trash2, Star, History, LayoutDashboard, Store, Radio, Globe, Phone, MapPin, ExternalLink, User, CreditCard, DollarSign, ShoppingCart, AlertTriangle, Info, ArrowUpCircle, Film } from 'lucide-react';
 import { StreamStatus, Shop, SocialHandles, Stream, SocialPlatform, WhatsappLine, WhatsappLabel, Reel, NotificationItem } from '../types';
 import { PLANES_URL } from '../constants';
@@ -515,7 +516,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           const ok = await onStreamUpdate({ ...editingStream, ...streamData }); 
           if (!ok) return;
       } else { 
-          const ok = await onStreamCreate({ id: `new-${Date.now()}`, shop: currentShop, shopId: currentShop.id, coverImage: currentShop.coverUrl || currentShop.logoUrl, status: StreamStatus.UPCOMING, views: 0, reportCount: 0, isVisible: true, likes: 0, extensionCount: 0, ...streamData });
+          const ok = await onStreamCreate({ id: `new-${Date.now()}`, shop: currentShop, shopId: currentShop.id, coverImage: getShopCoverUrl(currentShop), status: StreamStatus.UPCOMING, views: 0, reportCount: 0, isVisible: true, likes: 0, extensionCount: 0, ...streamData });
           if (!ok) return;
       }
       setShowCreateModal(false);

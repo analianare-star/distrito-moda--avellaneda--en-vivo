@@ -13,9 +13,20 @@ interface StoryModalProps {
     onClose: () => void;
     onNotify?: (title: string, message: string, tone?: 'info' | 'success' | 'warning' | 'error') => void;
     isSeen?: boolean;
+    canClientInteract?: boolean;
+    onRequireLogin?: () => void;
 }
 
-export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate, onClose, onNotify, isSeen }) => {
+export const StoryModal: React.FC<StoryModalProps> = ({
+    reel,
+    reels,
+    onNavigate,
+    onClose,
+    onNotify,
+    isSeen,
+    canClientInteract,
+    onRequireLogin,
+}) => {
     
     // Calculate time left
     const now = new Date();
@@ -33,7 +44,16 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
     const reelIndex = Math.max(0, reels.findIndex((item) => item.id === reel.id));
     const totalReels = reels.length;
 
+    const guardClientAction = () => {
+        if (canClientInteract === false) {
+            onRequireLogin?.();
+            return false;
+        }
+        return true;
+    };
+
     const handleOpenExternal = () => {
+        if (!guardClientAction()) return;
         window.open(reel.url, '_blank');
     };
 
@@ -43,6 +63,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
     };
 
     const handleOpenCatalog = () => {
+        if (!guardClientAction()) return;
         if (!catalogUrl) {
             onNotify?.('Catálogo no disponible', 'Esta tienda aún no cargó su catálogo.', 'warning');
             return;
@@ -51,6 +72,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
     };
 
     const handleShare = async () => {
+        if (!guardClientAction()) return;
         if (navigator.share) {
             try {
                 await navigator.share({
@@ -218,6 +240,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({ reel, reels, onNavigate,
                         </button>
                         <button
                             onClick={() => {
+                                if (!guardClientAction()) return;
                                 setLiked((prev) => !prev);
                                 onNotify?.('Me gusta', 'Sumamos tu reacción a esta historia.', 'success');
                             }}
