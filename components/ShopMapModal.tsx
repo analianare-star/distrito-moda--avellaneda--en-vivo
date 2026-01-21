@@ -8,6 +8,8 @@ interface ShopMapModalProps {
   onClose: () => void;
   focusName?: string;
   focusKeys?: string[];
+  focusLat?: number;
+  focusLng?: number;
 }
 
 type RawShop = Record<string, unknown>;
@@ -15,6 +17,7 @@ type RawShop = Record<string, unknown>;
 type MapShop = {
   uid: string;
   name: string;
+  email?: string;
   logoUrl: string | null;
   catalogUrl: string | null;
   address: string | null;
@@ -24,8 +27,6 @@ type MapShop = {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const MAP_API_URL = `${API_URL}/shops/map-data`;
-const API_URL = import.meta.env.VITE_API_URL;
-const MAP_API_URL = API_URL ? `${API_URL}/shops/map-data` : DATA_URL;
 const DEFAULT_CENTER: [number, number] = [-34.6275057, -58.4752695];
 const DEFAULT_ZOOM = 15;
 const FOCUS_ZOOM = 16;
@@ -67,6 +68,7 @@ const toMapShop = (row: RawShop): MapShop | null => {
   const lng = parseNumber(row['lng']);
   if (lat === null || lng === null) return null;
   const name = String(row['Nombre completo'] || row['Usuario'] || 'Tienda').trim();
+  const email = String(row['Mail'] || row['mail'] || '').trim();
   const logoUrl = String(row['Logo_URL'] || row['logourl'] || row['logoUrl'] || '').trim();
   const catalogUrl = String(row['url_catalogo'] || '').trim();
   const uid = String(row['Uid'] || row['UID'] || row['uid'] || '').trim();
@@ -82,6 +84,7 @@ const toMapShop = (row: RawShop): MapShop | null => {
   return {
     uid,
     name,
+    email: email || undefined,
     logoUrl: logoUrl || null,
     catalogUrl: catalogUrl || null,
     address,
@@ -211,6 +214,8 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({
   onClose,
   focusName,
   focusKeys,
+  focusLat,
+  focusLng,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -220,7 +225,11 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mapReady, setMapReady] = useState(false);
-  const focusSignature = (focusKeys && focusKeys.length > 0 ? focusKeys.join('|') : focusName || '');
+  const focusSignature = [
+    focusKeys && focusKeys.length > 0 ? focusKeys.join('|') : focusName || '',
+    focusLat ?? '',
+    focusLng ?? '',
+  ].join('|');
 
   useEffect(() => {
     if (!open || !mapContainerRef.current) return undefined;
@@ -332,8 +341,10 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({
               normalizedKeys.some((key) => {
                 const nameKey = normalizeValue(shop.name || '');
                 const uidKey = normalizeValue(shop.uid || '');
+                const emailKey = normalizeValue(shop.email || '');
                 const isExactMatch = nameKey === key || (uidKey && uidKey === key);
                 if (isExactMatch) return true;
+                if (emailKey && emailKey === key) return true;
                 if (key.length < 4) return false;
                 return (
                   (nameKey && nameKey.includes(key)) ||
@@ -342,18 +353,36 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({
               })
             )
           : null;
+        const focusFallback =
+          parseNumber(focusLat) !== null &&
+          parseNumber(focusLng) !== null
+            ? {
+                uid: normalizedKeys[0] || 'focus',
+                name: focusName || 'Tienda seleccionada',
+                email: undefined,
+                logoUrl: null,
+                catalogUrl: null,
+                address: null,
+                lat: parseNumber(focusLat)!,
+                lng: parseNumber(focusLng)!,
+              }
+            : null;
+        const resolvedFocus = focusShop || focusFallback;
 
         const shopsInRadius = shops.filter(
           (shop) => distanceMeters(shop.lat, shop.lng, DEFAULT_CENTER) <= MAX_RADIUS_METERS
         );
-        if (focusShop) {
-          const focusId = focusShop.uid || normalizeValue(focusShop.name);
+        if (resolvedFocus) {
+          const focusId = resolvedFocus.uid || normalizeValue(resolvedFocus.name);
           const alreadyIncluded = shopsInRadius.some(
             (shop) => (shop.uid || normalizeValue(shop.name)) === focusId
           );
           if (!alreadyIncluded) {
-            shopsInRadius.push(focusShop);
+            shopsInRadius.push(resolvedFocus);
           }
+        }
+        if (shopsInRadius.length === 0 && shops.length > 0) {
+          shopsInRadius.push(...shops);
         }
 
         let focusMarker: L.Marker | null = null;
@@ -367,7 +396,7 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({
           const visibleShops = shopsInRadius;
 
           if (gridSize > 0) {
-            let clusters = buildClusters(visibleShops, gridSize, focusShop);
+            let clusters = buildClusters(visibleShops, gridSize, resolvedFocus);
             clusters.sort((a, b) => b.count - a.count);
 
             if (maxClusters && clusters.length > maxClusters) {
@@ -396,9 +425,9 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({
           } else {
             visibleShops.forEach((shop) => {
               const isFocus =
-                Boolean(focusShop) &&
-                ((focusShop?.uid && shop.uid === focusShop.uid) ||
-                  normalizeValue(shop.name) === normalizeValue(focusShop?.name || ''));
+                Boolean(resolvedFocus) &&
+                ((resolvedFocus?.uid && shop.uid === resolvedFocus.uid) ||
+                  normalizeValue(shop.name) === normalizeValue(resolvedFocus?.name || ''));
               const icon = L.divIcon({
                 html: buildIconHtml(shop, isFocus),
                 className: styles.markerWrapper,
@@ -418,8 +447,8 @@ export const ShopMapModal: React.FC<ShopMapModalProps> = ({
         mapInstance.on('zoomend moveend', updateMarkers);
 
         mapInstance.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-        if (focusShop) {
-          const target: [number, number] = [focusShop.lat, focusShop.lng];
+        if (resolvedFocus) {
+          const target: [number, number] = [resolvedFocus.lat, resolvedFocus.lng];
           zoomTimerRef.current = window.setTimeout(() => {
             mapRef.current?.flyTo(target, FOCUS_ZOOM, { duration: 1.2 });
             focusMarker?.openPopup();

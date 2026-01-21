@@ -16,6 +16,7 @@ interface AdminViewProps {
   onPreviewClient: () => void;
   onPreviewShop: (shopId: string) => void;
   onShopUpdate: (shop: Shop) => Promise<boolean>;
+  adminRole?: "SUPERADMIN" | "MODERATOR";
 }
 
 export const AdminView: React.FC<AdminViewProps> = ({
@@ -29,6 +30,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
   onPreviewClient,
   onPreviewShop,
   onShopUpdate,
+  adminRole,
 }) => {
   return (
     <section aria-label="Panel de administracion">
@@ -48,6 +50,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               onPreviewClient={onPreviewClient}
               onPreviewShop={onPreviewShop}
               onShopUpdate={onShopUpdate}
+              adminRole={adminRole}
             />
           }
         />
@@ -66,6 +69,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               onPreviewClient={onPreviewClient}
               onPreviewShop={onPreviewShop}
               onShopUpdate={onShopUpdate}
+              adminRole={adminRole}
             />
           }
         />
@@ -84,6 +88,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               onPreviewClient={onPreviewClient}
               onPreviewShop={onPreviewShop}
               onShopUpdate={onShopUpdate}
+              adminRole={adminRole}
             />
           }
         />
@@ -102,6 +107,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               onPreviewClient={onPreviewClient}
               onPreviewShop={onPreviewShop}
               onShopUpdate={onShopUpdate}
+              adminRole={adminRole}
             />
           }
         />
@@ -120,6 +126,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               onPreviewClient={onPreviewClient}
               onPreviewShop={onPreviewShop}
               onShopUpdate={onShopUpdate}
+              adminRole={adminRole}
             />
           }
         />
@@ -138,6 +145,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               onPreviewClient={onPreviewClient}
               onPreviewShop={onPreviewShop}
               onShopUpdate={onShopUpdate}
+              adminRole={adminRole}
             />
           }
         />
@@ -156,6 +164,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               onPreviewClient={onPreviewClient}
               onPreviewShop={onPreviewShop}
               onShopUpdate={onShopUpdate}
+              adminRole={adminRole}
             />
           }
         />

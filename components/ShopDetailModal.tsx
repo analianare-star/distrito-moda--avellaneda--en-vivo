@@ -293,10 +293,14 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
         open={isMapOpen}
         onClose={() => setIsMapOpen(false)}
         focusName={shop.name}
+        focusLat={shop.addressDetails?.lat}
+        focusLng={shop.addressDetails?.lng}
         focusKeys={[
           shop.name,
+          shop.email,
           shop.razonSocial,
           shop.cuit,
+          shop.id,
           shop.addressDetails?.legacyUser,
           shop.addressDetails?.legacyUid,
         ].filter(Boolean) as string[]}

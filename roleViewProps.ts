@@ -21,6 +21,7 @@ type AdminViewArgs = {
   onPreviewClient: () => void;
   onPreviewShop: (shopId: string) => void;
   onShopUpdate: (shop: Shop) => Promise<boolean>;
+  adminRole?: "SUPERADMIN" | "MODERATOR";
 };
 
 export const buildAdminViewProps = (args: AdminViewArgs): AdminViewProps => ({
@@ -34,6 +35,7 @@ export const buildAdminViewProps = (args: AdminViewArgs): AdminViewProps => ({
   onPreviewClient: args.onPreviewClient,
   onPreviewShop: args.onPreviewShop,
   onShopUpdate: args.onShopUpdate,
+  adminRole: args.adminRole,
 });
 
 type MerchantViewArgs = {

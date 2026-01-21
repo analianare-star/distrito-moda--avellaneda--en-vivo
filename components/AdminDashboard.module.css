@@ -406,12 +406,24 @@
   @apply flex gap-2;
 }
 
+.adminActionDisabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
 .adminActionReject {
   @apply text-[10px] px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50;
 }
 
 .adminActionApprove {
   @apply text-[10px] px-2 py-1 rounded border border-green-200 text-green-600 hover:bg-green-50;
+}
+
+.adminFormDisabled {
+  @apply opacity-60 pointer-events-none;
+}
+
+.adminToggleDisabled {
+  @apply opacity-60 cursor-not-allowed;
 }
 
 .adminForm {
@@ -966,6 +978,42 @@
   @apply p-8 space-y-8 overflow-y-auto no-scrollbar;
 }
 
+.createModalSteps {
+  @apply flex flex-wrap gap-2;
+}
+
+.createModalStep {
+  @apply flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-gray-400 font-bold transition-all;
+}
+
+.createModalStepActive {
+  @apply border-dm-crimson text-dm-crimson bg-dm-crimson/10;
+}
+
+.createModalStepDone {
+  @apply border-emerald-200 text-emerald-600 bg-emerald-50;
+}
+
+.createModalStepIndex {
+  @apply inline-flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-semibold;
+}
+
+.createModalStepLabel {
+  @apply whitespace-nowrap;
+}
+
+.createModalErrorBox {
+  @apply rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[11px] text-red-600;
+}
+
+.createModalErrorTitle {
+  @apply font-bold uppercase text-[10px] tracking-[0.18em] text-red-500 mb-2;
+}
+
+.createModalErrorList {
+  @apply list-disc pl-4 space-y-1;
+}
+
 .createModalSection {
   @apply space-y-4;
 }
@@ -1016,6 +1064,14 @@
 
 .createModalFooter {
   @apply flex justify-end gap-3 pt-2;
+}
+
+.createModalFooterActions {
+  @apply flex items-center gap-3 flex-1 justify-end;
+}
+
+.createModalBack {
+  @apply h-14 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 px-6;
 }
 
 .createModalDivider {

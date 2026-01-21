@@ -24,6 +24,7 @@ interface AdminDashboardProps {
     onPreviewClient: () => void;
     onPreviewShop: (shopId: string) => void;
     onShopUpdate: (shop: Shop) => Promise<boolean>;
+    adminRole?: 'SUPERADMIN' | 'MODERATOR';
 }
 
 const PAYMENT_OPTIONS = ['Efectivo', 'Transferencia', 'Depósito', 'USDT', 'Cheque', 'Mercado Pago'];
@@ -39,6 +40,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onPreviewClient,
   onPreviewShop,
   onShopUpdate,
+  adminRole,
 }) => {
   const [reels, setReels] = useState<Reel[]>([]);
   const [reports, setReports] = useState<any[]>([]);
@@ -51,6 +53,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [notificationFilter, setNotificationFilter] = useState<'ALL' | 'UNREAD'>('UNREAD');
   const [notificationType, setNotificationType] = useState<'ALL' | 'SYSTEM' | 'REMINDER' | 'PURCHASE'>('ALL');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const createStepLabels = [
+      'Identidad & Legal',
+      'Direccion',
+      'Condiciones',
+      'Redes',
+      'Cuenta',
+      'Recursos',
+  ];
+  const [createStep, setCreateStep] = useState(0);
+  const [createErrors, setCreateErrors] = useState<string[]>([]);
   const [agendaQuery, setAgendaQuery] = useState('');
   const [agendaStatus, setAgendaStatus] = useState<'ALL' | StreamStatus>('ALL');
   const [shopFilter, setShopFilter] = useState<'ALL' | 'PENDING_VERIFICATION' | 'ACTIVE' | 'AGENDA_SUSPENDED' | 'HIDDEN' | 'BANNED'>('ALL');
@@ -149,6 +161,115 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       streamQuota: 0,
       reelQuota: 0
   });
+  const isSuperadmin = adminRole !== 'MODERATOR';
+  const adminRoleLabel = adminRole === 'MODERATOR' ? 'Moderador' : 'Superadmin';
+
+  const resetCreateForm = () => {
+      setFormData({
+          name: '',
+          razonSocial: '',
+          cuit: '',
+          street: '',
+          number: '',
+          city: '',
+          province: '',
+          zip: '',
+          minimumPurchase: 0,
+          paymentMethods: [],
+          email: '',
+          password: '',
+          plan: 'BASIC',
+          status: 'PENDING_VERIFICATION',
+          logoUrl: '',
+          coverUrl: '',
+          website: '',
+          catalogUrl: '',
+          phone: '',
+          instagram: '',
+          tiktok: '',
+          facebook: '',
+          youtube: '',
+          mapsUrl: '',
+          lat: '',
+          lng: '',
+          imageUrl: '',
+          storeImageUrl: '',
+          legacyUid: '',
+          legacyUserType: '',
+          legacyUser: '',
+          contactName: '',
+          streamQuota: 0,
+          reelQuota: 0,
+      });
+      setCreateStep(0);
+      setCreateErrors([]);
+  };
+
+  const validateCreateStep = (step: number) => {
+      const errors: string[] = [];
+      if (step === 0) {
+          if (!formData.name.trim()) errors.push('Nombre de Fantasia');
+          if (!formData.razonSocial.trim()) errors.push('Razon Social');
+          if (!formData.cuit.trim()) errors.push('CUIT');
+      }
+      if (step === 1) {
+          if (!formData.street.trim()) errors.push('Calle');
+          if (!formData.number.trim()) errors.push('Numero');
+          if (!formData.city.trim()) errors.push('Ciudad');
+          if (!formData.province.trim()) errors.push('Provincia');
+          if (!formData.zip.trim()) errors.push('Codigo postal');
+      }
+      if (step === 2) {
+          if (formData.minimumPurchase < 0) errors.push('Monto minimo');
+          if (formData.paymentMethods.length === 0) errors.push('Formas de pago');
+      }
+      if (step === 4) {
+          if (!formData.email.trim()) errors.push('Email administrativo');
+          if (!formData.password.trim()) errors.push('Contrasena inicial');
+          if (!formData.plan) errors.push('Plan');
+      }
+      return errors;
+  };
+
+  const validateCreateForm = () => {
+      let firstErrorStep = -1;
+      const allErrors: string[] = [];
+      createStepLabels.forEach((_, step) => {
+          const stepErrors = validateCreateStep(step);
+          if (stepErrors.length > 0 && firstErrorStep === -1) {
+              firstErrorStep = step;
+          }
+          allErrors.push(...stepErrors.map((value) => `Paso ${step + 1}: ${value}`));
+      });
+      return { allErrors, firstErrorStep };
+  };
+
+  const goToNextCreateStep = () => {
+      const errors = validateCreateStep(createStep);
+      if (errors.length) {
+          setCreateErrors(errors);
+          return;
+      }
+      setCreateErrors([]);
+      setCreateStep((step) => Math.min(step + 1, createStepLabels.length - 1));
+  };
+
+  const goToPrevCreateStep = () => {
+      setCreateErrors([]);
+      setCreateStep((step) => Math.max(step - 1, 0));
+  };
+
+  const openCreateModal = () => {
+      setIsCreateModalOpen(true);
+      setCreateStep(0);
+      setCreateErrors([]);
+  };
+
+  const closeCreateModal = () => {
+      setIsCreateModalOpen(false);
+      setCreateErrors([]);
+      setCreateStep(0);
+  };
 
   useEffect(() => {
       const needsReels = activeTab === 'REELS' || activeTab === 'DASHBOARD';
@@ -586,12 +707,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleCreateShop = async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!formData.name || !formData.razonSocial || !formData.email || !formData.password) {
+      const { allErrors, firstErrorStep } = validateCreateForm();
+      if (allErrors.length > 0) {
           setNotice({
               title: 'Campos obligatorios',
-              message: 'Completa Nombre, Razón Social, Email y Contraseña.',
+              message: 'Completa los campos requeridos para continuar.',
               tone: 'warning',
           });
+          setCreateErrors(allErrors);
+          if (firstErrorStep >= 0) {
+              setCreateStep(firstErrorStep);
+          }
           return;
       }
 
@@ -626,11 +752,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           ? [{ label: 'Ventas por mayor', number: formData.phone }]
           : [];
 
+      const addressLine = [formData.street, formData.number].filter(Boolean).join(' ');
+      const fullAddress = [addressLine, formData.city, formData.province, formData.zip]
+          .filter(Boolean)
+          .join(', ');
       const payload = {
           name: formData.name,
           razonSocial: formData.razonSocial,
           cuit: formData.cuit,
-          address: `${formData.street} ${formData.number}, ${formData.city}`,
+          address: fullAddress,
           addressDetails,
           minimumPurchase: formData.minimumPurchase,
           paymentMethods: formData.paymentMethods,
@@ -657,43 +787,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               tone: 'success',
           });
           setIsCreateModalOpen(false);
-          // Reset
-          setFormData({
-              name: '',
-              razonSocial: '',
-              cuit: '',
-              street: '',
-              number: '',
-              city: '',
-              province: '',
-              zip: '',
-              minimumPurchase: 0,
-              paymentMethods: [],
-              email: '',
-              password: '',
-              plan: 'BASIC',
-              status: 'PENDING_VERIFICATION',
-              logoUrl: '',
-              coverUrl: '',
-              website: '',
-              catalogUrl: '',
-              phone: '',
-              instagram: '',
-              tiktok: '',
-              facebook: '',
-              youtube: '',
-              mapsUrl: '',
-              lat: '',
-              lng: '',
-              imageUrl: '',
-              storeImageUrl: '',
-              legacyUid: '',
-              legacyUserType: '',
-              legacyUser: '',
-              contactName: '',
-              streamQuota: 0,
-              reelQuota: 0
-          });
+          resetCreateForm();
           onRefreshData();
       }
   };
@@ -768,6 +862,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleAssignQuota = async (e: React.FormEvent) => {
       e.preventDefault();
+      if (!isSuperadmin) {
+          setNotice({
+              title: 'Acceso restringido',
+              message: 'Solo un SUPERADMIN puede asignar cupos manuales.',
+              tone: 'warning',
+          });
+          return;
+      }
       if (!quotaShopId) {
           setNotice({
               title: 'Selecciona una tienda',
@@ -810,6 +912,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const handleApprovePurchase = async (purchaseId: string) => {
+      if (!isSuperadmin) {
+          setNotice({
+              title: 'Acceso restringido',
+              message: 'Solo un SUPERADMIN puede aprobar compras.',
+              tone: 'warning',
+          });
+          return;
+      }
       try {
           await api.approvePurchase(purchaseId);
           setNotice({
@@ -830,6 +940,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const handleRejectPurchase = async (purchaseId: string) => {
+      if (!isSuperadmin) {
+          setNotice({
+              title: 'Acceso restringido',
+              message: 'Solo un SUPERADMIN puede rechazar compras.',
+              tone: 'warning',
+          });
+          return;
+      }
       setInputDialog({
           title: 'Rechazar compra',
           message: 'Ingresa el motivo del rechazo (opcional).',
@@ -896,7 +1014,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       <header className={styles.header}>
         <div className={styles.headerInner}>
             <h1 className={styles.headerTitle}>Panel de Control ADMIN</h1>
-            <span className={styles.headerBadge}>Superadmin</span>
+            <span className={styles.headerBadge}>{adminRoleLabel}</span>
         </div>
       </header>
 
@@ -1616,7 +1734,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             >
                                 Pendientes ({pendingShops.length})
                             </button>
-                            <Button onClick={() => setIsCreateModalOpen(true)} className={styles.adminPrimaryButton}>
+                            <Button onClick={openCreateModal} className={styles.adminPrimaryButton}>
                                 <Plus size={18} className={styles.buttonIcon} /> Nueva Tienda
                             </Button>
                             <Button
@@ -1953,6 +2071,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <h3 className={styles.adminCardTitle}>Solicitudes de Compra</h3>
                             </div>
                             <p className={styles.adminCardSubtitle}>Bandeja de solicitudes pendientes (PENDING).</p>
+                            {!isSuperadmin && (
+                                <p className={styles.adminCardSubtitle}>Solo SUPERADMIN puede aprobar o rechazar compras.</p>
+                            )}
                             <div className={styles.adminCardStack}>
                                 <input
                                     type="text"
@@ -2012,13 +2133,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 <div className={styles.adminRequestActions}>
                                                     <button
                                                         onClick={() => handleRejectPurchase(req.purchaseId)}
-                                                        className={styles.adminActionReject}
+                                                        className={`${styles.adminActionReject} ${!isSuperadmin ? styles.adminActionDisabled : ''}`}
+                                                        disabled={!isSuperadmin}
+                                                        title={!isSuperadmin ? 'Solo SUPERADMIN' : 'Rechazar'}
                                                     >
                                                         Rechazar
                                                     </button>
                                                     <button
                                                         onClick={() => handleApprovePurchase(req.purchaseId)}
-                                                        className={styles.adminActionApprove}
+                                                        className={`${styles.adminActionApprove} ${!isSuperadmin ? styles.adminActionDisabled : ''}`}
+                                                        disabled={!isSuperadmin}
+                                                        title={!isSuperadmin ? 'Solo SUPERADMIN' : 'Aprobar'}
                                                     >
                                                         Aprobar
                                                     </button>
@@ -2032,11 +2157,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <div className={styles.adminCard}>
                             <h3 className={styles.adminCardTitle}>Asignación Manual de Cupos</h3>
                             <p className={styles.adminCardSubtitle}>Compensación manual (solo Superadmin).</p>
-                            <form onSubmit={handleAssignQuota} className={styles.adminForm}>
+                            {!isSuperadmin && (
+                                <p className={styles.adminCardSubtitle}>Solo SUPERADMIN puede asignar cupos manuales.</p>
+                            )}
+                            <form
+                                onSubmit={handleAssignQuota}
+                                className={`${styles.adminForm} ${!isSuperadmin ? styles.adminFormDisabled : ''}`}
+                            >
                                 <select
                                     value={quotaShopId}
                                     onChange={(e) => setQuotaShopId(e.target.value)}
                                     className={styles.adminInput}
+                                    disabled={!isSuperadmin}
                                 >
                                     <option value="">Seleccionar tienda...</option>
                                     {shops.map(shop => (
@@ -2047,6 +2179,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     value={quotaType}
                                     onChange={(e) => setQuotaType(e.target.value as any)}
                                     className={styles.adminInput}
+                                    disabled={!isSuperadmin}
                                 >
                                     <option value="STREAM">Vivos</option>
                                     <option value="REEL">Reels</option>
@@ -2057,8 +2190,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     onChange={(e) => setQuotaAmount(parseInt(e.target.value || '0', 10))}
                                     className={styles.adminInput}
                                     min={1}
+                                    disabled={!isSuperadmin}
                                 />
-                                <Button type="submit" className={styles.adminActionButton}>Asignar Cupos</Button>
+                                <Button
+                                    type="submit"
+                                    className={styles.adminActionButton}
+                                    disabled={!isSuperadmin}
+                                >
+                                    Asignar Cupos
+                                </Button>
                             </form>
                         </div>
                     </div>
@@ -2068,12 +2208,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <h3 className={styles.adminCardTitle}>Actuar como Distrito Moda</h3>
                                 <p className={styles.adminCardSubtitle}>Publicar vivos y reels oficiales destacados.</p>
                             </div>
-                            <label className={styles.adminToggleLabel}>
+                            <label className={`${styles.adminToggleLabel} ${!isSuperadmin ? styles.adminToggleDisabled : ''}`}>
                                 <input
                                     type="checkbox"
                                     checked={officialMode}
                                     onChange={() => setOfficialMode(!officialMode)}
                                     className={styles.adminToggleInput}
+                                    disabled={!isSuperadmin}
                                 />
                                 Modo Oficial
                             </label>
@@ -2273,18 +2414,47 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <div>
                             <h2 className={styles.createModalHeaderTitle}>Alta de Nueva Tienda</h2>
                             <p className={styles.createModalHeaderSubtitle}>Registro Administrativo</p>
-                            <p className={styles.createModalHeaderMeta}>Estado inicial: {formData.status}</p>
+                            <p className={styles.createModalHeaderMeta}>
+                              Paso {createStep + 1} de {createStepLabels.length} · Estado inicial: {formData.status}
+                            </p>
                         </div>
                       </div>
-                      <button onClick={() => setIsCreateModalOpen(false)} className={styles.createModalClose}>
+                      <button onClick={closeCreateModal} className={styles.createModalClose}>
                           <X size={24} />
                       </button>
                   </div>
 
                   {/* Modal Body / Form */}
                   <form onSubmit={handleCreateShop} className={styles.createModalForm}>
+                      <div className={styles.createModalSteps}>
+                          {createStepLabels.map((label, index) => {
+                              const isActive = index === createStep;
+                              const isDone = index < createStep;
+                              return (
+                                  <div
+                                      key={label}
+                                      className={`${styles.createModalStep} ${isActive ? styles.createModalStepActive : ''} ${isDone ? styles.createModalStepDone : ''}`}
+                                  >
+                                      <span className={styles.createModalStepIndex}>{index + 1}</span>
+                                      <span className={styles.createModalStepLabel}>{label}</span>
+                                  </div>
+                              );
+                          })}
+                      </div>
+
+                      {createErrors.length > 0 && (
+                          <div className={styles.createModalErrorBox}>
+                              <p className={styles.createModalErrorTitle}>Revisa estos campos:</p>
+                              <ul className={styles.createModalErrorList}>
+                                  {createErrors.map((error) => (
+                                      <li key={error}>{error}</li>
+                                  ))}
+                              </ul>
+                          </div>
+                      )}
                       
                       {/* Section 1: Identidad & Legal */}
+                      {createStep === 0 && (
                       <section className={styles.createModalSection}>
                           <h3 className={styles.createModalSectionTitle}>
                               <Store size={16} className={styles.adminSectionIcon} /> 1. Identidad & Legal
@@ -2359,8 +2529,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               </div>
                           </div>
                       </section>
+                      )}
 
                       {/* Section 2: Dirección Física */}
+                      {createStep === 1 && (
                       <section className={styles.createModalSection}>
                           <h3 className={styles.createModalSectionTitle}>
                               <MapPin size={16} className={styles.adminSectionIcon} /> 2. Dirección Física
@@ -2446,8 +2618,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                </div>
                           </div>
                       </section>
+                      )}
 
                       {/* Section 3: Condiciones de Venta */}
+                      {createStep === 2 && (
                       <section className={styles.createModalSection}>
                           <h3 className={styles.createModalSectionTitle}>
                               <CreditCard size={16} className={styles.adminSectionIcon} /> 3. Condiciones de Venta
@@ -2504,8 +2678,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               </div>
                           </div>
                       </section>
+                      )}
 
                       {/* Section 4: Redes y enlaces */}
+                      {createStep === 3 && (
                       <section className={styles.createModalSection}>
                           <h3 className={styles.createModalSectionTitle}>
                               <Globe size={16} className={styles.adminSectionIcon} /> 4. Redes y enlaces
@@ -2553,8 +2729,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               </div>
                           </div>
                       </section>
+                      )}
 
                       {/* Section 5: Contacto Administrativo & Cuenta */}
+                      {createStep === 4 && (
                       <section className={styles.createModalSection}>
                           <h3 className={styles.createModalSectionTitle}>
                               <User size={16} className={styles.adminSectionIcon} /> 5. Contacto & Cuenta
@@ -2596,11 +2774,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                       value={formData.plan}
                                       onChange={(e) => setFormData({...formData, plan: e.target.value as any})}
                                       className={`${styles.createModalSelect} font-bold text-dm-dark bg-gray-50`}
+                                      disabled={!isSuperadmin}
                                   >
                                       <option value="BASIC">ESTANDAR (BASIC)</option>
                                       <option value="PREMIUM">ALTA VISIBILIDAD (PREMIUM)</option>
                                       <option value="PRO">MAXIMA VISIBILIDAD (PRO)</option>
                                   </select>
+                                  {!isSuperadmin && (
+                                      <p className={styles.createModalHelper}>Solo SUPERADMIN puede modificar el plan.</p>
+                                  )}
                               </div>
                               <div>
                                   <label className={styles.createModalLabel}>Estado inicial</label>
@@ -2615,8 +2797,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               </div>
                           </div>
                       </section>
+                      )}
 
                       {/* Section 6: Configuración Técnica (Oculta/Dashboard) */}
+                      {createStep === 5 && (
                       <section className={styles.createModalDivider}>
                           <h3 className={styles.createModalDividerTitle}>
                               Configuración de Cuotas Iniciales
@@ -2683,6 +2867,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                </div>
                           </div>
                       </section>
+                      )}
 
                       {/* Form Actions */}
                       <div className={styles.createModalFooter}>
@@ -2690,16 +2875,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             type="button"
                             variant="outline"
                             className={styles.createModalCancel}
-                            onClick={() => setIsCreateModalOpen(false)}
+                            onClick={closeCreateModal}
                           >
                               Cancelar
                           </Button>
-                          <Button 
-                              type="submit" 
-                              className={styles.createModalSubmit}
-                          >
-                              <Save size={20} className={styles.buttonIcon} /> Dar de Alta Tienda
-                          </Button>
+                          <div className={styles.createModalFooterActions}>
+                              {createStep > 0 && (
+                                  <Button
+                                      type="button"
+                                      variant="outline"
+                                      className={styles.createModalBack}
+                                      onClick={goToPrevCreateStep}
+                                  >
+                                      Volver
+                                  </Button>
+                              )}
+                              {createStep < createStepLabels.length - 1 ? (
+                                  <Button
+                                      type="button"
+                                      className={styles.createModalSubmit}
+                                      onClick={goToNextCreateStep}
+                                  >
+                                      Siguiente
+                                  </Button>
+                              ) : (
+                                  <Button type="submit" className={styles.createModalSubmit}>
+                                      <Save size={20} className={styles.buttonIcon} /> Dar de Alta Tienda
+                                  </Button>
+                              )}
+                          </div>
                       </div>
                   </form>
               </div>

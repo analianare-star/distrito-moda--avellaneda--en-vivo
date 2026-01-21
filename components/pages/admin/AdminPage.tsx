@@ -16,6 +16,7 @@ interface AdminPageProps {
   onPreviewClient: () => void;
   onPreviewShop: (shopId: string) => void;
   onShopUpdate: (shop: Shop) => Promise<boolean>;
+  adminRole?: "SUPERADMIN" | "MODERATOR";
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({
@@ -30,6 +31,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   onPreviewClient,
   onPreviewShop,
   onShopUpdate,
+  adminRole,
 }) => {
   useEffect(() => {
     if (activeTab !== tab) {
@@ -49,6 +51,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
       onPreviewClient={onPreviewClient}
       onPreviewShop={onPreviewShop}
       onShopUpdate={onShopUpdate}
+      adminRole={adminRole}
     />
   );
 };

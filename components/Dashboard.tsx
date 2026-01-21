@@ -316,9 +316,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   // --- HELPERS ---
-  const isProfileLocked = !adminOverride;
-  const guardProfileEdit = () => {
-      if (!isProfileLocked) return false;
+  const isSensitiveLocked = !adminOverride;
+  const isCommercialLocked = isPreview && !adminOverride;
+  const isProfileLocked = isSensitiveLocked;
+  const guardSensitiveEdit = () => {
+      if (!isSensitiveLocked) return false;
       setNotice({
           title: 'Edicion restringida',
           message: 'Estos datos son validados por administracion. Contacta soporte para cambios.',
@@ -326,12 +328,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
       });
       return true;
   };
-  const handleInputChange = (field: keyof Shop, value: any) => {
-      if (isProfileLocked) return;
+  const guardCommercialEdit = () => {
+      if (!isCommercialLocked) return false;
+      setNotice({
+          title: 'Accion bloqueada',
+          message: 'Modo vista tecnica. Esta accion no esta disponible.',
+          tone: 'warning',
+      });
+      return true;
+  };
+  const handleInputChange = (
+      field: keyof Shop,
+      value: any,
+      options?: { sensitive?: boolean }
+  ) => {
+      const isSensitive = options?.sensitive ?? true;
+      if (isSensitive && isSensitiveLocked) return;
+      if (!isSensitive && isCommercialLocked) return;
       setShopForm(prev => ({ ...prev, [field]: value }));
   };
   const handleAddressChange = (field: string, value: string) => {
-      if (isProfileLocked) return;
+      if (isSensitiveLocked) return;
       setShopForm(prev => ({
           ...prev,
           addressDetails: {
@@ -341,7 +358,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       }));
   };
   const handleAddressSelect = (details: { street: string; number: string; city: string; province: string; zip: string }) => {
-      if (isProfileLocked) return;
+      if (isSensitiveLocked) return;
       const existingMapsUrl = (shopForm.addressDetails || currentShop.addressDetails || {}).mapsUrl || '';
       setShopForm(prev => ({
           ...prev,
@@ -350,15 +367,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
       }));
   };
   const togglePaymentMethod = (method: string) => {
-      if (guardProfileEdit()) return;
+      if (guardCommercialEdit()) return;
       const current = shopForm.paymentMethods || [];
       const updated = current.includes(method) ? current.filter(m => m !== method) : [...current, method];
-      handleInputChange('paymentMethods', updated);
+      handleInputChange('paymentMethods', updated, { sensitive: false });
   };
   const saveShopProfile = async (e: React.FormEvent) => {
       e.preventDefault();
       if (blockPreviewAction()) return;
-      if (guardProfileEdit()) return;
       const newAddress = shopForm.addressDetails 
         ? `${shopForm.addressDetails.street} ${shopForm.addressDetails.number}, ${shopForm.addressDetails.city}`
         : currentShop.address;
@@ -507,7 +523,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const saveSocials = async (e: React.FormEvent) => {
       e.preventDefault();
       if (blockPreviewAction()) return;
-      if (guardProfileEdit()) return;
+      if (guardSensitiveEdit()) return;
       const validWaLines: WhatsappLine[] = [];
       for (const line of waLines.slice(0, whatsappLimit)) {
           if (line.number.trim()) {
@@ -1073,7 +1089,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       {isProfileLocked && (
                           <div className={styles.profileLockedNote}>
                               <Lock size={14} />
-                              <span>Datos validados por administracion. Solo lectura.</span>
+                              <span>Datos sensibles validados por administracion. Solo podes editar condiciones comerciales.</span>
                           </div>
                       )}
                   </header>
@@ -1137,7 +1153,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                        <input
                                            type="text"
                                            value={shopForm.website || ''}
-                                           onChange={e => setShopForm(prev => ({ ...prev, website: e.target.value }))}
+                                           onChange={e => handleInputChange('website', e.target.value)}
                                            className={styles.socialsInput}
                                            placeholder="https://tuweb.com"
                                            disabled={isProfileLocked}
@@ -1512,7 +1528,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                       <span className={styles.profileInputLabel}>Monto Mínimo de Compra ($)</span>
                                       <div className={styles.profileFieldRelative}>
                                           <span className={styles.profilePricePrefix}>$</span>
-                                          <input type="number" value={shopForm.minimumPurchase || ''} onChange={e => handleInputChange('minimumPurchase', parseInt(e.target.value))} className={`${styles.profileInput} pl-6`} readOnly={isProfileLocked} />
+                                          <input type="number" value={shopForm.minimumPurchase || ''} onChange={e => handleInputChange('minimumPurchase', e.target.value ? Number(e.target.value) : 0, { sensitive: false })} className={`${styles.profileInput} pl-6`} readOnly={isCommercialLocked} />
                                       </div>
                                   </label>
                               </div>
@@ -1528,7 +1544,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                 checked={(shopForm.paymentMethods || []).includes(method)}
                                                 onChange={() => togglePaymentMethod(method)}
                                                 className={styles.profileCheckboxInput}
-                                                disabled={isProfileLocked}
+                                                disabled={isCommercialLocked}
                                               />
                                               <span>{method}</span>
                                           </label>
@@ -1538,7 +1554,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           </div>
                       </section>
                       <div className={styles.profileActions}>
-                          <Button type="submit" disabled={isProfileLocked}><Save size={16} className={styles.buttonIcon}/> Guardar Perfil</Button>
+                          <Button type="submit" disabled={isCommercialLocked}><Save size={16} className={styles.buttonIcon}/> Guardar Perfil</Button>
                       </div>
                   </form>
               </div>

@@ -67,7 +67,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onSetClientEmailMode,
   onSetLoginError,
 }) => {
-  if (!isOpen) return null;
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
 
@@ -75,6 +74,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setEmail("");
     setPassword("");
   }, [clientEmailMode, isOpen, loginStep]);
+
+  if (!isOpen) return null;
 
   return (
     <div className={styles.overlay}>
