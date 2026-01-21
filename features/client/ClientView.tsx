@@ -11,6 +11,8 @@ import { ClientAccountPage } from "../../components/pages/client/ClientAccountPa
 // ClientView muestra la experiencia publica y de cliente.
 // ClientView renders the public and client experience.
 interface ClientViewProps {
+  isLoading: boolean;
+  hasFetchError: boolean;
   activeBottomNav: string;
   activeFilter: string;
   savedTab: "FAVORITES" | "REMINDERS";
@@ -54,6 +56,8 @@ interface ClientViewProps {
 }
 
 export const ClientView: React.FC<ClientViewProps> = ({
+  isLoading,
+  hasFetchError,
   activeBottomNav,
   activeFilter,
   savedTab,
@@ -95,6 +99,8 @@ export const ClientView: React.FC<ClientViewProps> = ({
   streams,
   queueStreamsSource,
 }) => {
+  const isDataLoading = isLoading || hasFetchError;
+
   return (
     <section aria-label="Vista cliente">
       <Routes>
@@ -102,6 +108,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
           path="/"
           element={
             <ClientHomePage
+              isLoading={isDataLoading}
               activeFilter={activeFilter}
               filteredStreams={filteredStreams}
               sortedLiveStreams={sortedLiveStreams}
@@ -129,6 +136,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
           path="/en-vivo"
           element={
             <ClientHomePage
+              isLoading={isDataLoading}
               activeFilter={activeFilter}
               filteredStreams={filteredStreams}
               sortedLiveStreams={sortedLiveStreams}
@@ -156,11 +164,13 @@ export const ClientView: React.FC<ClientViewProps> = ({
           path="/en-vivo/:streamId"
           element={
             <ClientHomePage
+              isLoading={isDataLoading}
               activeFilter={activeFilter}
               filteredStreams={filteredStreams}
               sortedLiveStreams={sortedLiveStreams}
               activeReels={activeReels}
               featuredShops={featuredShops}
+              queueStreamsSource={queueStreamsSource}
               user={user}
               canClientInteract={canClientInteract}
               onFilterChange={onFilterChange}
@@ -182,6 +192,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
           path="/tiendas"
           element={
             <ClientShopsPage
+              isLoading={isDataLoading}
               filteredPublicShops={filteredPublicShops}
               renderShopCard={renderShopCard}
               onRefreshData={onRefreshData}
@@ -192,6 +203,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
           path="/tiendas/:shopId"
           element={
             <ClientShopsPage
+              isLoading={isDataLoading}
               filteredPublicShops={filteredPublicShops}
               renderShopCard={renderShopCard}
               onRefreshData={onRefreshData}
@@ -202,6 +214,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
           path="/favoritos"
           element={
             <ClientSavedPage
+              isLoading={isDataLoading}
               savedTab={savedTab}
               filteredFavoriteShops={filteredFavoriteShops}
               reminderStreams={reminderStreams}
@@ -220,6 +233,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
           path="/recordatorios"
           element={
             <ClientSavedPage
+              isLoading={isDataLoading}
               savedTab={savedTab}
               filteredFavoriteShops={filteredFavoriteShops}
               reminderStreams={reminderStreams}

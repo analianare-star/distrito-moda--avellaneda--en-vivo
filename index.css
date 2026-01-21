@@ -38,6 +38,13 @@
   text-align: center;
 }
 
+.dm-loading-intro--overlay {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  z-index: 80;
+}
+
 .dm-loading-header {
   display: flex;
   justify-content: center;
@@ -50,7 +57,7 @@
 }
 
 .dm-loading-logo--intro {
-  height: 56px;
+  height: 76px;
   animation: none;
 }
 
@@ -67,7 +74,7 @@
 }
 
 .dm-loading-progress--short {
-  width: min(140px, 50vw);
+  width: min(120px, 50vw);
 }
 
 .dm-loading-progress-bar {

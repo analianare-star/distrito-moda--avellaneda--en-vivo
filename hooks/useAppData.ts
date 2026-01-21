@@ -22,8 +22,10 @@ export const useAppData = ({
   const [allStreams, setAllStreams] = useState<Stream[]>([]);
   const [activeReels, setActiveReels] = useState<Reel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasFetchError, setHasFetchError] = useState(false);
 
   const refreshData = useCallback(async () => {
+    setHasFetchError(false);
     try {
       const [shops, streams, reels] = await Promise.all([
         api.fetchShops(),
@@ -46,6 +48,7 @@ export const useAppData = ({
       }
     } catch (error) {
       console.error("Error cargando datos:", error);
+      setHasFetchError(true);
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +77,7 @@ export const useAppData = ({
     activeReels,
     setActiveReels,
     isLoading,
+    hasFetchError,
     refreshData,
   };
 };

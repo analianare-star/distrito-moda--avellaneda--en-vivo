@@ -6,6 +6,7 @@ import styles from "./ClientSavedPage.module.css";
 // ClientSavedPage muestra favoritos y recordatorios.
 // ClientSavedPage renders favorites and reminders.
 interface ClientSavedPageProps {
+  isLoading: boolean;
   savedTab: "FAVORITES" | "REMINDERS";
   filteredFavoriteShops: Shop[];
   reminderStreams: Stream[];
@@ -20,6 +21,7 @@ interface ClientSavedPageProps {
 }
 
 export const ClientSavedPage: React.FC<ClientSavedPageProps> = ({
+  isLoading,
   savedTab,
   filteredFavoriteShops,
   reminderStreams,
@@ -67,18 +69,22 @@ export const ClientSavedPage: React.FC<ClientSavedPageProps> = ({
 
       {savedTab === "FAVORITES" ? (
         <div className={styles.gridFavorites}>
-          {filteredFavoriteShops.map((shop) => renderShopCard(shop))}
-          {filteredFavoriteShops.length === 0 && (
+          {isLoading &&
+            Array.from({ length: 6 }).map((_, index) => (
+              <div key={`fav-skel-${index}`} className={styles.skeletonCard} />
+            ))}
+          {!isLoading && filteredFavoriteShops.map((shop) => renderShopCard(shop))}
+          {!isLoading && filteredFavoriteShops.length === 0 && (
             <EmptyState
               title={
                 canClientInteract
-                  ? "Sin favoritos todavía"
-                  : "Ingresá para guardar tiendas"
+                  ? "Sin favoritos todavia"
+                  : "Ingresar para guardar tiendas"
               }
               message={
                 canClientInteract
-                  ? "Explorá tiendas y guardá las que te interesen."
-                  : "Necesitás iniciar sesión para guardar favoritos."
+                  ? "Explora tiendas y guarda las que te interesen."
+                  : "Necesitas iniciar sesion para guardar favoritos."
               }
               actionLabel={canClientInteract ? "Explorar tiendas" : "Ingresar"}
               onAction={() => {
@@ -93,49 +99,49 @@ export const ClientSavedPage: React.FC<ClientSavedPageProps> = ({
         </div>
       ) : (
         <div className={styles.gridReminders}>
-          {reminderStreams.map((stream) => (
-            <div
-              key={stream.id}
-              className={styles.reminderCard}
-            >
-              <p className={styles.reminderDate}>
-                {new Date(stream.fullDateISO).toLocaleString("es-AR", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })}
-              </p>
-              <p className={styles.reminderTitle}>
-                {stream.title}
-              </p>
-              <p className={styles.reminderShop}>
-                {stream.shop?.name || "Tienda"}
-              </p>
-              <div className={styles.reminderActions}>
-                <button
-                  onClick={() => onOpenShop(stream.shop)}
-                  className={styles.actionButton}
-                >
-                  Ver tienda
-                </button>
-                <button
-                  onClick={() => onToggleReminder(stream.id)}
-                  className={styles.actionButton}
-                >
-                  Quitar
-                </button>
-                <button
-                  onClick={() => onOpenCalendarInvite(stream)}
-                  className={styles.actionButton}
-                >
-                  Calendario
-                </button>
+          {isLoading &&
+            Array.from({ length: 3 }).map((_, index) => (
+              <div key={`rem-skel-${index}`} className={styles.skeletonReminder} />
+            ))}
+          {!isLoading &&
+            reminderStreams.map((stream) => (
+              <div key={stream.id} className={styles.reminderCard}>
+                <p className={styles.reminderDate}>
+                  {new Date(stream.fullDateISO).toLocaleString("es-AR", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  })}
+                </p>
+                <p className={styles.reminderTitle}>{stream.title}</p>
+                <p className={styles.reminderShop}>
+                  {stream.shop?.name || "Tienda"}
+                </p>
+                <div className={styles.reminderActions}>
+                  <button
+                    onClick={() => onOpenShop(stream.shop)}
+                    className={styles.actionButton}
+                  >
+                    Ver tienda
+                  </button>
+                  <button
+                    onClick={() => onToggleReminder(stream.id)}
+                    className={styles.actionButton}
+                  >
+                    Quitar
+                  </button>
+                  <button
+                    onClick={() => onOpenCalendarInvite(stream)}
+                    className={styles.actionButton}
+                  >
+                    Calendario
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-          {reminderStreams.length === 0 && (
+            ))}
+          {!isLoading && reminderStreams.length === 0 && (
             <EmptyState
               title="Sin recordatorios activos"
-              message="Agendá un vivo para recibir alertas antes de que empiece."
+              message="Agenda un vivo para recibir alertas antes de que empiece."
               actionLabel="Explorar vivos"
               onAction={() => onSelectBottomNav("live")}
             />

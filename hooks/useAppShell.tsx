@@ -3,15 +3,16 @@ import { useAppShellView } from "./useAppShellView";
 
 export const useAppShell = () => {
   const core = useAppCore();
-  const { loadingFallback, roleRouterProps, overlaysProps, resetViewProps } =
+  const { introOverlay, roleRouterProps, overlaysProps, resetViewProps } =
     useAppShellView(core);
 
   return {
     isResetView: core.isResetView,
     isLoading: core.isLoading,
+    hasFetchError: core.hasFetchError,
     isAdminViewBlocked: core.isAdminViewBlocked,
     isMerchantViewBlocked: core.isMerchantViewBlocked,
-    loadingFallback,
+    introOverlay,
     resetViewProps,
     roleRouterProps,
     overlaysProps,

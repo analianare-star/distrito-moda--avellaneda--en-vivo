@@ -8,6 +8,8 @@ import {
 } from "../roleViewProps";
 
 type UseRoleViewPropsArgs = {
+  isLoading: boolean;
+  hasFetchError: boolean;
   streams: Stream[];
   setStreams: React.Dispatch<React.SetStateAction<Stream[]>>;
   shops: Shop[];
@@ -75,6 +77,8 @@ type UseRoleViewPropsArgs = {
 };
 
 export const useRoleViewProps = ({
+  isLoading,
+  hasFetchError,
   streams,
   setStreams,
   shops,
@@ -207,6 +211,8 @@ export const useRoleViewProps = ({
   const clientViewProps = useMemo(
     () =>
       buildClientViewProps({
+        isLoading,
+        hasFetchError,
         activeBottomNav,
         activeFilter,
         savedTab,
@@ -249,6 +255,8 @@ export const useRoleViewProps = ({
         queueStreamsSource,
       }),
     [
+      hasFetchError,
+      isLoading,
       activeBottomNav,
       activeFilter,
       activeReels,

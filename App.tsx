@@ -7,10 +7,9 @@ import { useAppShell } from "./hooks/useAppShell";
 const App: React.FC = () => {
   const {
     isResetView,
-    isLoading,
     isAdminViewBlocked,
     isMerchantViewBlocked,
-    loadingFallback,
+    introOverlay,
     resetViewProps,
     roleRouterProps,
     overlaysProps,
@@ -18,10 +17,6 @@ const App: React.FC = () => {
 
   if (isResetView) {
     return <ResetView {...resetViewProps} />;
-  }
-
-  if (isLoading) {
-    return loadingFallback;
   }
 
   if (isAdminViewBlocked || isMerchantViewBlocked) {
@@ -43,6 +38,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
+      {introOverlay}
       <RoleRouter {...roleRouterProps} />
       <AppOverlays {...overlaysProps} />
     </div>

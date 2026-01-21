@@ -13,6 +13,7 @@ import styles from "./ClientHomePage.module.css";
 // ClientHomePage muestra home y agenda publica.
 // ClientHomePage renders home and public agenda.
 interface ClientHomePageProps {
+  isLoading: boolean;
   activeFilter: string;
   filteredStreams: Stream[];
   sortedLiveStreams: Stream[];
@@ -30,12 +31,17 @@ interface ClientHomePageProps {
   onLike: (streamId: string) => void;
   onRate: (streamId: string, rating: number) => void;
   onDownloadCard: (stream: Stream) => void;
-  onNotify: (title: string, message: string, tone?: "info" | "success" | "warning" | "error") => void;
+  onNotify: (
+    title: string,
+    message: string,
+    tone?: "info" | "success" | "warning" | "error"
+  ) => void;
   onOpenLogin: () => void;
   onQueueModalChange: (isOpen: boolean) => void;
 }
 
 export const ClientHomePage: React.FC<ClientHomePageProps> = ({
+  isLoading,
   activeFilter,
   filteredStreams,
   sortedLiveStreams,
@@ -61,11 +67,12 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
   useEffect(() => {
     onQueueModalChange(Boolean(queueStream));
   }, [queueStream, onQueueModalChange]);
+
   const visibleStreams = filteredStreams.slice(0, 6);
   const streamLayout = ["wide", "small", "small", "wide", "small", "small"];
   const isMockStream = (streamId: string) => streamId.startsWith("mock-stream-");
   const blockMockAction = () => {
-    onNotify?.("Demo de prueba", "Estas historias son de prueba para diseño UI.", "info");
+    onNotify?.("Demo de prueba", "Estas historias son de prueba para diseno UI.", "info");
   };
   const queueStreams = useMemo(() => {
     const filtered = queueStreamsSource.filter(
@@ -85,13 +92,13 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
     return [...live, ...upcoming].slice(0, 10);
   }, [queueStreamsSource]);
 
-  const formatUpcoming = () => "Próximamente";
+  const formatUpcoming = () => "Proximamente";
   const openFirstReel = useCallback(() => {
     if (activeReels.length > 0) {
       onViewReel(activeReels[0]);
       return;
     }
-    onNotify?.("Sin historias", "Todavía no hay historias para mostrar.", "info");
+    onNotify?.("Sin historias", "Todavia no hay historias para mostrar.", "info");
   }, [activeReels, onNotify, onViewReel]);
 
   const promoBanners = useMemo(
@@ -99,7 +106,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
       {
         id: "brands",
         eyebrow: "En vivo",
-        title: "Conocé las marcas de Avellaneda en tiempo real",
+        title: "Conoce las marcas de Avellaneda en tiempo real",
         icon: Radio,
         theme: {
           bg: "#c1b5ab",
@@ -189,7 +196,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
 
   const queueSection =
     queueStreams.length > 0 ? (
-      <div className={styles.queueSection} aria-label="En vivo y próximos">
+      <div className={styles.queueSection} aria-label="En vivo y proximos">
         <div className={styles.queueRow}>
           {queueStreams.map((stream) => {
             const isLive = stream.status === StreamStatus.LIVE;
@@ -238,7 +245,32 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
     </>
   ) : null;
 
-  return (
+  const loadingContent = (
+    <section className={styles.section} aria-label="Cargando contenido">
+      <div className={styles.content}>
+        <div className={styles.skeletonWrap}>
+          <div className={styles.skeletonRow}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={`reel-skel-${index}`} className={styles.skeletonBubble} />
+            ))}
+          </div>
+          <div className={styles.skeletonBanner} />
+          <div className={styles.skeletonGrid}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={`shop-skel-${index}`} className={styles.skeletonCard} />
+            ))}
+          </div>
+          <div className={styles.skeletonList}>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={`live-skel-${index}`} className={styles.skeletonStream} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const loadedContent = (
     <section className={styles.section} aria-label="Contenido principal">
       <div className={styles.content}>
         <ReelsStrip
@@ -297,7 +329,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
             {visibleStreams.length === 0 && (
               <EmptyState
                 title="No hay vivos con este filtro"
-                message="Probá ver todos los vivos o revisá más tarde."
+                message="Proba ver todos los vivos o revisa mas tarde."
                 actionLabel="Ver todos"
                 onAction={() => {
                   onFilterChange("Todos");
@@ -358,4 +390,6 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
       )}
     </section>
   );
+
+  return isLoading ? loadingContent : loadedContent;
 };

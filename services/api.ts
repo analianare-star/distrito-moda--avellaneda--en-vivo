@@ -10,6 +10,7 @@ import {
   StreamStatus,
 } from '../types';
 import { auth } from '../firebase';
+import { normalizeMediaUrl } from '../utils/shopMedia';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -132,6 +133,21 @@ const mapShop = (shop: any): Shop => {
   const liveBaseRemaining = Math.max(0, liveBaseLimit - liveBaseUsed);
   const liveExtraBalance = quotaWallet?.liveExtraBalance ?? 0;
   const reelExtraBalance = quotaWallet?.reelExtraBalance ?? 0;
+  const logoUrl = normalizeMediaUrl(shop?.logoUrl || '');
+  const coverUrl = normalizeMediaUrl(
+    shop?.coverUrl ||
+      shop?.addressDetails?.storeImageUrl ||
+      shop?.addressDetails?.imageUrl ||
+      shop?.logoUrl ||
+      ''
+  );
+  const addressDetails = shop?.addressDetails
+    ? {
+        ...shop.addressDetails,
+        storeImageUrl: normalizeMediaUrl(shop.addressDetails.storeImageUrl) || undefined,
+        imageUrl: normalizeMediaUrl(shop.addressDetails.imageUrl) || undefined,
+      }
+    : shop?.addressDetails;
   return {
     ...shop,
     plan: normalizePlan(shop?.plan),
@@ -158,8 +174,9 @@ const mapShop = (shop: any): Shop => {
     reviews: shop?.reviews || [],
     ratingAverage: Number(shop?.ratingAverage ?? 0),
     ratingCount: Number(shop?.ratingCount ?? 0),
-    logoUrl: shop?.logoUrl || '',
-    coverUrl: shop?.coverUrl || undefined,
+    logoUrl,
+    coverUrl: coverUrl || undefined,
+    addressDetails,
     quotaWallet,
   };
 };
@@ -181,7 +198,7 @@ const mapStream = (stream: any): Stream => {
     shop,
     shopId: stream.shopId || shop.id,
     title: stream.title,
-    coverImage: stream.coverImage || shop.coverUrl || shop.logoUrl || '',
+    coverImage: normalizeMediaUrl(stream.coverImage || shop.coverUrl || shop.logoUrl || ''),
     status: stream.status,
     extensionCount: Number(stream.extensionCount ?? 0),
     scheduledTime: formatTime(fullDateISO),
@@ -208,9 +225,9 @@ const mapReel = (reel: any): Reel => {
     id: reel.id,
     shopId: reel.shopId,
     shopName: shop.name || '',
-    shopLogo: shop.logoUrl || '',
+    shopLogo: normalizeMediaUrl(shop.logoUrl || ''),
     url: reel.url || '',
-    thumbnail: reel.thumbnail || undefined,
+    thumbnail: normalizeMediaUrl(reel.thumbnail || '') || undefined,
     createdAtISO,
     expiresAtISO,
     status,

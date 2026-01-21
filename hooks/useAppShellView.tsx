@@ -29,17 +29,12 @@ type OverlaysProps = {
 };
 
 export const useAppShellView = (core: AppCoreState) => {
-  const [showSkeletons, setShowSkeletons] = useState(false);
+  const [showIntroOverlay, setShowIntroOverlay] = useState(true);
 
   useEffect(() => {
-    if (!core.isLoading) {
-      setShowSkeletons(false);
-      return;
-    }
-    setShowSkeletons(false);
-    const timer = window.setTimeout(() => setShowSkeletons(true), 5000);
+    const timer = window.setTimeout(() => setShowIntroOverlay(false), 5000);
     return () => window.clearTimeout(timer);
-  }, [core.isLoading]);
+  }, []);
 
   const clientAuthModal = (
     <AuthModal
@@ -68,63 +63,22 @@ export const useAppShellView = (core: AppCoreState) => {
     />
   );
 
-  const loadingFallback = (
-    <div className="min-h-screen bg-white text-dm-dark">
-      {!showSkeletons ? (
-        <div className="dm-loading-intro">
-          <img
-            src={core.brandLogo}
-            alt="Avellaneda en Vivo"
-            className="dm-loading-logo dm-loading-logo--intro"
-            loading="eager"
-          />
-          <div
-            className="dm-loading-progress dm-loading-progress--short"
-            aria-hidden="true"
-          >
-            <div className="dm-loading-progress-bar" />
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="dm-loading-header">
-            <img
-              src={core.brandLogo}
-              alt="Avellaneda en Vivo"
-              className="dm-loading-logo dm-loading-logo--header"
-              loading="eager"
-            />
-          </div>
-          <div className="mx-auto mt-6 max-w-5xl px-6 pb-12 space-y-8 dm-loading-skeletons">
-            <div className="flex gap-3 overflow-hidden">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div
-                  key={`reel-skel-${index}`}
-                  className="h-14 w-14 shrink-0 rounded-full bg-gray-200 animate-pulse"
-                />
-              ))}
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <div
-                  key={`shop-skel-${index}`}
-                  className="h-32 rounded-2xl border border-gray-100 bg-gray-50 animate-pulse"
-                />
-              ))}
-            </div>
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={`live-skel-${index}`}
-                  className="h-24 rounded-2xl border border-gray-100 bg-gray-50 animate-pulse"
-                />
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+  const introOverlay = showIntroOverlay ? (
+    <div className="dm-loading-intro dm-loading-intro--overlay">
+      <img
+        src={core.brandLogo}
+        alt="Avellaneda en Vivo"
+        className="dm-loading-logo dm-loading-logo--intro"
+        loading="eager"
+      />
+      <div
+        className="dm-loading-progress dm-loading-progress--short"
+        aria-hidden="true"
+      >
+        <div className="dm-loading-progress-bar" />
+      </div>
     </div>
-  );
+  ) : null;
 
   const roleRouterProps = {
     brandLogo: core.brandLogo,
@@ -185,7 +139,7 @@ export const useAppShellView = (core: AppCoreState) => {
   };
 
   return {
-    loadingFallback,
+    introOverlay,
     roleRouterProps,
     overlaysProps,
     resetViewProps,

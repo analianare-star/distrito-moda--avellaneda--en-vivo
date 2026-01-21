@@ -84,7 +84,16 @@ export const useAppCore = () => {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [hasBottomNavInteraction, setHasBottomNavInteraction] = useState(false);
 
-  const { allShops, setAllShops, allStreams, setAllStreams, activeReels, isLoading, refreshData } =
+  const {
+    allShops,
+    setAllShops,
+    allStreams,
+    setAllStreams,
+    activeReels,
+    isLoading,
+    hasFetchError,
+    refreshData,
+  } =
     useAppData({
       isResetView,
       currentShopId,
@@ -428,6 +437,8 @@ export const useAppCore = () => {
       navigateTo,
     });
   const { adminViewProps, merchantViewProps, clientViewProps } = useRoleViewProps({
+    isLoading,
+    hasFetchError,
     streams: allStreams,
     setStreams: setAllStreams,
     shops: allShops,
@@ -506,6 +517,7 @@ export const useAppCore = () => {
   return {
     isResetView,
     isLoading,
+    hasFetchError,
     isAdminViewBlocked,
     isMerchantViewBlocked,
     locationPath: location.pathname,
