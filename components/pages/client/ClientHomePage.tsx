@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { CalendarCheck, Radio, Sparkles } from "lucide-react";
 import { HeroSection } from "../../HeroSection";
 import { ReelsStrip } from "../../ReelsStrip";
@@ -74,80 +74,90 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
   const blockMockAction = () => {
     onNotify?.("Demo de prueba", "Estas historias son de prueba para diseno UI.", "info");
   };
-  const queueStreams = useMemo(() => {
-    const filtered = queueStreamsSource.filter(
+  const queueSource = Array.isArray(queueStreamsSource)
+    ? queueStreamsSource
+    : [];
+  const queueStreams = queueSource
+    .filter(
       (stream) =>
         stream.isVisible &&
         stream.shop?.status === "ACTIVE" &&
         (stream.status === StreamStatus.LIVE ||
           stream.status === StreamStatus.UPCOMING)
+    )
+    .reduce<{ live: Stream[]; upcoming: Stream[] }>(
+      (acc, stream) => {
+        if (stream.status === StreamStatus.LIVE) {
+          acc.live.push(stream);
+        } else if (stream.status === StreamStatus.UPCOMING) {
+          acc.upcoming.push(stream);
+        }
+        return acc;
+      },
+      { live: [], upcoming: [] }
     );
-    const live = filtered.filter((stream) => stream.status === StreamStatus.LIVE);
-    const upcoming = filtered
-      .filter((stream) => stream.status === StreamStatus.UPCOMING)
-      .sort(
-        (a, b) =>
-          new Date(a.fullDateISO).getTime() - new Date(b.fullDateISO).getTime()
-      );
-    return [...live, ...upcoming].slice(0, 10);
-  }, [queueStreamsSource]);
+  queueStreams.upcoming.sort(
+    (a, b) =>
+      new Date(a.fullDateISO).getTime() - new Date(b.fullDateISO).getTime()
+  );
+  const queueList = [...queueStreams.live, ...queueStreams.upcoming].slice(
+    0,
+    10
+  );
 
   const formatUpcoming = () => "Proximamente";
-  const openFirstReel = useCallback(() => {
+  const openFirstReel = () => {
     if (activeReels.length > 0) {
       onViewReel(activeReels[0]);
       return;
     }
     onNotify?.("Sin historias", "Todavia no hay historias para mostrar.", "info");
-  }, [activeReels, onNotify, onViewReel]);
+  };
 
-  const promoBanners = useMemo(
-    () => [
-      {
-        id: "brands",
-        eyebrow: "En vivo",
-        title: "Conoce las marcas de Avellaneda en tiempo real",
-        icon: Radio,
-        theme: {
-          bg: "#c1b5ab",
-          edge: "#c1b5ab",
-          text: "#2b211b",
-          muted: "#5b5148",
-          stroke: "rgba(11, 11, 13, 0.6)",
-        },
-        onClick: () => onSelectBottomNav("live"),
+  const promoBanners = [
+    {
+      id: "brands",
+      eyebrow: "En vivo",
+      title: "Conoce las marcas de Avellaneda en tiempo real",
+      icon: Radio,
+      theme: {
+        bg: "#c1b5ab",
+        edge: "#c1b5ab",
+        text: "#2b211b",
+        muted: "#5b5148",
+        stroke: "rgba(11, 11, 13, 0.6)",
       },
-      {
-        id: "real",
-        eyebrow: "En vivo",
-        title: "Vivos reales, sin intermediarios",
-        icon: Sparkles,
-        theme: {
-          bg: "#c1b5ab",
-          edge: "#c1b5ab",
-          text: "#2b211b",
-          muted: "#5b5148",
-          stroke: "rgba(11, 11, 13, 0.6)",
-        },
-        onClick: openFirstReel,
+      onClick: () => onSelectBottomNav("live"),
+    },
+    {
+      id: "real",
+      eyebrow: "En vivo",
+      title: "Vivos reales, sin intermediarios",
+      icon: Sparkles,
+      theme: {
+        bg: "#c1b5ab",
+        edge: "#c1b5ab",
+        text: "#2b211b",
+        muted: "#5b5148",
+        stroke: "rgba(11, 11, 13, 0.6)",
       },
-      {
-        id: "wholesale",
-        eyebrow: "En vivo",
-        title: "El mayorista en vivo",
-        icon: CalendarCheck,
-        theme: {
-          bg: "#c1b5ab",
-          edge: "#c1b5ab",
-          text: "#2b211b",
-          muted: "#5b5148",
-          stroke: "rgba(11, 11, 13, 0.6)",
-        },
-        onClick: () => onSelectBottomNav("reminders"),
+      onClick: openFirstReel,
+    },
+    {
+      id: "wholesale",
+      eyebrow: "En vivo",
+      title: "El mayorista en vivo",
+      icon: CalendarCheck,
+      theme: {
+        bg: "#c1b5ab",
+        edge: "#c1b5ab",
+        text: "#2b211b",
+        muted: "#5b5148",
+        stroke: "rgba(11, 11, 13, 0.6)",
       },
-    ],
-    [onSelectBottomNav, openFirstReel]
-  );
+      onClick: () => onSelectBottomNav("reminders"),
+    },
+  ];
 
   const [promoIndex, setPromoIndex] = useState(0);
 
@@ -157,7 +167,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
       setPromoIndex((prev) => (prev + 1) % promoBanners.length);
     }, 7000);
     return () => window.clearInterval(timer);
-  }, [promoBanners.length]);
+  }, []);
 
   const promoStrip =
     promoBanners.length > 0 ? (
@@ -195,10 +205,10 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
     ) : null;
 
   const queueSection =
-    queueStreams.length > 0 ? (
+    queueList.length > 0 ? (
       <div className={styles.queueSection} aria-label="En vivo y proximos">
         <div className={styles.queueRow}>
-          {queueStreams.map((stream) => {
+          {queueList.map((stream) => {
             const isLive = stream.status === StreamStatus.LIVE;
             const coverImage = getShopCoverUrl(stream.shop);
             return (
@@ -343,7 +353,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
 
       {queueStream && (
         <LiveQueueModal
-          streams={queueStreams}
+          streams={queueList}
           activeStreamId={queueStream.id}
           user={user}
           canClientInteract={canClientInteract}

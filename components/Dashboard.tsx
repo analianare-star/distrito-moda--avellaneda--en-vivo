@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './Button';
 import { getShopCoverUrl } from '../utils/shopMedia';
 import { Plus, X, Instagram, Facebook, Video, AlertOctagon, Check, Save, Lock, RefreshCw, Pencil, Trash2, Star, History, LayoutDashboard, Store, Radio, Globe, Phone, MapPin, ExternalLink, User, CreditCard, DollarSign, ShoppingCart, AlertTriangle, Info, ArrowUpCircle, Film } from 'lucide-react';
@@ -11,6 +11,7 @@ import { AddressAutocomplete } from './AddressAutocomplete';
 import { api } from '../services/api';
 import { NoticeModal } from './NoticeModal';
 import { LogoBubble } from './LogoBubble';
+import { MercadoPagoWallet } from './payments/MercadoPagoWallet';
 import styles from './Dashboard.module.css';
 
 interface DashboardProps {
@@ -62,6 +63,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showBuyReelModal, setShowBuyReelModal] = useState(false);
+  const [mpPreferenceId, setMpPreferenceId] = useState<string | null>(null);
+  const [mpPurchaseId, setMpPurchaseId] = useState<string | null>(null);
+  const [mpError, setMpError] = useState<string | null>(null);
+  const [mpLoading, setMpLoading] = useState(false);
+  const [mpMode, setMpMode] = useState<'LIVE' | 'REEL' | null>(null);
   const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
   const [showPendingNotice, setShowPendingNotice] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -75,8 +81,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [shopReels, setShopReels] = useState<Reel[]>([]); 
   const [purchaseHistory, setPurchaseHistory] = useState<any[]>([]);
   const [isPurchaseLoading, setIsPurchaseLoading] = useState(false);
+  const [isPurchaseBlocked, setIsPurchaseBlocked] = useState(false);
+  const purchasesLoadedRef = useRef(false);
 
-  const blockPreviewAction = (message = 'Acción bloqueada en modo vista técnica.') => {
+  const blockPreviewAction = (message = 'Accion bloqueada en modo vista tecnica.') => {
       if (!isPreview) return false;
       setNotice({
           title: 'Modo vista',
@@ -84,6 +92,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
           tone: 'warning',
       });
       return true;
+  };
+
+  const openBuyModal = () => {
+      if (blockPreviewAction()) return;
+      setShowBuyReelModal(false);
+      setShowBuyModal(true);
+  };
+
+  const openBuyReelModal = () => {
+      if (blockPreviewAction()) return;
+      setShowBuyModal(false);
+      setShowBuyReelModal(true);
   };
   
   // Local states
@@ -101,17 +121,84 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   // Sync Logic & Load Reels
   const loadPurchases = async () => {
-      if (!currentShop.id) return;
+      if (isPreview) return;
+      if (!currentShop.id || currentShop.id === 'empty' || isPurchaseBlocked) return;
       setIsPurchaseLoading(true);
       try {
           const data = await api.fetchPurchasesByShop(currentShop.id);
           setPurchaseHistory(data || []);
+          purchasesLoadedRef.current = true;
       } catch (error) {
           console.error('Error cargando compras', error);
+          const message = error instanceof Error ? error.message : '';
+          if (message.toLowerCase().includes('403') || message.toLowerCase().includes('forbidden')) {
+              setIsPurchaseBlocked(true);
+          }
       } finally {
           setIsPurchaseLoading(false);
       }
   };
+
+  const loadPurchasesOnce = async () => {
+      if (isPreview) return;
+      if (purchasesLoadedRef.current) return;
+      await loadPurchases();
+  };
+
+  const resetMercadoPagoState = () => {
+      setMpPreferenceId(null);
+      setMpPurchaseId(null);
+      setMpError(null);
+      setMpLoading(false);
+      setMpMode(null);
+  };
+
+  const startMercadoPagoPayment = async (type: 'LIVE_PACK' | 'REEL_PACK', quantity: number) => {
+      if (blockPreviewAction()) return;
+      if (!currentShop.id) {
+          setNotice({
+              title: 'Sin tienda',
+              message: 'No se pudo iniciar el pago sin tienda activa.',
+              tone: 'error',
+          });
+          return;
+      }
+      setMpLoading(true);
+      setMpError(null);
+      try {
+          const data = await api.createMercadoPagoPreference({
+              type,
+              quantity,
+              shopId: currentShop.id,
+          });
+          setMpPreferenceId(data.preferenceId || null);
+          setMpPurchaseId(data.purchaseId || null);
+          setMpMode(type === 'LIVE_PACK' ? 'LIVE' : 'REEL');
+          loadPurchases();
+      } catch (error: any) {
+          setMpError(error.message || 'No se pudo iniciar el pago.');
+          setNotice({
+              title: 'Pago no iniciado',
+              message: error.message || 'No se pudo iniciar el pago.',
+              tone: 'error',
+          });
+      } finally {
+          setMpLoading(false);
+      }
+  };
+
+  useEffect(() => {
+      if (!showBuyModal && !showBuyReelModal) {
+          resetMercadoPagoState();
+          return;
+      }
+      if (showBuyModal && mpMode && mpMode !== 'LIVE') {
+          resetMercadoPagoState();
+      }
+      if (showBuyReelModal && mpMode && mpMode !== 'REEL') {
+          resetMercadoPagoState();
+      }
+  }, [showBuyModal, showBuyReelModal, mpMode]);
 
   useEffect(() => {
       const initialLines = [
@@ -139,7 +226,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
       }));
 
       const loadReels = async () => {
-          if (!currentShop.id) return;
+          if (isPreview) return;
+          if (!currentShop.id || currentShop.id === 'empty') return;
           try {
             const myReels = await api.fetchReelsByShop(currentShop.id);
             setShopReels(myReels);
@@ -148,6 +236,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
           }
       };
       loadReels();
+      setIsPurchaseBlocked(false);
+      purchasesLoadedRef.current = false;
       loadPurchases();
   }, [currentShop]);
 
@@ -426,19 +516,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleBuyReelConfirm = async () => {
-      if (blockPreviewAction()) return;
-      const result = await api.buyReelQuota(currentShop.id, 5, { method: 'SIMULATED' });
-      if (onReelChange) onReelChange();
-      onRefreshData();
-      loadPurchases();
-      const status = result?.purchase?.status;
-      setNotice({
-          title: status === 'PENDING' ? 'Solicitud enviada' : 'Compra realizada',
-          message: status === 'PENDING'
-              ? 'Tu compra quedó pendiente de aprobación.'
-              : '¡Paquete de historias comprado!',
-          tone: status === 'PENDING' ? 'info' : 'success',
-      });
+      await startMercadoPagoPayment('REEL_PACK', 5);
   };
 
   // --- STREAM FORM HANDLERS ---
@@ -447,21 +525,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       if (isAgendaSuspended) {
           setNotice({
               title: 'Agenda suspendida',
-              message: 'No puedes comprar cupos de vivos mientras dure la suspensión.',
+              message: 'No puedes comprar cupos de vivos mientras dure la suspension.',
               tone: 'warning',
           });
           return;
       }
-      setConfirmDialog({
-          title: 'Comprar cupo extra',
-          message: 'Confirmar compra de 1 cupo adicional por $5.000?',
-          confirmLabel: 'Confirmar compra',
-              onConfirm: () => {
-                  onBuyQuota(1);
-                  loadPurchases();
-                  setShowBuyModal(false);
-              },
-      });
+      startMercadoPagoPayment('LIVE_PACK', 1);
   };
   const handleCreateClick = () => {
       if (blockPreviewAction()) return;
@@ -717,11 +786,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               </div>
                               <Button
                                   size="sm"
-                                  onClick={() => {
-                                      if (blockPreviewAction()) return;
-                                      if (blockPreviewAction()) return;
-                                      setShowBuyModal(true);
-                                  }}
+                                  onClick={openBuyModal}
                                   disabled={isAgendaSuspended || isPreview}
                                   className={styles.quotaBuyButton}
                               >
@@ -805,6 +870,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                         <p>Disfrutas de máxima exposición y cupos.</p>
                                     </div>
                                 )}
+                                <div className={styles.planInfo}>
+                                    <div className={styles.planInfoRow}>
+                                        <span>Vivos base/semana</span>
+                                        <span>{isStandard ? '0' : isAlta ? '1' : '3'}</span>
+                                    </div>
+                                    <div className={styles.planInfoRow}>
+                                        <span>Reels diarios</span>
+                                        <span>{isStandard ? '1' : isAlta ? '3' : '5'}</span>
+                                    </div>
+                                    <p className={styles.planInfoNote}>
+                                        Precios y upgrades se definen por Distrito Moda.
+                                    </p>
+                                </div>
                            </div>
 
                            {!isMaxima && (
@@ -826,11 +904,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                   size="sm"
                                   variant="outline"
                                   className={styles.buttonFull}
-                                  onClick={() => {
-                                      if (blockPreviewAction()) return;
-                                      if (blockPreviewAction()) return;
-                                      setShowBuyModal(true);
-                                  }}
+                                  onClick={openBuyModal}
                                   disabled={isAgendaSuspended || isPreview}
                               >
                                   <ShoppingCart size={14} className={styles.buttonIcon}/> Comprar cupo
@@ -869,11 +943,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               <div className={styles.infoRow}><span>Publicadas hoy</span><span className={styles.infoValue}>{reelsToday}</span></div>
                           </div>
                           <button
-                              onClick={() => {
-                                  if (blockPreviewAction()) return;
-                                  if (blockPreviewAction()) return;
-                                  setShowBuyReelModal(true);
-                              }}
+                              onClick={openBuyReelModal}
                               className={`${styles.infoLink} ${isPreview ? styles.infoLinkDisabled : styles.infoLinkActive}`}
                           >
                               Comprar extras
@@ -980,10 +1050,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               Extras comprados: <span className={styles.reelsStatValuePositive}>{reelsExtra}</span>
                           </p>
                           <button
-                              onClick={() => {
-                                  if (blockPreviewAction()) return;
-                                  setShowBuyReelModal(true);
-                              }}
+                              onClick={openBuyReelModal}
                               className={`${styles.reelsBuyLink} ${isPreview ? styles.reelsBuyLinkDisabled : styles.reelsBuyLinkActive}`}
                           >
                               Comprar Extras
@@ -1579,12 +1646,34 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <div className={styles.modalForm}>
                       <div className={styles.modalRow}>
                           <span className={styles.modalRowTitle}>1 Cupo de Vivo</span>
-                          <span className={styles.modalRowPrice}>$5.000</span>
+                          <span className={styles.modalRowPrice}>Precio en Mercado Pago</span>
                       </div>
-                      <Button className={styles.modalConfirmButtonGreen} onClick={handleBuyConfirm}>
-                          Confirmar Compra
-                      </Button>
-                      <p className={styles.modalNote}>Pago seguro procesado por Mercado Pago</p>
+                      {mpError && (
+                          <p className={styles.modalError}>{mpError}</p>
+                      )}
+                      {mpPreferenceId && mpMode === 'LIVE' ? (
+                          <div className={styles.mpContainer}>
+                              <MercadoPagoWallet
+                                preferenceId={mpPreferenceId}
+                                onReady={() => {
+                                  void loadPurchasesOnce();
+                                }}
+                              />
+                              {mpPurchaseId && (
+                                  <p className={styles.modalNote}>
+                                      Compra #{mpPurchaseId} en proceso. Cuando el pago se apruebe, los cupos se acreditan automaticamente.
+                                  </p>
+                              )}
+                          </div>
+                      ) : (
+                          <Button
+                            className={styles.modalConfirmButtonGreen}
+                            onClick={handleBuyConfirm}
+                            disabled={mpLoading}
+                          >
+                              {mpLoading ? 'Iniciando pago...' : 'Continuar con Mercado Pago'}
+                          </Button>
+                      )}
                   </div>
               </div>
            </div>
@@ -1606,15 +1695,34 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <div className={styles.modalForm}>
                       <div className={styles.modalRow}>
                           <span className={styles.modalRowTitle}>Pack 5 Historias</span>
-                          <span className={styles.modalRowPrice}>$2.500</span>
+                          <span className={styles.modalRowPrice}>Precio en Mercado Pago</span>
                       </div>
-                      <Button className={styles.modalConfirmButtonCrimson} onClick={async () => {
-                          await handleBuyReelConfirm();
-                          setShowBuyReelModal(false);
-                      }}>
-                          Confirmar Compra
-                      </Button>
-                      <p className={styles.modalNote}>Compra simulada para entorno demo.</p>
+                      {mpError && (
+                          <p className={styles.modalError}>{mpError}</p>
+                      )}
+                      {mpPreferenceId && mpMode === 'REEL' ? (
+                          <div className={styles.mpContainer}>
+                              <MercadoPagoWallet
+                                preferenceId={mpPreferenceId}
+                                onReady={() => {
+                                  void loadPurchasesOnce();
+                                }}
+                              />
+                              {mpPurchaseId && (
+                                  <p className={styles.modalNote}>
+                                      Compra #{mpPurchaseId} en proceso. Cuando el pago se apruebe, los cupos se acreditan automaticamente.
+                                  </p>
+                              )}
+                          </div>
+                      ) : (
+                          <Button
+                            className={styles.modalConfirmButtonCrimson}
+                            onClick={handleBuyReelConfirm}
+                            disabled={mpLoading}
+                          >
+                              {mpLoading ? 'Iniciando pago...' : 'Continuar con Mercado Pago'}
+                          </Button>
+                      )}
                   </div>
               </div>
            </div>
@@ -1732,3 +1840,4 @@ export const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 }
+

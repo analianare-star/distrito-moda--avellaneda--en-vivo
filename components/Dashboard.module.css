@@ -282,6 +282,18 @@
   @apply text-purple-600;
 }
 
+.planInfo {
+  @apply mt-4 space-y-2 text-xs text-gray-600;
+}
+
+.planInfoRow {
+  @apply flex items-center justify-between;
+}
+
+.planInfoNote {
+  @apply text-[11px] text-gray-400;
+}
+
 .planTitle {
   @apply font-bold text-dm-dark text-lg flex items-center gap-2;
 }
@@ -664,6 +676,14 @@
 
 .modalNote {
   @apply text-[10px] text-center text-gray-400;
+}
+
+.modalError {
+  @apply text-[11px] text-center text-dm-crimson;
+}
+
+.mpContainer {
+  @apply flex flex-col gap-3;
 }
 
 .modalInfo {

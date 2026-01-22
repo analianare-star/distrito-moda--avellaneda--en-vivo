@@ -597,6 +597,19 @@ export const api = {
     return api.buyStreamQuota(shopId, amount);
   },
 
+  createMercadoPagoPreference: async (payload: { type: string; quantity: number; shopId?: string }) => {
+    const res = await fetchWithAuth(`/payments/mercadopago/preference`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || 'No se pudo iniciar el pago');
+    }
+    return data;
+  },
+
   reportStream: async (streamId: string, reason: string) => {
     try {
       const res = await fetchWithAuth(`/streams/${streamId}/report`, {
@@ -716,7 +729,7 @@ export const api = {
     try {
       const query = status ? `?status=${status}` : '';
       const res = await fetchWithAuth(`/purchases/shop/${shopId}${query}`);
-      if (!res.ok) throw new Error('Error al obtener compras');
+      if (!res.ok) throw new Error(`Error al obtener compras (${res.status})`);
       return await res.json();
     } catch (error) {
       console.error('Error fetching shop purchases:', error);

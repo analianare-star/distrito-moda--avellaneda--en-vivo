@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mercadopago/sdk-react": "^0.0.22",
     "firebase": "10.12.4",
     "html-to-image": "^1.11.13",
     "jspdf": "^4.0.0",
