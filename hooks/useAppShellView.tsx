@@ -29,9 +29,43 @@ type OverlaysProps = {
 };
 
 export const useAppShellView = (core: AppCoreState) => {
-  const [showIntroOverlay, setShowIntroOverlay] = useState(true);
+  const shouldSkipIntro = () => {
+    try {
+      if (window.sessionStorage.getItem('mp_return')) return true;
+      const params = new URLSearchParams(window.location.search);
+      const mpResult = params.get('mp_result');
+      const collectionStatus = params.get('collection_status') || params.get('status');
+      const paymentId =
+        params.get('payment_id') ||
+        params.get('collection_id') ||
+        params.get('paymentId');
+      const purchaseId = params.get('external_reference') || params.get('purchaseId');
+      const status = (mpResult || collectionStatus || '').toLowerCase();
+      if (status || paymentId || purchaseId) {
+        window.sessionStorage.setItem(
+          'mp_return',
+          JSON.stringify({
+            status: status || undefined,
+            paymentId: paymentId || undefined,
+            purchaseId: purchaseId || undefined,
+            ts: Date.now(),
+          })
+        );
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const [showIntroOverlay, setShowIntroOverlay] = useState(() => !shouldSkipIntro());
 
   useEffect(() => {
+    if (shouldSkipIntro()) {
+      setShowIntroOverlay(false);
+      return;
+    }
     const timer = window.setTimeout(() => setShowIntroOverlay(false), 5000);
     return () => window.clearTimeout(timer);
   }, []);
