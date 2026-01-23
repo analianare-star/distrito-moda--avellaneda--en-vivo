@@ -39,6 +39,24 @@ type Tab = 'RESUMEN' | 'REDES' | 'VIVOS' | 'REELS' | 'PERFIL';
 const WA_LABELS: WhatsappLabel[] = ['Ventas por mayor', 'Ventas por menor', 'Consulta ingreso', 'Envíos', 'Reclamos'];
 const PAYMENT_OPTIONS = ['Efectivo', 'Transferencia', 'Depósito', 'USDT', 'Cheque', 'Mercado Pago'];
 const REEL_LIMITS: Record<string, number> = { 'Estandar': 1, 'Alta Visibilidad': 3, 'Maxima Visibilidad': 5 };
+const MP_RETURN_STORAGE_KEY = 'mp_return';
+
+type MpReturnPayload = {
+  status?: string;
+  paymentId?: string;
+  purchaseId?: string;
+  ts: number;
+};
+
+const readStoredMpReturn = (): MpReturnPayload | null => {
+  try {
+    const raw = window.sessionStorage.getItem(MP_RETURN_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as MpReturnPayload;
+  } catch {
+    return null;
+  }
+};
 
 export const Dashboard: React.FC<DashboardProps> = ({ 
     currentShop, 
@@ -195,26 +213,45 @@ export const Dashboard: React.FC<DashboardProps> = ({
           params.get('paymentId');
       const purchaseId = externalReference || params.get('purchaseId');
 
-      if (!mpResult && !collectionStatus) return;
+      let payload: MpReturnPayload | null = null;
+      const statusFromUrl = (mpResult || collectionStatus || '').toLowerCase();
+      if (statusFromUrl || paymentId || purchaseId) {
+          payload = {
+              status: statusFromUrl || undefined,
+              paymentId: paymentId || undefined,
+              purchaseId: purchaseId || undefined,
+              ts: Date.now(),
+          };
+          window.sessionStorage.setItem(MP_RETURN_STORAGE_KEY, JSON.stringify(payload));
+      } else {
+          payload = readStoredMpReturn();
+      }
+
+      if (!payload || (!payload.status && !payload.paymentId && !payload.purchaseId)) return;
 
       mpReturnHandledRef.current = true;
-      const status = (mpResult || collectionStatus || '').toLowerCase();
+      const status = (payload.status || '').toLowerCase();
 
       const finalizePayment = async () => {
-          if (paymentId) {
+          let approvedFromConfirm: boolean | null = null;
+          if (payload?.paymentId) {
               try {
-                  await api.confirmMercadoPagoPayment(paymentId);
+                  const result = await api.confirmMercadoPagoPayment(payload.paymentId);
+                  approvedFromConfirm = Boolean(result?.approved);
               } catch (error) {
                   console.error('Error confirmando pago', error);
               }
           }
 
-          if (status === 'approved' || status === 'success') {
+          const isApproved =
+              approvedFromConfirm === true || status === 'approved' || status === 'success';
+
+          if (isApproved) {
               setNotice({
                   title: 'Compra exitosa',
-                  message: purchaseId
-                      ? `Compra ${purchaseId} aprobada. ¡Muchas gracias por elegirnos!`
-                      : 'Pago aprobado. ¡Muchas gracias por elegirnos!',
+                  message: payload?.purchaseId
+                      ? `Compra ${payload.purchaseId} aprobada. Muchas gracias por elegirnos!`
+                      : 'Pago aprobado. Muchas gracias por elegirnos!',
                   tone: 'success',
               });
               onRefreshData();
@@ -229,12 +266,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
           } else {
               setNotice({
                   title: 'Pago no completado',
-                  message: 'No se pudo completar el pago. Podés reintentarlo cuando quieras.',
+                  message: 'No se pudo completar el pago. Podes reintentarlo cuando quieras.',
                   tone: 'warning',
               });
           }
 
           window.history.replaceState({}, document.title, window.location.pathname);
+          window.sessionStorage.removeItem(MP_RETURN_STORAGE_KEY);
       };
 
       void finalizePayment();
