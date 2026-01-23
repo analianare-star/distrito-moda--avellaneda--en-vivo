@@ -44,7 +44,13 @@ export const useAppData = ({
       setActiveReels(activeOnly);
 
       if (!currentShopId && shops.length > 0) {
-        setCurrentShopId(shops[0].id);
+        const path =
+          typeof window !== "undefined" ? window.location.pathname : "";
+        const isShopRoute = path === "/tienda" || path.startsWith("/tienda/");
+        const isAdminRoute = path === "/admin" || path.startsWith("/admin/");
+        if (!isShopRoute && !isAdminRoute) {
+          setCurrentShopId(shops[0].id);
+        }
       }
     } catch (error) {
       console.error("Error cargando datos:", error);

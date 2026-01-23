@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
     return {
       server: {
         port: 5173, // <--- ¡CAMBIO AQUÍ! Movemos el frontend para no chocar con el backend
+        strictPort: true,
         host: '0.0.0.0',
       },
       plugins: [react()],

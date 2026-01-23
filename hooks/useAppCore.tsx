@@ -188,8 +188,11 @@ export const useAppCore = () => {
 
   // --- Estados derivados con proteccion anti-crash ---
   // If shop list is empty, fallback to EMPTY_SHOP.
+  const isShopPath = isShopRoute(location.pathname);
   const currentShop =
-    allShops.find((s) => s.id === currentShopId) || allShops[0] || EMPTY_SHOP;
+    allShops.find((s) => s.id === currentShopId) ||
+    (!isShopPath ? allShops[0] : undefined) ||
+    EMPTY_SHOP;
   const {
     effectiveViewMode,
     effectiveUserType,
