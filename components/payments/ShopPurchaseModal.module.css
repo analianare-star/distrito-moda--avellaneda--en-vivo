@@ -1,0 +1,134 @@
+.modalBackdrop {
+  @apply fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4;
+}
+
+.modalCard {
+  @apply bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative;
+}
+
+.modalClose {
+  @apply absolute top-4 right-4 text-gray-400 hover:text-dm-dark;
+}
+
+.modalHeader {
+  @apply text-center mb-4;
+}
+
+.modalIcon {
+  @apply w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 bg-gray-100 text-dm-dark;
+}
+
+.modalTitle {
+  @apply font-serif text-[20px] md:text-2xl text-dm-dark;
+}
+
+.modalSubtitle {
+  @apply text-xs text-gray-500 mt-1;
+}
+
+.stepper {
+  @apply flex items-center justify-center gap-2 mb-4;
+}
+
+.stepDot {
+  @apply w-2.5 h-2.5 rounded-full bg-gray-200;
+}
+
+.stepDotActive {
+  @apply bg-dm-crimson shadow-[0_0_10px_rgba(237,22,80,0.5)];
+}
+
+.optionGrid {
+  @apply space-y-3;
+}
+
+.optionCard {
+  @apply w-full text-left border border-gray-200 rounded-xl p-4 transition;
+  background: #fafafa;
+}
+
+.optionCard:hover {
+  border-color: #c1b5ab;
+}
+
+.optionCardActive {
+  border-color: #ed1650;
+  box-shadow: 0 12px 30px rgba(237, 22, 80, 0.15);
+  background: #fff5f8;
+}
+
+.optionHeader {
+  @apply flex items-center justify-between;
+}
+
+.optionTitle {
+  @apply font-bold text-dm-dark;
+}
+
+.optionSubtitle {
+  @apply text-xs text-gray-500 mt-1;
+}
+
+.optionPrice {
+  @apply text-xs font-bold text-green-600 mt-3 block;
+}
+
+.optionBadge {
+  @apply text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide;
+  background: #f2f2f2;
+  color: #1f1a1c;
+}
+
+.optionBadgeGreen {
+  background: #e8f7ef;
+  color: #1b7f4b;
+}
+
+.optionBadgeCrimson {
+  background: #ffe8ef;
+  color: #ed1650;
+}
+
+.primaryButton {
+  @apply w-full bg-dm-crimson hover:bg-red-700 border-none text-white;
+}
+
+.summarySection {
+  @apply space-y-3;
+}
+
+.summaryRow {
+  @apply flex items-center justify-between border border-gray-100 bg-gray-50 rounded-lg px-3 py-2;
+}
+
+.summaryLabel {
+  @apply text-xs text-gray-500;
+}
+
+.summaryValue {
+  @apply text-sm font-bold text-dm-dark;
+}
+
+.summaryActions {
+  @apply flex gap-2 pt-2;
+}
+
+.summaryNote {
+  @apply text-[11px] text-gray-400 text-center;
+}
+
+.paySection {
+  @apply space-y-3;
+}
+
+.mpContainer {
+  @apply flex flex-col gap-3;
+}
+
+.purchaseNote {
+  @apply text-[10px] text-center text-gray-400;
+}
+
+.errorText {
+  @apply text-[11px] text-dm-crimson text-center;
+}

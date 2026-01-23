@@ -610,6 +610,19 @@ export const api = {
     return data;
   },
 
+  confirmMercadoPagoPayment: async (paymentId: string) => {
+    const res = await fetchWithAuth(`/payments/mercadopago/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentId }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || 'No se pudo confirmar el pago');
+    }
+    return data;
+  },
+
   reportStream: async (streamId: string, reason: string) => {
     try {
       const res = await fetchWithAuth(`/streams/${streamId}/report`, {

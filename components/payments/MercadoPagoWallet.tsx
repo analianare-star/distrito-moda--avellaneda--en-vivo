@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Wallet, initMercadoPago } from "@mercadopago/sdk-react";
 
 type MercadoPagoWalletProps = {
@@ -11,10 +11,14 @@ if (publicKey) {
   initMercadoPago(publicKey, { locale: "es-AR" });
 }
 
-export const MercadoPagoWallet: React.FC<MercadoPagoWalletProps> = ({
-  preferenceId,
-  onReady,
-}) => {
+export const MercadoPagoWallet = React.memo(
+  ({ preferenceId, onReady }: MercadoPagoWalletProps) => {
+    const readyRef = useRef(false);
+
+    useEffect(() => {
+      readyRef.current = false;
+    }, [preferenceId]);
+
   if (!publicKey) {
     return (
       <p className="text-sm text-gray-500">
@@ -26,10 +30,15 @@ export const MercadoPagoWallet: React.FC<MercadoPagoWalletProps> = ({
   return (
     <div>
       <Wallet
-        key={preferenceId}
         initialization={{ preferenceId }}
-        onReady={onReady}
+        onReady={() => {
+          if (readyRef.current) return;
+          readyRef.current = true;
+          onReady?.();
+        }}
       />
     </div>
   );
-};
+  },
+  (prev, next) => prev.preferenceId === next.preferenceId
+);

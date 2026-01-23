@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './Button';
 import { getShopCoverUrl } from '../utils/shopMedia';
-import { Plus, X, Instagram, Facebook, Video, AlertOctagon, Check, Save, Lock, RefreshCw, Pencil, Trash2, Star, History, LayoutDashboard, Store, Radio, Globe, Phone, MapPin, ExternalLink, User, CreditCard, DollarSign, ShoppingCart, AlertTriangle, Info, ArrowUpCircle, Film } from 'lucide-react';
+import { Plus, X, Instagram, Facebook, Video, AlertOctagon, Check, Save, Lock, RefreshCw, Pencil, Trash2, Star, History, LayoutDashboard, Store, Radio, Globe, Phone, MapPin, ExternalLink, User, CreditCard, ShoppingCart, AlertTriangle, Info, ArrowUpCircle, Film } from 'lucide-react';
 import { StreamStatus, Shop, SocialHandles, Stream, SocialPlatform, WhatsappLine, WhatsappLabel, Reel, NotificationItem } from '../types';
 import { PLANES_URL } from '../constants';
 import { AddressAutocomplete } from './AddressAutocomplete';
@@ -11,7 +11,7 @@ import { AddressAutocomplete } from './AddressAutocomplete';
 import { api } from '../services/api';
 import { NoticeModal } from './NoticeModal';
 import { LogoBubble } from './LogoBubble';
-import { MercadoPagoWallet } from './payments/MercadoPagoWallet';
+import { ShopPurchaseModal } from './payments/ShopPurchaseModal';
 import styles from './Dashboard.module.css';
 
 interface DashboardProps {
@@ -61,13 +61,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('RESUMEN');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showBuyModal, setShowBuyModal] = useState(false);
-  const [showBuyReelModal, setShowBuyReelModal] = useState(false);
-  const [mpPreferenceId, setMpPreferenceId] = useState<string | null>(null);
-  const [mpPurchaseId, setMpPurchaseId] = useState<string | null>(null);
-  const [mpError, setMpError] = useState<string | null>(null);
-  const [mpLoading, setMpLoading] = useState(false);
-  const [mpMode, setMpMode] = useState<'LIVE' | 'REEL' | null>(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [purchaseType, setPurchaseType] = useState<'LIVE_PACK' | 'REEL_PACK'>('LIVE_PACK');
   const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
   const [showPendingNotice, setShowPendingNotice] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -83,6 +78,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [isPurchaseLoading, setIsPurchaseLoading] = useState(false);
   const [isPurchaseBlocked, setIsPurchaseBlocked] = useState(false);
   const purchasesLoadedRef = useRef(false);
+  const mpReturnHandledRef = useRef(false);
 
   const blockPreviewAction = (message = 'Accion bloqueada en modo vista tecnica.') => {
       if (!isPreview) return false;
@@ -96,14 +92,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const openBuyModal = () => {
       if (blockPreviewAction()) return;
-      setShowBuyReelModal(false);
-      setShowBuyModal(true);
+      setPurchaseType('LIVE_PACK');
+      setShowPurchaseModal(true);
   };
 
   const openBuyReelModal = () => {
       if (blockPreviewAction()) return;
-      setShowBuyModal(false);
-      setShowBuyReelModal(true);
+      setPurchaseType('REEL_PACK');
+      setShowPurchaseModal(true);
   };
   
   // Local states
@@ -145,60 +141,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
       await loadPurchases();
   };
 
-  const resetMercadoPagoState = () => {
-      setMpPreferenceId(null);
-      setMpPurchaseId(null);
-      setMpError(null);
-      setMpLoading(false);
-      setMpMode(null);
-  };
-
-  const startMercadoPagoPayment = async (type: 'LIVE_PACK' | 'REEL_PACK', quantity: number) => {
-      if (blockPreviewAction()) return;
-      if (!currentShop.id) {
-          setNotice({
-              title: 'Sin tienda',
-              message: 'No se pudo iniciar el pago sin tienda activa.',
-              tone: 'error',
-          });
-          return;
-      }
-      setMpLoading(true);
-      setMpError(null);
-      try {
-          const data = await api.createMercadoPagoPreference({
-              type,
-              quantity,
-              shopId: currentShop.id,
-          });
-          setMpPreferenceId(data.preferenceId || null);
-          setMpPurchaseId(data.purchaseId || null);
-          setMpMode(type === 'LIVE_PACK' ? 'LIVE' : 'REEL');
-          loadPurchases();
-      } catch (error: any) {
-          setMpError(error.message || 'No se pudo iniciar el pago.');
-          setNotice({
-              title: 'Pago no iniciado',
-              message: error.message || 'No se pudo iniciar el pago.',
-              tone: 'error',
-          });
-      } finally {
-          setMpLoading(false);
-      }
-  };
-
-  useEffect(() => {
-      if (!showBuyModal && !showBuyReelModal) {
-          resetMercadoPagoState();
-          return;
-      }
-      if (showBuyModal && mpMode && mpMode !== 'LIVE') {
-          resetMercadoPagoState();
-      }
-      if (showBuyReelModal && mpMode && mpMode !== 'REEL') {
-          resetMercadoPagoState();
-      }
-  }, [showBuyModal, showBuyReelModal, mpMode]);
 
   useEffect(() => {
       const initialLines = [
@@ -240,6 +182,63 @@ export const Dashboard: React.FC<DashboardProps> = ({
       purchasesLoadedRef.current = false;
       loadPurchases();
   }, [currentShop]);
+
+  useEffect(() => {
+      if (mpReturnHandledRef.current) return;
+      const params = new URLSearchParams(window.location.search);
+      const mpResult = params.get('mp_result');
+      const collectionStatus = params.get('collection_status') || params.get('status');
+      const externalReference = params.get('external_reference');
+      const paymentId =
+          params.get('payment_id') ||
+          params.get('collection_id') ||
+          params.get('paymentId');
+      const purchaseId = externalReference || params.get('purchaseId');
+
+      if (!mpResult && !collectionStatus) return;
+
+      mpReturnHandledRef.current = true;
+      const status = (mpResult || collectionStatus || '').toLowerCase();
+
+      const finalizePayment = async () => {
+          if (paymentId) {
+              try {
+                  await api.confirmMercadoPagoPayment(paymentId);
+              } catch (error) {
+                  console.error('Error confirmando pago', error);
+              }
+          }
+
+          if (status === 'approved' || status === 'success') {
+              setNotice({
+                  title: 'Compra exitosa',
+                  message: purchaseId
+                      ? `Compra ${purchaseId} aprobada. ¡Muchas gracias por elegirnos!`
+                      : 'Pago aprobado. ¡Muchas gracias por elegirnos!',
+                  tone: 'success',
+              });
+              onRefreshData();
+              loadPurchases();
+          } else if (status === 'pending' || status === 'in_process') {
+              setNotice({
+                  title: 'Pago en proceso',
+                  message: 'Estamos acreditando la compra. Te avisamos en minutos.',
+                  tone: 'info',
+              });
+              loadPurchases();
+          } else {
+              setNotice({
+                  title: 'Pago no completado',
+                  message: 'No se pudo completar el pago. Podés reintentarlo cuando quieras.',
+                  tone: 'warning',
+              });
+          }
+
+          window.history.replaceState({}, document.title, window.location.pathname);
+      };
+
+      void finalizePayment();
+  }, [onRefreshData]);
 
   // --- LOGIC: QUOTAS & PERMISSIONS (CORREGIDO PARA EVITAR NaN) ---
   
@@ -515,23 +514,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       }
   };
 
-  const handleBuyReelConfirm = async () => {
-      await startMercadoPagoPayment('REEL_PACK', 5);
-  };
-
   // --- STREAM FORM HANDLERS ---
-  const handleBuyConfirm = () => {
-      if (blockPreviewAction()) return;
-      if (isAgendaSuspended) {
-          setNotice({
-              title: 'Agenda suspendida',
-              message: 'No puedes comprar cupos de vivos mientras dure la suspension.',
-              tone: 'warning',
-          });
-          return;
-      }
-      startMercadoPagoPayment('LIVE_PACK', 1);
-  };
   const handleCreateClick = () => {
       if (blockPreviewAction()) return;
       if (!canSchedule) return;
@@ -1630,103 +1613,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       </main>
 
-      {/* MODAL: BUY QUOTA */}
-      {showBuyModal && (
-           <div className={styles.modalBackdrop}>
-              <div className={styles.modalCard}>
-                  <button onClick={() => setShowBuyModal(false)} className={styles.modalClose}><X size={20}/></button>
-                  <div className={styles.modalHeader}>
-                      <div className={`${styles.modalIcon} ${styles.modalIconGreen}`}>
-                          <DollarSign size={32} />
-                      </div>
-                      <h2 className={styles.modalTitle}>Comprar Cupo Extra</h2>
-                      <p className={styles.modalSubtitle}>Agrega un vivo adicional a tu agenda semanal.</p>
-                  </div>
-                  
-                  <div className={styles.modalForm}>
-                      <div className={styles.modalRow}>
-                          <span className={styles.modalRowTitle}>1 Cupo de Vivo</span>
-                          <span className={styles.modalRowPrice}>Precio en Mercado Pago</span>
-                      </div>
-                      {mpError && (
-                          <p className={styles.modalError}>{mpError}</p>
-                      )}
-                      {mpPreferenceId && mpMode === 'LIVE' ? (
-                          <div className={styles.mpContainer}>
-                              <MercadoPagoWallet
-                                preferenceId={mpPreferenceId}
-                                onReady={() => {
-                                  void loadPurchasesOnce();
-                                }}
-                              />
-                              {mpPurchaseId && (
-                                  <p className={styles.modalNote}>
-                                      Compra #{mpPurchaseId} en proceso. Cuando el pago se apruebe, los cupos se acreditan automaticamente.
-                                  </p>
-                              )}
-                          </div>
-                      ) : (
-                          <Button
-                            className={styles.modalConfirmButtonGreen}
-                            onClick={handleBuyConfirm}
-                            disabled={mpLoading}
-                          >
-                              {mpLoading ? 'Iniciando pago...' : 'Continuar con Mercado Pago'}
-                          </Button>
-                      )}
-                  </div>
-              </div>
-           </div>
-      )}
-
-      {/* MODAL: BUY REEL QUOTA */}
-      {showBuyReelModal && (
-           <div className={styles.modalBackdrop}>
-              <div className={styles.modalCard}>
-                  <button onClick={() => setShowBuyReelModal(false)} className={styles.modalClose}><X size={20}/></button>
-                  <div className={styles.modalHeader}>
-                      <div className={`${styles.modalIcon} ${styles.modalIconCrimson}`}>
-                          <Film size={32} />
-                      </div>
-                      <h2 className={styles.modalTitle}>Comprar Historias Extra</h2>
-                      <p className={styles.modalSubtitle}>Agrega 5 historias adicionales para hoy.</p>
-                  </div>
-                  
-                  <div className={styles.modalForm}>
-                      <div className={styles.modalRow}>
-                          <span className={styles.modalRowTitle}>Pack 5 Historias</span>
-                          <span className={styles.modalRowPrice}>Precio en Mercado Pago</span>
-                      </div>
-                      {mpError && (
-                          <p className={styles.modalError}>{mpError}</p>
-                      )}
-                      {mpPreferenceId && mpMode === 'REEL' ? (
-                          <div className={styles.mpContainer}>
-                              <MercadoPagoWallet
-                                preferenceId={mpPreferenceId}
-                                onReady={() => {
-                                  void loadPurchasesOnce();
-                                }}
-                              />
-                              {mpPurchaseId && (
-                                  <p className={styles.modalNote}>
-                                      Compra #{mpPurchaseId} en proceso. Cuando el pago se apruebe, los cupos se acreditan automaticamente.
-                                  </p>
-                              )}
-                          </div>
-                      ) : (
-                          <Button
-                            className={styles.modalConfirmButtonCrimson}
-                            onClick={handleBuyReelConfirm}
-                            disabled={mpLoading}
-                          >
-                              {mpLoading ? 'Iniciando pago...' : 'Continuar con Mercado Pago'}
-                          </Button>
-                      )}
-                  </div>
-              </div>
-           </div>
-      )}
+      <ShopPurchaseModal
+        isOpen={showPurchaseModal}
+        onClose={() => setShowPurchaseModal(false)}
+        shopId={currentShop.id}
+        defaultType={purchaseType}
+        isPreview={isPreview}
+        onNotice={(title, message, tone) =>
+          setNotice({ title, message, tone })
+        }
+        onPurchaseSync={() => {
+          void loadPurchasesOnce();
+          void loadPurchases();
+        }}
+      />
 
       {/* MODAL: CREATE STREAM */}
       {showCreateModal && (
