@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AppHeader } from "./layout/AppHeader";
 import { AppFooterNav, FooterNavItem } from "./layout/AppFooterNav";
 import { AdminLayout } from "./layout/AdminLayout";
@@ -77,6 +77,8 @@ export const RoleRouter: React.FC<RoleRouterProps> = ({
   clientIsPreview,
   clientHideChrome,
 }) => {
+  const location = useLocation();
+  const showClientLogoOnDesktop = location.pathname.startsWith("/tiendas");
   const commonHeaderProps = {
     brandLogo,
     bottomNavItems,
@@ -165,6 +167,7 @@ export const RoleRouter: React.FC<RoleRouterProps> = ({
                 {...commonHeaderProps}
                 userName={clientUserName}
                 hideUserInfoOnDesktop
+                showLogoOnDesktop={showClientLogoOnDesktop}
               />
             }
             headerAccessory={

@@ -14,6 +14,28 @@
   @apply h-24 w-auto object-contain sm:h-28 md:h-32;
 }
 
+@media (min-width: 1024px) {
+  .header {
+    @apply py-1 px-4;
+  }
+
+  .nav {
+    min-height: 44px;
+  }
+
+  .logoWrap {
+    display: none;
+  }
+
+  .logoWrapDesktop {
+    display: flex;
+  }
+
+  .logoImageDesktop {
+    height: 28px;
+  }
+}
+
 .userInfo {
   @apply absolute bottom-1 right-4 flex flex-col items-end text-[11px] font-sans leading-tight text-gray-500 md:right-6;
 }

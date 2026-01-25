@@ -5,11 +5,10 @@ import { ReelsStrip } from "../../ReelsStrip";
 import { StreamCard } from "../../StreamCard";
 import { EmptyState } from "../../EmptyState";
 import { Reel, Shop, Stream, StreamStatus, UserContext } from "../../../types";
-import { CLIENT_NAV_ITEMS } from "../../../navigation";
 import { getShopCoverUrl } from "../../../utils/shopMedia";
 import { LiveQueueModal } from "../../LiveQueueModal";
 import { LogoBubble } from "../../LogoBubble";
-import { ShopMapEmbed } from "../../ShopMapEmbed";
+import { ClientDesktopPanel } from "./ClientDesktopPanel";
 import styles from "./ClientHomePage.module.css";
 
 // ClientHomePage muestra home y agenda publica.
@@ -72,19 +71,10 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
   onQueueModalChange,
 }) => {
   const [queueStream, setQueueStream] = useState<Stream | null>(null);
-  const [isDesktop, setIsDesktop] = useState(false);
   useEffect(() => {
     onQueueModalChange(Boolean(queueStream));
   }, [queueStream, onQueueModalChange]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const media = window.matchMedia("(min-width: 1024px)");
-    const handleChange = () => setIsDesktop(media.matches);
-    handleChange();
-    media.addEventListener("change", handleChange);
-    return () => media.removeEventListener("change", handleChange);
-  }, []);
 
   const visibleStreams = filteredStreams.slice(0, 6);
   const streamLayout = ["wide", "small", "small", "wide", "small", "small"];
@@ -273,133 +263,18 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
     </>
   ) : null;
 
-  const desktopPanelStats = [
-    {
-      label: "Vivos en vivo",
-      value: queueStreams.live.length,
-    },
-    {
-      label: "Vivos proximos",
-      value: queueStreams.upcoming.length,
-    },
-    {
-      label: "Tiendas destacadas",
-      value: featuredShops.length,
-    },
-  ];
-
-  const upcomingHero = queueStreams.upcoming[0] ?? queueStreams.live[0];
-  const promoHeading = upcomingHero
-    ? `Siguiente vivo: ${upcomingHero.shop.name}`
-    : "Sin novedades en vivo";
-
-  const topShopList = featuredShops.slice(0, 3);
   const desktopPanel = (
-    <aside className={styles.desktopPanel} aria-label="Panel lateral de escritorio">
-      <div className={styles.panelBrand}>
-        <img src={brandLogo} alt="Avellaneda en Vivo" className={styles.panelBrandLogo} />
-      </div>
-      <div className={styles.panelHeader}>
-        <p className={styles.panelLabel}>Panel Desktop</p>
-        <span className={styles.panelSmallLabel}>Modo mouse</span>
-      </div>
-      <div className={styles.panelUser}>
-        <span className={styles.panelUserTitle}>
-          {user.isLoggedIn ? "Sesion activa" : "Ingresar"}
-        </span>
-        <span className={styles.panelUserName}>
-          {user.isLoggedIn ? user.name || user.email || "Tienda" : "Invitado"}
-        </span>
-        {user.isLoggedIn ? (
-          <button type="button" className={styles.panelAction} onClick={onLogout}>
-            Cerrar sesion
-          </button>
-        ) : (
-          <div className={styles.panelAuthButtons}>
-            <button type="button" className={styles.panelAction} onClick={onOpenLogin}>
-              Ingresar
-            </button>
-            <button
-              type="button"
-              className={styles.panelActionSecondary}
-              onClick={onOpenLogin}
-            >
-              Registrarme
-            </button>
-          </div>
-        )}
-      </div>
-      <nav className={styles.panelNav} aria-label="Navegacion desktop">
-        {CLIENT_NAV_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`${styles.panelNavButton} ${
-              activeBottomNav === item.id ? styles.panelNavButtonActive : ""
-            }`}
-            onClick={() => onSelectBottomNav(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
-      <ul className={styles.panelList}>
-        {desktopPanelStats.map((item) => (
-          <li key={item.label} className={styles.panelItem}>
-            <span className={styles.panelValue}>{item.value}</span>
-            <span className={styles.panelLabelText}>{item.label}</span>
-          </li>
-        ))}
-      </ul>
-      <div className={styles.panelNotice}>
-        <strong>{promoHeading}</strong>
-        <span>Explora nuevas tiendas y vivos destacados.</span>
-      </div>
-      <div className={styles.panelTopShops}>
-        <span className={styles.panelSubheading}>Top tiendas en vivo</span>
-        <div className={styles.panelShopList}>
-          {topShopList.map((shop) => (
-            <button
-              key={shop.id}
-              type="button"
-              className={styles.panelShopItem}
-              onClick={() => onOpenShop(shop)}
-            >
-              <LogoBubble
-                src={shop.logoUrl}
-                alt={shop.name}
-                size={36}
-                seed={shop.id || shop.name}
-              />
-              <span className={styles.panelShopName}>{shop.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className={styles.panelMap}>
-        <p className={styles.panelMapTitle}>Mapa en vivo</p>
-        <p className={styles.panelMapCopy}>
-          Descubre tiendas activas y puntos clave dentro de Avellaneda.
-        </p>
-        {isDesktop ? <ShopMapEmbed /> : null}
-      </div>
-      {upcomingHero && (
-        <div className={styles.panelPromoCard}>
-          <p className={styles.panelPromoTitle}>Proximo</p>
-          <strong className={styles.panelPromoShop}>{upcomingHero.shop.name}</strong>
-          <span className={styles.panelPromoMeta}>
-            {upcomingHero.status === StreamStatus.LIVE ? "En vivo ahora" : "Proximo vivo"}
-          </span>
-        </div>
-      )}
-      <button
-        type="button"
-        className={styles.panelButton}
-        onClick={() => onSelectBottomNav("live")}
-      >
-        Ver vivos
-      </button>
-    </aside>
+    <ClientDesktopPanel
+      brandLogo={brandLogo}
+      user={user}
+      activeBottomNav={activeBottomNav}
+      featuredShops={featuredShops}
+      queueStreamsSource={queueStreamsSource}
+      onSelectBottomNav={onSelectBottomNav}
+      onOpenShop={onOpenShop}
+      onOpenLogin={onOpenLogin}
+      onLogout={onLogout}
+    />
   );
 
   const layoutWrapper = (content: React.ReactNode, label: string) => (
@@ -507,5 +382,29 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
     "Contenido principal"
   );
 
-  return isLoading ? loadingContent : loadedContent;
+  return (
+    <>
+      {isLoading ? loadingContent : loadedContent}
+      {queueStream && (
+        <LiveQueueModal
+          streams={queueList}
+          activeStreamId={queueStream.id}
+          user={user}
+          canClientInteract={canClientInteract}
+          onClose={() => setQueueStream(null)}
+          onOpenShop={onOpenShop}
+          onReport={(streamId) => {
+            const target = queueList.find((item) => item.id === streamId);
+            if (target) onReport(target);
+          }}
+          onToggleReminder={onToggleReminder}
+          onRequireLogin={onOpenLogin}
+          onLike={onLike}
+          onRate={onRate}
+          onDownloadCard={onDownloadCard}
+          onNotify={onNotify}
+        />
+      )}
+    </>
+  );
 };

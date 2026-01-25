@@ -11,6 +11,7 @@ export type ClientNavId =
   | "home"
   | "shops"
   | "live"
+  | "map"
   | "reminders"
   | "account"
   | "favorites";
@@ -36,7 +37,7 @@ export const CLIENT_NAV_ITEMS: ClientNavItemSpec[] = [
   { id: "home", label: "Inicio", isCenter: false },
   { id: "shops", label: "Tiendas", isCenter: false },
   { id: "live", label: "En vivo", isCenter: true },
-  { id: "reminders", label: "Recordatorios", isCenter: false },
+  { id: "map", label: "Mapa", isCenter: false },
   { id: "account", label: "Cuenta", isCenter: false },
 ];
 
@@ -68,6 +69,7 @@ export const CLIENT_NAV_CONFIG: Record<
   home: { path: "/", filter: "Todos" },
   shops: { path: "/tiendas" },
   live: { path: "/en-vivo", filter: "En Vivo" },
+  map: { path: "/mapa" },
   reminders: { path: "/recordatorios", savedTab: "REMINDERS" },
   favorites: { path: "/favoritos", savedTab: "FAVORITES", navId: "reminders" },
   account: { path: "/cuenta" },
@@ -77,6 +79,7 @@ export const CLIENT_PATH_TO_NAV: Record<string, ClientNavId> = {
   "/": "home",
   "/tiendas": "shops",
   "/en-vivo": "live",
+  "/mapa": "map",
   "/recordatorios": "reminders",
   "/favoritos": "favorites",
   "/cuenta": "account",

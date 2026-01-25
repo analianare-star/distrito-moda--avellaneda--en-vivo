@@ -71,10 +71,39 @@
   @apply grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4;
 }
 
+.shopCell {
+  @apply w-full;
+}
+
 .skeletonCard {
   @apply h-36 rounded-2xl bg-gray-200 animate-pulse;
 }
 
 .loadMore {
   @apply mt-6 text-center text-[11px] uppercase tracking-[0.3em] text-gray-400;
+}
+
+@media (min-width: 1024px) {
+  .shopsGrid {
+    grid-auto-flow: dense;
+    grid-auto-rows: 140px;
+    gap: 20px;
+  }
+
+  .shopCell > * {
+    height: 100%;
+  }
+
+  .shopCell:nth-child(8n + 1) {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+
+  .shopCell:nth-child(8n + 4) {
+    grid-column: span 2;
+  }
+
+  .shopCell:nth-child(8n + 6) {
+    grid-row: span 2;
+  }
 }

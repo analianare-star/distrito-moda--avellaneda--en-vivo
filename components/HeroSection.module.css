@@ -247,6 +247,15 @@
     max-width: 1040px;
   }
 
+  .reelsNav {
+    left: 50%;
+    right: auto;
+    width: 1040px;
+    padding-left: 0;
+    padding-right: 0;
+    transform: translate(-50%, -50%);
+  }
+
   .liveContent {
     max-width: 1040px;
     padding-left: 0;

@@ -5,8 +5,9 @@ import { StoryModal } from "../../components/StoryModal";
 import { Shop, Stream, Reel, UserContext, NotificationItem } from "../../types";
 import { ClientHomePage } from "../../components/pages/client/ClientHomePage";
 import { ClientShopsPage } from "../../components/pages/client/ClientShopsPage";
-import { ClientSavedPage } from "../../components/pages/client/ClientSavedPage";
 import { ClientAccountPage } from "../../components/pages/client/ClientAccountPage";
+import { ClientMapPage } from "../../components/pages/client/ClientMapPage";
+import { EmptyState } from "../../components/EmptyState";
 
 // ClientView muestra la experiencia publica y de cliente.
 // ClientView renders the public and client experience.
@@ -102,6 +103,11 @@ export const ClientView: React.FC<ClientViewProps> = ({
   queueStreamsSource,
 }) => {
   const isDataLoading = isLoading || hasFetchError;
+  const renderGuestGate = (title: string, message: string) => (
+    <section aria-label={title}>
+      <EmptyState title={title} message={message} actionLabel="Ingresar" onAction={onRequireLogin} />
+    </section>
+  );
 
   return (
     <section aria-label="Vista cliente">
@@ -207,6 +213,15 @@ export const ClientView: React.FC<ClientViewProps> = ({
               filteredPublicShops={filteredPublicShops}
               renderShopCard={renderShopCard}
               onRefreshData={onRefreshData}
+              brandLogo={brandLogo}
+              user={user}
+              activeBottomNav={activeBottomNav}
+              featuredShops={featuredShops}
+              queueStreamsSource={queueStreamsSource}
+              onSelectBottomNav={onSelectBottomNav}
+              onOpenShop={onOpenShop}
+              onOpenLogin={onOpenLogin}
+              onLogout={onLogout}
             />
           }
         />
@@ -218,57 +233,47 @@ export const ClientView: React.FC<ClientViewProps> = ({
               filteredPublicShops={filteredPublicShops}
               renderShopCard={renderShopCard}
               onRefreshData={onRefreshData}
+              brandLogo={brandLogo}
+              user={user}
+              activeBottomNav={activeBottomNav}
+              featuredShops={featuredShops}
+              queueStreamsSource={queueStreamsSource}
+              onSelectBottomNav={onSelectBottomNav}
+              onOpenShop={onOpenShop}
+              onOpenLogin={onOpenLogin}
+              onLogout={onLogout}
             />
           }
+        />
+        <Route
+          path="/mapa"
+          element={<ClientMapPage onClose={() => onSelectBottomNav("home")} />}
         />
         <Route
           path="/favoritos"
-          element={
-            <ClientSavedPage
-              isLoading={isDataLoading}
-              savedTab={savedTab}
-              filteredFavoriteShops={filteredFavoriteShops}
-              reminderStreams={reminderStreams}
-              canClientInteract={canClientInteract}
-              renderShopCard={renderShopCard}
-              onSetSavedTab={onSetSavedTab}
-              onSelectBottomNav={onSelectBottomNav}
-              onRequireLogin={onRequireLogin}
-              onOpenShop={onOpenShop}
-              onToggleReminder={onToggleReminder}
-              onOpenCalendarInvite={onOpenCalendarInvite}
-            />
-          }
+          element={<Navigate to="/cuenta" replace />}
         />
         <Route
           path="/recordatorios"
-          element={
-            <ClientSavedPage
-              isLoading={isDataLoading}
-              savedTab={savedTab}
-              filteredFavoriteShops={filteredFavoriteShops}
-              reminderStreams={reminderStreams}
-              canClientInteract={canClientInteract}
-              renderShopCard={renderShopCard}
-              onSetSavedTab={onSetSavedTab}
-              onSelectBottomNav={onSelectBottomNav}
-              onRequireLogin={onRequireLogin}
-              onOpenShop={onOpenShop}
-              onToggleReminder={onToggleReminder}
-              onOpenCalendarInvite={onOpenCalendarInvite}
-            />
-          }
+          element={<Navigate to="/cuenta" replace />}
         />
         <Route
           path="/cuenta"
           element={
-            <ClientAccountPage
-              isLoggedIn={user.isLoggedIn}
-              user={user}
-              notifications={notifications}
-              reminderStreams={reminderStreams}
-              onOpenCalendarInvite={onOpenCalendarInvite}
-            />
+            user.isLoggedIn ? (
+              <ClientAccountPage
+                isLoggedIn={user.isLoggedIn}
+                user={user}
+                notifications={notifications}
+                reminderStreams={reminderStreams}
+                onOpenCalendarInvite={onOpenCalendarInvite}
+              />
+            ) : (
+              renderGuestGate(
+                "Ingresar para acceder a tu cuenta",
+                "Inicia sesion para ver tu actividad y tus avisos."
+              )
+            )
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

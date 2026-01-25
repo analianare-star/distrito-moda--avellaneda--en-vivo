@@ -15,8 +15,8 @@
 .desktopPanel {
   @apply hidden lg:flex flex-col gap-4 w-[320px] shrink-0 rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-xl;
   position: sticky;
-  top: calc(var(--app-header-height, 88px) + 16px);
-  min-height: calc(100vh - var(--app-header-height, 88px) - 32px);
+  top: calc(var(--app-header-height, 88px) + 8px);
+  min-height: calc(100vh - var(--app-header-height, 88px) - 20px);
   height: auto;
   overflow: visible;
 }
@@ -139,7 +139,7 @@
 }
 
 .panelMap {
-  @apply mt-3 rounded-2xl border border-slate-200 bg-white/80 p-4 flex flex-col gap-2;
+  @apply mt-3 rounded-2xl border border-slate-200 bg-white/80 p-4 flex flex-col gap-3;
 }
 
 .panelMapTitle {
@@ -148,6 +148,22 @@
 
 .panelMapCopy {
   @apply text-[12px] text-slate-600 leading-relaxed;
+}
+
+.panelMapCta {
+  @apply mt-2 w-full rounded-full border border-dm-crimson bg-dm-crimson px-4 py-2 text-[11px] font-bold uppercase tracking-[0.28em] text-white shadow-md hover:bg-dm-crimson/90;
+}
+
+.panelExtras {
+  @apply mt-3 rounded-2xl border border-slate-200 bg-white/80 p-4 flex flex-col gap-3;
+}
+
+.panelExtrasList {
+  @apply list-none m-0 p-0 flex flex-col gap-2 text-[12px] text-slate-600 leading-relaxed;
+}
+
+.panelExtrasItem {
+  @apply rounded-xl border border-slate-200 bg-white/80 px-3 py-2;
 }
 
 .panelMapButton {
@@ -248,19 +264,19 @@
 
 @media (min-width: 1024px) {
   .queueRow {
-    @apply gap-6;
+    @apply gap-8;
     padding-left: 0;
     padding-right: 0;
   }
 
   .queueCard {
-    min-width: 160px;
-    height: 210px;
-    padding-top: 18px;
+    min-width: 200px;
+    height: 248px;
+    padding-top: 22px;
   }
 
   .queueName {
-    font-size: 12px;
+    font-size: 13px;
   }
 }
 

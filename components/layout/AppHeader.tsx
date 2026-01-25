@@ -22,6 +22,7 @@ interface AppHeaderProps {
   isLoggedIn: boolean;
   onLogout: () => void;
   hideUserInfoOnDesktop?: boolean;
+  showLogoOnDesktop?: boolean;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -35,6 +36,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   isLoggedIn,
   onLogout,
   hideUserInfoOnDesktop,
+  showLogoOnDesktop,
 }) => {
   const headerRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -57,8 +59,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <header className={styles.header} ref={headerRef}>
       <nav className={styles.nav} aria-label="Navegacion principal">
-        <div className={styles.logoWrap}>
-          <img src={brandLogo} alt="Distrito Moda" className={styles.logoImage} />
+        <div
+          className={`${styles.logoWrap} ${
+            showLogoOnDesktop ? styles.logoWrapDesktop : ""
+          }`}
+        >
+          <img
+            src={brandLogo}
+            alt="Distrito Moda"
+            className={`${styles.logoImage} ${
+              showLogoOnDesktop ? styles.logoImageDesktop : ""
+            }`}
+          />
         </div>
         <div
           className={`${styles.userInfo} ${

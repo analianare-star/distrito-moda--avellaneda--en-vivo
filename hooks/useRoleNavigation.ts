@@ -28,6 +28,8 @@ import {
   Receipt,
   Globe,
   Film,
+  MapPin,
+  Menu,
 } from "lucide-react";
 
 type UseRoleNavigationArgs = {
@@ -153,6 +155,7 @@ export const useRoleNavigation = ({
     home: Home,
     shops: Store,
     live: Radio,
+    map: MapPin,
     reminders: Clock,
     favorites: Heart,
     account: User,
@@ -199,7 +202,10 @@ export const useRoleNavigation = ({
             ? "Mi cuenta"
             : "Ingresar"
           : item.label,
-      icon: CLIENT_NAV_ICONS[item.id],
+      icon:
+        item.id === "account" && userIsLoggedIn
+          ? Menu
+          : CLIENT_NAV_ICONS[item.id],
       isCenter: item.isCenter,
       onSelect: () => handleClientNav(item.id),
       badge:
