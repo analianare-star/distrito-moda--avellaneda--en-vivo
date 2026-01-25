@@ -74,3 +74,7 @@
 .skeletonCard {
   @apply h-36 rounded-2xl bg-gray-200 animate-pulse;
 }
+
+.loadMore {
+  @apply mt-6 text-center text-[11px] uppercase tracking-[0.3em] text-gray-400;
+}

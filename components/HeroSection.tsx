@@ -45,7 +45,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   );
   const [showcaseShops, setShowcaseShops] = useState<Shop[]>([]);
   const lastShowcaseIdsRef = useRef<string[]>([]);
-  const showcaseLayout = ["wide", "tall", "small", "small", "wide"];
+  const showcaseLayout = ["wide", "tall", "small", "small", "wide", "small"];
 
   const pickRandomShops = (
     pool: Shop[],
@@ -78,13 +78,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       setShowcaseShops([]);
       return;
     }
-    const initial = pickRandomShops(showcasePool, 5, lastShowcaseIdsRef.current);
+    const initial = pickRandomShops(showcasePool, 6, lastShowcaseIdsRef.current);
     setShowcaseShops(initial);
     lastShowcaseIdsRef.current = initial.map((shop) => shop.id);
     const timer = setInterval(() => {
       const nextBatch = pickRandomShops(
         showcasePool,
-        5,
+        6,
         lastShowcaseIdsRef.current
       );
       setShowcaseShops(nextBatch);
@@ -123,7 +123,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <div className={styles.showcaseHeader}>
             <div>
               <p className={styles.showcaseEyebrow}>Novedades de tiendas</p>
-              <h2 className={styles.showcaseTitle}>Explorá Avellaneda en Vivo</h2>
+              <h2 className={styles.showcaseTitle}>Explora Avellaneda en Vivo</h2>
             </div>
             <button
               className={styles.showcaseAction}
@@ -141,10 +141,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   : layout === "tall"
                   ? styles.showcaseTileTall
                   : "";
+              const desktopOnly =
+                index === 5 ? styles.showcaseTileDesktopOnly : "";
               return (
                 <button
                   key={shop.id}
-                  className={`${styles.showcaseTile} ${tileClass}`}
+                  className={`${styles.showcaseTile} ${tileClass} ${desktopOnly}`}
                   onClick={() => {
                     if (!guardShopAccess()) return;
                     onOpenShop(shop, { navigate: false });

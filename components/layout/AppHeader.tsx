@@ -1,5 +1,4 @@
 import React from "react";
-import { ChevronDown } from "lucide-react";
 import styles from "./AppHeader.module.css";
 
 // AppHeader muestra marca, menu y saludo del usuario.
@@ -22,6 +21,7 @@ interface AppHeaderProps {
   userName: string;
   isLoggedIn: boolean;
   onLogout: () => void;
+  hideUserInfoOnDesktop?: boolean;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -34,6 +34,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   userName,
   isLoggedIn,
   onLogout,
+  hideUserInfoOnDesktop,
 }) => {
   const headerRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -55,83 +56,22 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
   return (
     <header className={styles.header} ref={headerRef}>
-      <nav
-        className={styles.nav}
-        aria-label="Navegación principal"
-      >
-        <div className={styles.desktopMenuWrap}>
-          <button
-            onClick={onToggleDesktopMenu}
-            className={styles.menuButton}
-            aria-expanded={isDesktopMenuOpen}
-            aria-controls="desktop-menu"
-          >
-            Menú
-            <ChevronDown
-              size={14}
-              className={`${styles.menuChevron} ${
-                isDesktopMenuOpen ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-          {isDesktopMenuOpen && (
-            <div
-              id="desktop-menu"
-              className={styles.menuPanel}
-            >
-              <div className={styles.menuList}>
-                {bottomNavItems.map((item) => {
-                  const isActive = activeBottomNav === item.id;
-                  const badgeCount = typeof item.badge === "number" ? item.badge : 0;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        item.onSelect();
-                        onCloseDesktopMenu();
-                      }}
-                      className={`${styles.menuItem} ${
-                        isActive ? styles.menuItemActive : styles.menuItemInactive
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        {item.label}
-                        {badgeCount > 0 && (
-                          <span className={styles.badge}>
-                            {badgeCount > 9 ? "9+" : badgeCount}
-                          </span>
-                        )}
-                      </span>
-                      <item.icon size={14} />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
+      <nav className={styles.nav} aria-label="Navegacion principal">
         <div className={styles.logoWrap}>
-          <img
-            src={brandLogo}
-            alt="Distrito Moda"
-            className={styles.logoImage}
-          />
+          <img src={brandLogo} alt="Distrito Moda" className={styles.logoImage} />
         </div>
-
-        <div className={styles.userInfo}>
+        <div
+          className={`${styles.userInfo} ${
+            hideUserInfoOnDesktop ? styles.userInfoDesktopHidden : ""
+          }`}
+        >
           <span className="flex items-center gap-1">
             <span>Hola</span>
-            <span className={styles.userDot}>·</span>
-            <span className={styles.userName}>
-              {userName}
-            </span>
+            <span className={styles.userDot}>-</span>
+            <span className={styles.userName}>{userName}</span>
           </span>
           {isLoggedIn && (
-            <button
-              onClick={onLogout}
-              className={styles.logout}
-            >
+            <button onClick={onLogout} className={styles.logout}>
               Salir
             </button>
           )}

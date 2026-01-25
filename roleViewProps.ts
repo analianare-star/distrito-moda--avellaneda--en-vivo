@@ -79,6 +79,7 @@ export const buildMerchantViewProps = (
 type ClientViewArgs = {
   isLoading: boolean;
   hasFetchError: boolean;
+  brandLogo: string;
   activeBottomNav: string;
   activeFilter: string;
   savedTab: "FAVORITES" | "REMINDERS";
@@ -124,6 +125,7 @@ type ClientViewArgs = {
 export const buildClientViewProps = (args: ClientViewArgs): ClientViewProps => ({
   isLoading: args.isLoading,
   hasFetchError: args.hasFetchError,
+  brandLogo: args.brandLogo,
   activeBottomNav: args.activeBottomNav,
   activeFilter: args.activeFilter,
   savedTab: args.savedTab,

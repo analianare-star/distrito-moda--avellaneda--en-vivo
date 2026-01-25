@@ -164,6 +164,7 @@ export const RoleRouter: React.FC<RoleRouterProps> = ({
               <AppHeader
                 {...commonHeaderProps}
                 userName={clientUserName}
+                hideUserInfoOnDesktop
               />
             }
             headerAccessory={

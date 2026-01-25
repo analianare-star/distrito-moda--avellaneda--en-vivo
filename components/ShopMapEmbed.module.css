@@ -1,0 +1,19 @@
+.embedPanel {
+  @apply border border-slate-200 bg-white/90 shadow-sm;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+}
+
+.searchWrap {
+  @apply px-4 pb-3 pt-2 bg-white border-b border-slate-200;
+}
+
+.searchInput {
+  @apply w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-[12px] font-semibold text-dm-dark placeholder:text-slate-400;
+  outline: none;
+}
+
+.embedMap {
+  min-height: 320px;
+}

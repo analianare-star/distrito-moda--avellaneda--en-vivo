@@ -13,6 +13,7 @@ import { ClientAccountPage } from "../../components/pages/client/ClientAccountPa
 interface ClientViewProps {
   isLoading: boolean;
   hasFetchError: boolean;
+  brandLogo: string;
   activeBottomNav: string;
   activeFilter: string;
   savedTab: "FAVORITES" | "REMINDERS";
@@ -58,6 +59,7 @@ interface ClientViewProps {
 export const ClientView: React.FC<ClientViewProps> = ({
   isLoading,
   hasFetchError,
+  brandLogo,
   activeBottomNav,
   activeFilter,
   savedTab,
@@ -109,6 +111,8 @@ export const ClientView: React.FC<ClientViewProps> = ({
           element={
             <ClientHomePage
               isLoading={isDataLoading}
+              brandLogo={brandLogo}
+              activeBottomNav={activeBottomNav}
               activeFilter={activeFilter}
               filteredStreams={filteredStreams}
               sortedLiveStreams={sortedLiveStreams}
@@ -128,6 +132,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onDownloadCard={onDownloadCard}
               onNotify={onNotify}
               onOpenLogin={onOpenLogin}
+              onLogout={onLogout}
               onQueueModalChange={onQueueModalChange}
             />
           }
@@ -137,6 +142,8 @@ export const ClientView: React.FC<ClientViewProps> = ({
           element={
             <ClientHomePage
               isLoading={isDataLoading}
+              brandLogo={brandLogo}
+              activeBottomNav={activeBottomNav}
               activeFilter={activeFilter}
               filteredStreams={filteredStreams}
               sortedLiveStreams={sortedLiveStreams}
@@ -156,6 +163,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onDownloadCard={onDownloadCard}
               onNotify={onNotify}
               onOpenLogin={onOpenLogin}
+              onLogout={onLogout}
               onQueueModalChange={onQueueModalChange}
             />
           }
@@ -165,6 +173,8 @@ export const ClientView: React.FC<ClientViewProps> = ({
           element={
             <ClientHomePage
               isLoading={isDataLoading}
+              brandLogo={brandLogo}
+              activeBottomNav={activeBottomNav}
               activeFilter={activeFilter}
               filteredStreams={filteredStreams}
               sortedLiveStreams={sortedLiveStreams}
@@ -184,6 +194,7 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onDownloadCard={onDownloadCard}
               onNotify={onNotify}
               onOpenLogin={onOpenLogin}
+              onLogout={onLogout}
               onQueueModalChange={onQueueModalChange}
             />
           }

@@ -40,11 +40,39 @@
 }
 
 .showcaseGrid {
-  @apply w-full grid grid-cols-2 gap-[3px] auto-rows-[90px] sm:auto-rows-[110px] md:grid-cols-3 md:auto-rows-[130px];
+  @apply w-full grid grid-cols-2 gap-[4px] auto-rows-[90px] sm:auto-rows-[110px] md:grid-cols-3 md:auto-rows-[130px];
   position: relative;
   z-index: 1;
   padding-left: 15px;
   padding-right: 15px;
+  grid-auto-flow: dense;
+}
+
+.showcaseTileDesktopOnly {
+  @apply hidden;
+}
+
+@media (min-width: 1024px) {
+  .showcaseHeader {
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+
+  .showcaseGrid {
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+
+  .showcaseGrid {
+    @apply auto-rows-[160px];
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .showcaseTileDesktopOnly {
+    display: block;
+    grid-column: 3;
+    grid-row: 2;
+  }
 }
 
 
@@ -123,6 +151,18 @@
   @apply flex gap-5 min-w-max px-1 pb-2;
 }
 
+.reelsNav {
+  @apply hidden lg:flex absolute left-0 right-0 items-center justify-between px-2;
+  pointer-events: none;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 0;
+}
+
+.reelsNavButton {
+  @apply pointer-events-auto flex items-center justify-center h-12 w-12 rounded-full border border-dm-crimson/40 bg-white text-dm-crimson text-2xl shadow-md hover:bg-dm-crimson hover:text-white transition;
+}
+
 .reelCard {
   @apply flex flex-col items-center gap-2 cursor-pointer w-[72px];
 }
@@ -173,6 +213,54 @@
 .reelViews {
   @apply text-[9px];
   color: #0b0b0d;
+}
+
+@media (min-width: 1024px) {
+  .reelsRow {
+    @apply gap-8;
+  }
+
+  .reelCard {
+    @apply w-[98px];
+  }
+
+  .reelRing {
+    @apply w-[98px] h-[98px];
+  }
+
+  .reelName {
+    @apply text-[12px];
+  }
+
+  .reelViews {
+    @apply text-[10px];
+  }
+
+  .reelsWrap {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+
+  .reelsScroller {
+    padding-left: 0;
+    padding-right: 0;
+    max-width: 1040px;
+  }
+
+  .liveContent {
+    max-width: 1040px;
+    padding-left: 0;
+    padding-right: 0;
+    gap: 24px;
+  }
+
+  .liveMedia {
+    max-width: 520px;
+  }
+
+  .liveInfo {
+    max-width: 480px;
+  }
 }
 
 .reelsBanner {
@@ -398,6 +486,12 @@
 
 .filtersRow {
   @apply flex gap-2 md:justify-center min-w-max;
+}
+
+@media (min-width: 1024px) {
+  .filtersInner {
+    max-width: 1040px;
+  }
 }
 
 .filterButton {

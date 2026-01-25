@@ -442,6 +442,7 @@ export const useAppCore = () => {
   const { adminViewProps, merchantViewProps, clientViewProps } = useRoleViewProps({
     isLoading,
     hasFetchError,
+    brandLogo: BRAND_LOGO,
     streams: allStreams,
     setStreams: setAllStreams,
     shops: allShops,

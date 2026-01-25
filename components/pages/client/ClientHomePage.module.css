@@ -4,6 +4,183 @@
   isolation: isolate;
 }
 
+.layout {
+  @apply flex w-full gap-6;
+}
+
+.mainContent {
+  @apply flex-1 min-w-0;
+}
+
+.desktopPanel {
+  @apply hidden lg:flex flex-col gap-4 w-[320px] shrink-0 rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-xl;
+  position: sticky;
+  top: calc(var(--app-header-height, 88px) + 16px);
+  min-height: calc(100vh - var(--app-header-height, 88px) - 32px);
+  height: auto;
+  overflow: visible;
+}
+
+.panelBrand {
+  @apply flex items-center justify-center;
+}
+
+.panelBrandLogo {
+  @apply h-12 w-auto object-contain;
+}
+
+.panelHeader {
+  @apply flex flex-col gap-1;
+}
+
+.panelLabel {
+  @apply text-[11px] font-bold uppercase tracking-[0.36em] text-slate-500;
+}
+
+.panelSmallLabel {
+  @apply text-[10px] uppercase text-slate-400 tracking-[0.3em];
+}
+
+.panelUser {
+  @apply rounded-2xl border border-slate-200 bg-white/80 p-4 flex flex-col gap-2;
+}
+
+.panelUserTitle {
+  @apply text-[10px] uppercase tracking-[0.4em] text-slate-400;
+}
+
+.panelUserName {
+  @apply text-sm font-semibold text-dm-dark;
+}
+
+.panelAuthButtons {
+  @apply flex flex-col gap-2;
+}
+
+.panelAction {
+  @apply rounded-full border border-dm-crimson bg-dm-crimson px-4 py-2 text-[11px] font-bold uppercase tracking-[0.32em] text-white shadow-md;
+}
+
+.panelActionSecondary {
+  @apply rounded-full border border-dm-crimson/30 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.32em] text-dm-dark;
+}
+
+.panelList {
+  @apply list-none p-0 m-0 flex flex-col gap-3;
+}
+
+.panelItem {
+  @apply flex flex-col;
+}
+
+.panelValue {
+  @apply text-4xl font-extrabold text-dm-crimson leading-tight;
+}
+
+.panelLabelText {
+  @apply text-xs uppercase tracking-[0.3em] text-slate-500;
+}
+
+.panelPromoCard {
+  @apply rounded-2xl bg-gradient-to-br from-dm-crimson/10 to-white p-4 border border-dm-crimson/20 shadow-sm flex flex-col gap-1;
+}
+
+.panelPromoTitle {
+  @apply text-[11px] uppercase tracking-[0.3em] text-dm-crimson/70;
+}
+
+.panelPromoShop {
+  @apply text-lg font-bold text-dm-dark;
+}
+
+.panelPromoMeta {
+  @apply text-[11px] uppercase tracking-[0.4em] text-dm-dark/80;
+}
+
+.panelButton {
+  @apply mt-3 rounded-full border border-dm-crimson bg-dm-crimson/90 px-4 py-2 text-sm font-bold uppercase tracking-[0.4em] text-white shadow-lg hover:bg-dm-crimson;
+}
+
+.panelNav {
+  @apply flex flex-col gap-2 mt-2;
+}
+
+.panelNavButton {
+  @apply rounded-xl border border-dm-crimson/25 bg-dm-crimson/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.32em] text-dm-dark transition hover:bg-dm-crimson/10;
+  text-align: left;
+}
+
+.panelNavButtonActive {
+  @apply bg-dm-crimson text-white border-dm-crimson shadow-md;
+}
+
+.panelNotice {
+  @apply mt-3 rounded-2xl border border-slate-200 bg-white/80 p-4 text-[12px] text-slate-600 flex flex-col gap-1;
+}
+
+.panelTopShops {
+  @apply mt-3 flex flex-col gap-3;
+}
+
+.panelSubheading {
+  @apply text-[10px] uppercase tracking-[0.4em] text-slate-400;
+}
+
+.panelShopList {
+  @apply flex flex-col gap-2;
+}
+
+.panelShopItem {
+  @apply flex items-center gap-3 rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-left transition hover:border-dm-crimson/40;
+}
+
+.panelShopName {
+  @apply text-[12px] font-semibold text-dm-dark;
+}
+
+.panelMap {
+  @apply mt-3 rounded-2xl border border-slate-200 bg-white/80 p-4 flex flex-col gap-2;
+}
+
+.panelMapTitle {
+  @apply text-[11px] uppercase tracking-[0.3em] text-slate-400;
+}
+
+.panelMapCopy {
+  @apply text-[12px] text-slate-600 leading-relaxed;
+}
+
+.panelMapButton {
+  @apply mt-2 rounded-full border border-dm-crimson/40 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.3em] text-dm-crimson hover:bg-dm-crimson hover:text-white transition;
+}
+
+
+@media (max-width: 1023px) {
+  .layout {
+    @apply flex-col;
+  }
+
+  .desktopPanel {
+    @apply hidden;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section {
+    max-width: 1400px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .mainContent {
+    max-width: 1040px;
+  }
+
+  .layout {
+    @apply items-start gap-8;
+  }
+}
+
 .section::before {
   content: "";
   position: absolute;
@@ -67,6 +244,24 @@
   scroll-snap-align: start;
   color: #0f172a;
   overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .queueRow {
+    @apply gap-6;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .queueCard {
+    min-width: 160px;
+    height: 210px;
+    padding-top: 18px;
+  }
+
+  .queueName {
+    font-size: 12px;
+  }
 }
 
 .queueBackdrop {

@@ -5,15 +5,19 @@ import { ReelsStrip } from "../../ReelsStrip";
 import { StreamCard } from "../../StreamCard";
 import { EmptyState } from "../../EmptyState";
 import { Reel, Shop, Stream, StreamStatus, UserContext } from "../../../types";
+import { CLIENT_NAV_ITEMS } from "../../../navigation";
 import { getShopCoverUrl } from "../../../utils/shopMedia";
 import { LiveQueueModal } from "../../LiveQueueModal";
 import { LogoBubble } from "../../LogoBubble";
+import { ShopMapEmbed } from "../../ShopMapEmbed";
 import styles from "./ClientHomePage.module.css";
 
 // ClientHomePage muestra home y agenda publica.
 // ClientHomePage renders home and public agenda.
 interface ClientHomePageProps {
   isLoading: boolean;
+  brandLogo: string;
+  activeBottomNav: string;
   activeFilter: string;
   filteredStreams: Stream[];
   sortedLiveStreams: Stream[];
@@ -37,11 +41,14 @@ interface ClientHomePageProps {
     tone?: "info" | "success" | "warning" | "error"
   ) => void;
   onOpenLogin: () => void;
+  onLogout: () => void;
   onQueueModalChange: (isOpen: boolean) => void;
 }
 
 export const ClientHomePage: React.FC<ClientHomePageProps> = ({
   isLoading,
+  brandLogo,
+  activeBottomNav,
   activeFilter,
   filteredStreams,
   sortedLiveStreams,
@@ -61,12 +68,23 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
   onDownloadCard,
   onNotify,
   onOpenLogin,
+  onLogout,
   onQueueModalChange,
 }) => {
   const [queueStream, setQueueStream] = useState<Stream | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
   useEffect(() => {
     onQueueModalChange(Boolean(queueStream));
   }, [queueStream, onQueueModalChange]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(min-width: 1024px)");
+    const handleChange = () => setIsDesktop(media.matches);
+    handleChange();
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
 
   const visibleStreams = filteredStreams.slice(0, 6);
   const streamLayout = ["wide", "small", "small", "wide", "small", "small"];
@@ -255,150 +273,238 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
     </>
   ) : null;
 
-  const loadingContent = (
-    <section className={styles.section} aria-label="Cargando contenido">
-      <div className={styles.content}>
-        <div className={styles.skeletonWrap}>
-          <div className={styles.skeletonRow}>
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={`reel-skel-${index}`} className={styles.skeletonBubble} />
-            ))}
+  const desktopPanelStats = [
+    {
+      label: "Vivos en vivo",
+      value: queueStreams.live.length,
+    },
+    {
+      label: "Vivos proximos",
+      value: queueStreams.upcoming.length,
+    },
+    {
+      label: "Tiendas destacadas",
+      value: featuredShops.length,
+    },
+  ];
+
+  const upcomingHero = queueStreams.upcoming[0] ?? queueStreams.live[0];
+  const promoHeading = upcomingHero
+    ? `Siguiente vivo: ${upcomingHero.shop.name}`
+    : "Sin novedades en vivo";
+
+  const topShopList = featuredShops.slice(0, 3);
+  const desktopPanel = (
+    <aside className={styles.desktopPanel} aria-label="Panel lateral de escritorio">
+      <div className={styles.panelBrand}>
+        <img src={brandLogo} alt="Avellaneda en Vivo" className={styles.panelBrandLogo} />
+      </div>
+      <div className={styles.panelHeader}>
+        <p className={styles.panelLabel}>Panel Desktop</p>
+        <span className={styles.panelSmallLabel}>Modo mouse</span>
+      </div>
+      <div className={styles.panelUser}>
+        <span className={styles.panelUserTitle}>
+          {user.isLoggedIn ? "Sesion activa" : "Ingresar"}
+        </span>
+        <span className={styles.panelUserName}>
+          {user.isLoggedIn ? user.name || user.email || "Tienda" : "Invitado"}
+        </span>
+        {user.isLoggedIn ? (
+          <button type="button" className={styles.panelAction} onClick={onLogout}>
+            Cerrar sesion
+          </button>
+        ) : (
+          <div className={styles.panelAuthButtons}>
+            <button type="button" className={styles.panelAction} onClick={onOpenLogin}>
+              Ingresar
+            </button>
+            <button
+              type="button"
+              className={styles.panelActionSecondary}
+              onClick={onOpenLogin}
+            >
+              Registrarme
+            </button>
           </div>
-          <div className={styles.skeletonBanner} />
-          <div className={styles.skeletonGrid}>
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={`shop-skel-${index}`} className={styles.skeletonCard} />
-            ))}
-          </div>
-          <div className={styles.skeletonList}>
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div key={`live-skel-${index}`} className={styles.skeletonStream} />
-            ))}
-          </div>
+        )}
+      </div>
+      <nav className={styles.panelNav} aria-label="Navegacion desktop">
+        {CLIENT_NAV_ITEMS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`${styles.panelNavButton} ${
+              activeBottomNav === item.id ? styles.panelNavButtonActive : ""
+            }`}
+            onClick={() => onSelectBottomNav(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <ul className={styles.panelList}>
+        {desktopPanelStats.map((item) => (
+          <li key={item.label} className={styles.panelItem}>
+            <span className={styles.panelValue}>{item.value}</span>
+            <span className={styles.panelLabelText}>{item.label}</span>
+          </li>
+        ))}
+      </ul>
+      <div className={styles.panelNotice}>
+        <strong>{promoHeading}</strong>
+        <span>Explora nuevas tiendas y vivos destacados.</span>
+      </div>
+      <div className={styles.panelTopShops}>
+        <span className={styles.panelSubheading}>Top tiendas en vivo</span>
+        <div className={styles.panelShopList}>
+          {topShopList.map((shop) => (
+            <button
+              key={shop.id}
+              type="button"
+              className={styles.panelShopItem}
+              onClick={() => onOpenShop(shop)}
+            >
+              <LogoBubble
+                src={shop.logoUrl}
+                alt={shop.name}
+                size={36}
+                seed={shop.id || shop.name}
+              />
+              <span className={styles.panelShopName}>{shop.name}</span>
+            </button>
+          ))}
         </div>
+      </div>
+      <div className={styles.panelMap}>
+        <p className={styles.panelMapTitle}>Mapa en vivo</p>
+        <p className={styles.panelMapCopy}>
+          Descubre tiendas activas y puntos clave dentro de Avellaneda.
+        </p>
+        {isDesktop ? <ShopMapEmbed /> : null}
+      </div>
+      {upcomingHero && (
+        <div className={styles.panelPromoCard}>
+          <p className={styles.panelPromoTitle}>Proximo</p>
+          <strong className={styles.panelPromoShop}>{upcomingHero.shop.name}</strong>
+          <span className={styles.panelPromoMeta}>
+            {upcomingHero.status === StreamStatus.LIVE ? "En vivo ahora" : "Proximo vivo"}
+          </span>
+        </div>
+      )}
+      <button
+        type="button"
+        className={styles.panelButton}
+        onClick={() => onSelectBottomNav("live")}
+      >
+        Ver vivos
+      </button>
+    </aside>
+  );
+
+  const layoutWrapper = (content: React.ReactNode, label: string) => (
+    <section className={styles.section} aria-label={label}>
+      <div className={styles.layout}>
+        {desktopPanel}
+        <div className={styles.mainContent}>{content}</div>
       </div>
     </section>
   );
 
-  const loadedContent = (
-    <section className={styles.section} aria-label="Contenido principal">
-      <div className={styles.content}>
-        <ReelsStrip
-          activeReels={activeReels}
-          viewedReels={user.viewedReels}
-          onViewReel={onViewReel}
-        />
-
-        <HeroSection
-          activeFilter={activeFilter}
-          onFilterChange={onFilterChange}
-          liveStreams={sortedLiveStreams}
-          activeReels={activeReels}
-          featuredShops={featuredShops}
-          onViewReel={onViewReel}
-          viewedReels={user.viewedReels}
-          onOpenShop={(shop) => onOpenShop(shop, { navigate: false })}
-          canClientInteract={canClientInteract}
-          onRequireLogin={onOpenLogin}
-          queueSlot={bannerAndQueue}
-        />
-
-        <div className={styles.schedule}>
-          <div className={styles.scheduleHeader}>
-            <h2 className={styles.scheduleTitle}>Vivos recientes</h2>
-            <div className={styles.scheduleFilter}>
-              Mostrando: <span className={styles.filterValue}>{activeFilter}</span>
-            </div>
-          </div>
-          <div className={styles.streamsGrid}>
-            {visibleStreams.map((stream, index) => {
-              const layout = streamLayout[index] || "small";
-              return (
-                <div
-                  key={stream.id}
-                  className={`${styles.streamItem} ${
-                    layout === "wide" ? styles.streamItemWide : ""
-                  }`}
-                >
-                  <StreamCard
-                    stream={stream}
-                    user={user}
-                    canClientInteract={canClientInteract}
-                    onNotify={onNotify}
-                    onRequireLogin={onOpenLogin}
-                    onOpenShop={() => onOpenShop(stream.shop)}
-                    onReport={onReport}
-                    onToggleReminder={onToggleReminder}
-                    onLike={onLike}
-                    onRate={onRate}
-                    onDownloadCard={onDownloadCard}
-                  />
-                </div>
-              );
-            })}
-            {visibleStreams.length === 0 && (
-              <EmptyState
-                title="No hay vivos con este filtro"
-                message="Proba ver todos los vivos o revisa mas tarde."
-                actionLabel="Ver todos"
-                onAction={() => {
-                  onFilterChange("Todos");
-                  onSelectBottomNav("home");
-                }}
-              />
-            )}
-          </div>
+  const loadingContent = layoutWrapper(
+    <div className={styles.content}>
+      <div className={styles.skeletonWrap}>
+        <div className={styles.skeletonRow}>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={`reel-skel-${index}`} className={styles.skeletonBubble} />
+          ))}
+        </div>
+        <div className={styles.skeletonBanner} />
+        <div className={styles.skeletonGrid}>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={`shop-skel-${index}`} className={styles.skeletonCard} />
+          ))}
+        </div>
+        <div className={styles.skeletonList}>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={`live-skel-${index}`} className={styles.skeletonStream} />
+          ))}
         </div>
       </div>
+    </div>,
+    "Cargando contenido"
+  );
 
-      {queueStream && (
-        <LiveQueueModal
-          streams={queueList}
-          activeStreamId={queueStream.id}
-          user={user}
-          canClientInteract={canClientInteract}
-          onClose={() => setQueueStream(null)}
-          onOpenShop={onOpenShop}
-          onReport={(streamId) => {
-            if (isMockStream(streamId)) {
-              blockMockAction();
-              return;
-            }
-            onReport(streamId);
-          }}
-          onToggleReminder={(streamId) => {
-            if (isMockStream(streamId)) {
-              blockMockAction();
-              return;
-            }
-            onToggleReminder(streamId);
-          }}
-          onRequireLogin={onOpenLogin}
-          onLike={(streamId) => {
-            if (isMockStream(streamId)) {
-              blockMockAction();
-              return;
-            }
-            onLike?.(streamId);
-          }}
-          onRate={(streamId, rating) => {
-            if (isMockStream(streamId)) {
-              blockMockAction();
-              return;
-            }
-            onRate?.(streamId, rating);
-          }}
-          onDownloadCard={(stream) => {
-            if (isMockStream(stream.id)) {
-              blockMockAction();
-              return;
-            }
-            onDownloadCard?.(stream);
-          }}
-          onNotify={onNotify}
-        />
-      )}
-    </section>
+  const loadedContent = layoutWrapper(
+    <div className={styles.content}>
+      <ReelsStrip
+        activeReels={activeReels}
+        viewedReels={user.viewedReels}
+        onViewReel={onViewReel}
+      />
+
+      <HeroSection
+        activeFilter={activeFilter}
+        onFilterChange={onFilterChange}
+        liveStreams={sortedLiveStreams}
+        activeReels={activeReels}
+        featuredShops={featuredShops}
+        onViewReel={onViewReel}
+        viewedReels={user.viewedReels}
+        onOpenShop={(shop) => onOpenShop(shop, { navigate: false })}
+        canClientInteract={canClientInteract}
+        onRequireLogin={onOpenLogin}
+        queueSlot={bannerAndQueue}
+      />
+
+      <div className={styles.schedule}>
+        <div className={styles.scheduleHeader}>
+          <h2 className={styles.scheduleTitle}>Vivos recientes</h2>
+          <div className={styles.scheduleFilter}>
+            Mostrando: <span className={styles.filterValue}>{activeFilter}</span>
+          </div>
+        </div>
+        <div className={styles.streamsGrid}>
+          {visibleStreams.map((stream, index) => {
+            const layout = streamLayout[index] || "small";
+            return (
+              <div
+                key={stream.id}
+                className={`${styles.streamItem} ${
+                  layout === "wide" ? styles.streamItemWide : ""
+                }`}
+              >
+                <StreamCard
+                  stream={stream}
+                  user={user}
+                  canClientInteract={canClientInteract}
+                  onNotify={onNotify}
+                  onRequireLogin={onOpenLogin}
+                  onOpenShop={() => onOpenShop(stream.shop)}
+                  onReport={onReport}
+                  onToggleReminder={onToggleReminder}
+                  onLike={onLike}
+                  onRate={onRate}
+                  onDownloadCard={onDownloadCard}
+                />
+              </div>
+            );
+          })}
+          {visibleStreams.length === 0 && (
+            <EmptyState
+              title="No hay vivos con este filtro"
+              message="Proba ver todos los vivos o revisa mas tarde."
+              actionLabel="Ver todos"
+              onAction={() => {
+                onFilterChange("Todos");
+                onSelectBottomNav("home");
+              }}
+            />
+          )}
+        </div>
+      </div>
+    </div>,
+    "Contenido principal"
   );
 
   return isLoading ? loadingContent : loadedContent;

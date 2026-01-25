@@ -74,6 +74,20 @@
   @apply font-serif text-[17px] font-bold text-dm-dark leading-tight line-clamp-2;
 }
 
+@media (min-width: 1024px) {
+  .media {
+    aspect-ratio: 4 / 4;
+  }
+
+  .body {
+    padding: 12px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+}
+
 .platformBadge {
   @apply text-[11px] font-bold uppercase px-2 py-0.5 rounded border;
 }

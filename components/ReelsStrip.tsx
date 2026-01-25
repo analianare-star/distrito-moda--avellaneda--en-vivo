@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React, { useRef } from "react";
 import { Reel } from "../types";
 import heroStyles from "./HeroSection.module.css";
 
@@ -15,6 +15,7 @@ export const ReelsStrip: React.FC<ReelsStripProps> = ({
   viewedReels,
   onViewReel,
 }) => {
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
   const sortedReels = [...activeReels].sort((a, b) => {
     const aSeen = viewedReels.includes(a.id);
     const bSeen = viewedReels.includes(b.id);
@@ -28,7 +29,7 @@ export const ReelsStrip: React.FC<ReelsStripProps> = ({
     <>
       {sortedReels.length > 0 && (
         <div className={heroStyles.reelsWrap}>
-          <div className={heroStyles.reelsScroller}>
+          <div className={heroStyles.reelsScroller} ref={scrollerRef}>
             <div className={heroStyles.reelsRow}>
               {sortedReels.map((reel) => {
                 const isSeen = viewedReels.includes(reel.id);
@@ -67,6 +68,24 @@ export const ReelsStrip: React.FC<ReelsStripProps> = ({
                 );
               })}
             </div>
+          </div>
+          <div className={heroStyles.reelsNav}>
+            <button
+              type="button"
+              className={heroStyles.reelsNavButton}
+              aria-label="Anterior"
+              onClick={() => scrollerRef.current?.scrollBy({ left: -260, behavior: "smooth" })}
+            >
+              <span aria-hidden="true">&lt;</span>
+            </button>
+            <button
+              type="button"
+              className={heroStyles.reelsNavButton}
+              aria-label="Siguiente"
+              onClick={() => scrollerRef.current?.scrollBy({ left: 260, behavior: "smooth" })}
+            >
+              <span aria-hidden="true">&gt;</span>
+            </button>
           </div>
         </div>
       )}
