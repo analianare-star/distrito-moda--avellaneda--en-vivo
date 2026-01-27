@@ -370,9 +370,17 @@ export const api = {
       return null;
     }
   },
-  fetchShops: async (): Promise<Shop[]> => {
+  fetchShops: async (options?: { limit?: number; offset?: number }): Promise<Shop[]> => {
     try {
-      const res = await fetchWithAuth('/shops');
+      const params = new URLSearchParams();
+      if (options?.limit && Number.isFinite(options.limit)) {
+        params.set('limit', String(options.limit));
+      }
+      if (options?.offset && Number.isFinite(options.offset)) {
+        params.set('offset', String(options.offset));
+      }
+      const query = params.toString();
+      const res = await fetchWithAuth(`/shops${query ? `?${query}` : ''}`);
       if (!res.ok) throw new Error('Error al conectar con el servidor');
       const data = await res.json();
       return data.map(mapShop);
@@ -610,11 +618,11 @@ export const api = {
     return data;
   },
 
-  confirmMercadoPagoPayment: async (paymentId: string) => {
+  confirmMercadoPagoPayment: async (payload: { paymentId?: string; purchaseId?: string }) => {
     const res = await fetchWithAuth(`/payments/mercadopago/confirm`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentId }),
+      body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {

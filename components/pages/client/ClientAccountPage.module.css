@@ -1,5 +1,5 @@
 .section {
-  @apply mx-auto max-w-5xl px-4 pb-16 pt-8;
+  @apply mx-auto w-full max-w-5xl px-4 pb-24 pt-8 flex flex-col gap-5;
 }
 
 .header {
@@ -14,50 +14,150 @@
   @apply text-sm text-gray-500;
 }
 
+.identityCard {
+  @apply relative rounded-3xl border border-slate-200 bg-white/95 px-4 py-4 flex items-center gap-3 shadow-sm;
+}
+
+.identityAvatar {
+  @apply h-12 w-12 shrink-0 rounded-2xl bg-dm-crimson text-white flex items-center justify-center text-lg font-extrabold;
+}
+
+.identityMeta {
+  @apply flex-1 min-w-0 flex flex-col;
+}
+
+.identityName {
+  @apply text-base font-bold text-dm-dark truncate;
+}
+
+.identityEmail {
+  @apply text-xs uppercase tracking-[0.26em] text-slate-400 truncate;
+}
+
+.identityBadge {
+  @apply absolute -right-2 -top-2 h-8 min-w-8 rounded-full bg-dm-crimson px-2 flex items-center justify-center text-[11px] font-bold uppercase tracking-[0.18em] text-white shadow-lg;
+}
+
 .statsGrid {
-  @apply mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4;
+  @apply grid grid-cols-3 gap-3;
 }
 
 .statCard {
-  @apply rounded-2xl border border-gray-100 bg-white p-4 shadow-sm;
+  @apply rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left shadow-sm transition hover:border-dm-crimson/40;
 }
 
 .statLabel {
-  @apply text-xs uppercase tracking-wide text-gray-400;
+  @apply text-[10px] uppercase tracking-[0.32em] text-slate-400;
 }
 
 .statValue {
-  @apply mt-2 text-lg font-semibold text-dm-dark;
+  @apply mt-1 text-xl font-extrabold text-dm-crimson leading-tight;
 }
 
 .statMeta {
-  @apply text-xs text-gray-500;
+  @apply text-[10px] uppercase tracking-[0.28em] text-slate-400;
+}
+
+.tabStrip {
+  @apply flex items-center gap-2 overflow-x-auto pb-1;
+}
+
+.tabStrip::-webkit-scrollbar {
+  height: 0;
+  width: 0;
+}
+
+.tabButton {
+  @apply relative shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.3em] text-slate-500 transition hover:border-dm-crimson/40 hover:text-dm-crimson;
+}
+
+.tabActive {
+  @apply border-dm-crimson bg-dm-crimson text-white shadow-md hover:text-white;
+}
+
+.tabBadge {
+  @apply absolute -right-1 -top-1 h-6 min-w-6 rounded-full bg-dm-crimson px-1 flex items-center justify-center text-[10px] font-extrabold uppercase tracking-[0.16em] text-white shadow-md;
 }
 
 .sectionBlock {
-  @apply mt-8;
+  @apply flex flex-col gap-3;
 }
 
 .sectionHeader {
-  @apply flex items-center justify-between text-sm text-gray-500;
+  @apply flex items-baseline justify-between gap-3 text-sm text-slate-500;
+}
+
+.sectionHeader h3 {
+  @apply text-base font-bold text-dm-dark;
+}
+
+.sectionActions {
+  @apply flex items-center justify-end;
+}
+
+.sectionAction {
+  @apply rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.28em] text-slate-500 transition hover:border-dm-crimson/40 hover:text-dm-crimson;
 }
 
 .list {
-  @apply mt-3 space-y-3;
+  @apply flex flex-col gap-2;
 }
 
 .listItem {
-  @apply rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-sm;
+  @apply rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm;
+}
+
+.listRow {
+  @apply rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm flex items-center gap-3;
+}
+
+.rowMeta {
+  @apply flex-1 min-w-0 flex flex-col;
 }
 
 .listTitle {
-  @apply text-sm font-semibold text-dm-dark;
+  @apply text-sm font-semibold text-dm-dark truncate;
 }
 
 .listMeta {
-  @apply text-xs text-gray-500;
+  @apply text-[10px] uppercase tracking-[0.26em] text-slate-400;
 }
 
-.listAction {
-  @apply mt-2 text-xs font-semibold text-dm-crimson underline;
+.rowActions {
+  @apply flex items-center gap-1;
 }
+
+.rowAction {
+  @apply rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500 transition hover:border-dm-crimson/40 hover:text-dm-crimson;
+}
+
+.rowActionDanger {
+  @apply border-rose-200 text-rose-500 hover:border-rose-400 hover:text-rose-600;
+}
+
+.noticeDot {
+  @apply h-2.5 w-2.5 rounded-full shrink-0;
+}
+
+.noticeUnread {
+  @apply bg-dm-crimson;
+}
+
+.noticeRead {
+  @apply bg-slate-300;
+}
+
+@media (min-width: 768px) {
+  .section {
+    @apply px-6 pt-10;
+  }
+
+  .statsGrid {
+    @apply grid-cols-3;
+  }
+
+  .identityCard {
+    @apply px-5 py-5;
+  }
+}
+

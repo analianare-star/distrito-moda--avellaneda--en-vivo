@@ -125,12 +125,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <p className={styles.showcaseEyebrow}>Novedades de tiendas</p>
               <h2 className={styles.showcaseTitle}>Explora Avellaneda en Vivo</h2>
             </div>
-            <button
-              className={styles.showcaseAction}
-              onClick={() => onFilterChange("Todos")}
-            >
-              Ver todo
-            </button>
+           
           </div>
           <div className={styles.showcaseGrid}>
             {showcaseShops.map((shop, index) => {

@@ -70,8 +70,9 @@ export const CLIENT_NAV_CONFIG: Record<
   shops: { path: "/tiendas" },
   live: { path: "/en-vivo", filter: "En Vivo" },
   map: { path: "/mapa" },
-  reminders: { path: "/recordatorios", savedTab: "REMINDERS" },
-  favorites: { path: "/favoritos", savedTab: "FAVORITES", navId: "reminders" },
+  // Reminders and favorites live inside the account shell.
+  reminders: { path: "/cuenta", savedTab: "REMINDERS", navId: "account" },
+  favorites: { path: "/cuenta", savedTab: "FAVORITES", navId: "account" },
   account: { path: "/cuenta" },
 };
 
@@ -80,8 +81,8 @@ export const CLIENT_PATH_TO_NAV: Record<string, ClientNavId> = {
   "/tiendas": "shops",
   "/en-vivo": "live",
   "/mapa": "map",
-  "/recordatorios": "reminders",
-  "/favoritos": "favorites",
+  "/recordatorios": "account",
+  "/favoritos": "account",
   "/cuenta": "account",
 };
 
@@ -141,5 +142,12 @@ export const resolveMerchantTabFromPath = (path: string): MerchantTab => {
   return "RESUMEN";
 };
 
-export const resolveClientNavFromPath = (path: string): ClientNavId | null =>
-  CLIENT_PATH_TO_NAV[path] || null;
+export const resolveClientNavFromPath = (path: string): ClientNavId | null => {
+  if (path.startsWith("/tiendas")) return "shops";
+  if (path.startsWith("/en-vivo")) return "live";
+  if (path.startsWith("/mapa")) return "map";
+  if (path.startsWith("/recordatorios")) return "account";
+  if (path.startsWith("/favoritos")) return "account";
+  if (path.startsWith("/cuenta")) return "account";
+  return CLIENT_PATH_TO_NAV[path] || null;
+};

@@ -5,7 +5,7 @@
 }
 
 .layout {
-  @apply flex w-full gap-6;
+  @apply flex flex-col w-full;
 }
 
 .mainContent {
@@ -26,8 +26,9 @@
 }
 
 .panelBrandLogo {
-  @apply h-12 w-auto object-contain;
+  @apply max-h-24 w-auto object-contain;
 }
+
 
 .panelHeader {
   @apply flex flex-col gap-1;
@@ -114,6 +115,82 @@
   @apply bg-dm-crimson text-white border-dm-crimson shadow-md;
 }
 
+.panelAccount {
+  @apply mt-2 rounded-2xl border border-slate-200 bg-white/90 p-4 flex flex-col gap-3;
+}
+
+.panelAccountTabs {
+  @apply grid grid-cols-2 gap-2;
+}
+
+.panelAccountTab {
+  @apply rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold uppercase tracking-[0.28em] text-slate-600 transition hover:border-dm-crimson/40 hover:text-dm-crimson;
+}
+
+.panelAccountTabActive {
+  @apply border-dm-crimson bg-dm-crimson text-white shadow-md hover:text-white;
+}
+
+.panelAccountBody {
+  @apply flex flex-col gap-2;
+}
+
+.panelAccountSummary {
+  @apply grid grid-cols-3 gap-2;
+}
+
+.panelAccountSummaryItem {
+  @apply rounded-xl border border-slate-200 bg-white/90 px-3 py-3 flex flex-col gap-1;
+}
+
+.panelAccountSummaryValue {
+  @apply text-2xl font-extrabold text-dm-crimson leading-tight;
+}
+
+.panelAccountSummaryLabel {
+  @apply text-[10px] uppercase tracking-[0.28em] text-slate-500;
+}
+
+.panelAccountHeader {
+  @apply flex items-center justify-between gap-3;
+}
+
+.panelAccountHeaderButton {
+  @apply rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.26em] text-slate-500 transition hover:border-dm-crimson/40 hover:text-dm-crimson;
+}
+
+.panelAccountEmpty {
+  @apply rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] text-slate-500;
+}
+
+.panelAccountRow {
+  @apply flex items-center gap-3 rounded-xl border border-slate-200 bg-white/90 px-3 py-2;
+}
+
+.panelAccountMeta {
+  @apply flex-1 min-w-0 flex flex-col;
+}
+
+.panelAccountTitle {
+  @apply text-[12px] font-semibold text-dm-dark truncate;
+}
+
+.panelAccountSub {
+  @apply text-[10px] uppercase tracking-[0.26em] text-slate-400;
+}
+
+.panelAccountActions {
+  @apply flex items-center gap-1;
+}
+
+.panelAccountAction {
+  @apply rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500 transition hover:border-dm-crimson/40 hover:text-dm-crimson;
+}
+
+.panelAccountActionDanger {
+  @apply border-rose-200 text-rose-500 hover:border-rose-400 hover:text-rose-600;
+}
+
 .panelNotice {
   @apply mt-3 rounded-2xl border border-slate-200 bg-white/80 p-4 text-[12px] text-slate-600 flex flex-col gap-1;
 }
@@ -170,6 +247,16 @@
   @apply mt-2 rounded-full border border-dm-crimson/40 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.3em] text-dm-crimson hover:bg-dm-crimson hover:text-white transition;
 }
 
+@media (min-width: 1024px) {
+  .layout {
+    @apply flex-row gap-6;
+  }
+
+  .mainContent {
+    @apply mt-14;
+  }
+}
+
 
 @media (max-width: 1023px) {
   .layout {
@@ -183,17 +270,17 @@
 
 @media (min-width: 1024px) {
   .section {
-    max-width: 1400px;
+    max-width: 1520px;
     padding-left: 24px;
     padding-right: 24px;
   }
 
   .mainContent {
-    max-width: 1040px;
+    max-width: 1100px;
   }
 
   .layout {
-    @apply items-start gap-8;
+    @apply items-start gap-6;
   }
 }
 
@@ -247,10 +334,15 @@
 }
 
 .queueRow {
-  @apply flex gap-3 overflow-x-auto pb-2 no-scrollbar;
+  @apply flex gap-3 overflow-x-auto pb-2;
   padding-left: 15px;
   padding-right: 15px;
   scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.queueRow::-webkit-scrollbar {
+  display: none;
 }
 
 .queueCard {

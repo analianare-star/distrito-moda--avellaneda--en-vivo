@@ -3,7 +3,7 @@
 }
 
 .main {
-  @apply pt-16 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12;
+  @apply pt-1 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12;
 }
 
 .mainPreview {
@@ -12,4 +12,10 @@
 
 .mainNoChrome {
   @apply pt-0 pb-0;
+}
+
+@media (min-width: 1024px) {
+  .mainDesktopCompact {
+    padding-top: 12px;
+  }
 }

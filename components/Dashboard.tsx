@@ -234,9 +234,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       const finalizePayment = async () => {
           let approvedFromConfirm: boolean | null = null;
-          if (payload?.paymentId) {
+          if (payload?.paymentId || payload?.purchaseId) {
               try {
-                  const result = await api.confirmMercadoPagoPayment(payload.paymentId);
+                  const result = await api.confirmMercadoPagoPayment({
+                      paymentId: payload.paymentId,
+                      purchaseId: payload.purchaseId,
+                  });
                   approvedFromConfirm = Boolean(result?.approved);
               } catch (error) {
                   console.error('Error confirmando pago', error);

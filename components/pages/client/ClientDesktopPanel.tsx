@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CLIENT_NAV_ITEMS } from "../../../navigation";
-import { Shop, Stream, StreamStatus, UserContext } from "../../../types";
+import { Shop, Stream, StreamStatus, UserContext, NotificationItem } from "../../../types";
 import { LogoBubble } from "../../LogoBubble";
 import { ShopMapEmbed } from "../../ShopMapEmbed";
 import panelStyles from "./ClientHomePage.module.css";
@@ -10,9 +10,24 @@ interface ClientDesktopPanelProps {
   user: UserContext;
   activeBottomNav: string;
   featuredShops: Shop[];
+  favoriteShops: Shop[];
   queueStreamsSource: Stream[];
+  notifications: NotificationItem[];
+  reminderStreams: Stream[];
   onSelectBottomNav: (value: string) => void;
   onOpenShop: (shop: Shop) => void;
+  onToggleFavorite: (shopId: string) => void;
+  onToggleReminder: (streamId: string) => void;
+  onOpenCalendarInvite: (stream: Stream) => void;
+  onOpenStream: (stream: Stream) => void;
+  onMarkNotificationRead: (id: string) => void;
+  onMarkAllNotificationsRead: () => void;
+  onNotificationAction: (note: NotificationItem) => void;
+  onNotify: (
+    title: string,
+    message: string,
+    tone?: "info" | "success" | "warning" | "error"
+  ) => void;
   onOpenLogin: () => void;
   onLogout: () => void;
 }
@@ -22,9 +37,20 @@ export const ClientDesktopPanel: React.FC<ClientDesktopPanelProps> = ({
   user,
   activeBottomNav,
   featuredShops,
+  favoriteShops,
   queueStreamsSource,
+  notifications,
+  reminderStreams,
   onSelectBottomNav,
   onOpenShop,
+  onToggleFavorite,
+  onToggleReminder,
+  onOpenCalendarInvite,
+  onOpenStream,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+  onNotificationAction,
+  onNotify,
   onOpenLogin,
   onLogout,
 }) => {
@@ -39,6 +65,10 @@ export const ClientDesktopPanel: React.FC<ClientDesktopPanelProps> = ({
     return () => media.removeEventListener("change", handleChange);
   }, []);
 
+  const safeFeatured = Array.isArray(featuredShops) ? featuredShops : [];
+  const safeFavorites = Array.isArray(favoriteShops) ? favoriteShops : [];
+  const safeReminders = Array.isArray(reminderStreams) ? reminderStreams : [];
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
   const queueSource = Array.isArray(queueStreamsSource)
     ? queueStreamsSource
     : [];
@@ -77,7 +107,7 @@ export const ClientDesktopPanel: React.FC<ClientDesktopPanelProps> = ({
     },
     {
       label: "Tiendas destacadas",
-      value: featuredShops.length,
+      value: safeFeatured.length,
     },
   ];
 
@@ -85,8 +115,241 @@ export const ClientDesktopPanel: React.FC<ClientDesktopPanelProps> = ({
   const promoHeading = upcomingHero
     ? `Siguiente vivo: ${upcomingHero.shop.name}`
     : "Sin novedades en vivo";
-  const topShopList = featuredShops.slice(0, 3);
+  const topShopList = safeFeatured.slice(0, 3);
   const navItems = useMemo(() => CLIENT_NAV_ITEMS, []);
+  const showAccountPanel = activeBottomNav === "account" && user.isLoggedIn;
+
+  type AccountTab = "RESUMEN" | "FAVORITOS" | "RECORDATORIOS" | "NOTIFICACIONES";
+  const [accountTab, setAccountTab] = useState<AccountTab>("RESUMEN");
+
+  useEffect(() => {
+    if (!showAccountPanel) {
+      setAccountTab("RESUMEN");
+    }
+  }, [showAccountPanel]);
+
+  const recentReminders = safeReminders.slice(0, 5);
+  const recentNotifications = safeNotifications.slice(0, 6);
+  const recentFavorites = safeFavorites.slice(0, 6);
+
+  const formatStreamMeta = (stream: Stream) => {
+    try {
+      const date = new Date(stream.fullDateISO);
+      const day = date.toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "short",
+      });
+      return `${day} • ${stream.scheduledTime}`;
+    } catch {
+      return stream.scheduledTime || "Proximamente";
+    }
+  };
+
+  const formatNotificationMeta = (note: NotificationItem) => {
+    try {
+      const date = new Date(note.createdAt);
+      return date.toLocaleString("es-AR", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "Reciente";
+    }
+  };
+
+  const accountPanel = showAccountPanel ? (
+    <div className={panelStyles.panelAccount}>
+      <div className={panelStyles.panelAccountTabs} role="tablist" aria-label="Panel cuenta">
+        {(
+          [
+            { id: "RESUMEN", label: "Resumen" },
+            { id: "FAVORITOS", label: "Favoritos" },
+            { id: "RECORDATORIOS", label: "Recordatorios" },
+            { id: "NOTIFICACIONES", label: "Alertas" },
+          ] as { id: AccountTab; label: string }[]
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={accountTab === tab.id}
+            className={`${panelStyles.panelAccountTab} ${
+              accountTab === tab.id ? panelStyles.panelAccountTabActive : ""
+            }`}
+            onClick={() => setAccountTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className={panelStyles.panelAccountBody}>
+        {accountTab === "RESUMEN" && (
+          <div className={panelStyles.panelAccountSummary}>
+            {[
+              { label: "Favoritos", value: safeFavorites.length },
+              { label: "Recordatorios", value: safeReminders.length },
+              {
+                label: "Alertas",
+                value: safeNotifications.filter((note) => !note.read).length,
+              },
+            ].map((item) => (
+              <div key={item.label} className={panelStyles.panelAccountSummaryItem}>
+                <span className={panelStyles.panelAccountSummaryValue}>{item.value}</span>
+                <span className={panelStyles.panelAccountSummaryLabel}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {accountTab === "FAVORITOS" && (
+          <>
+            {recentFavorites.length === 0 ? (
+              <div className={panelStyles.panelAccountEmpty}>
+                Todavia no guardaste tiendas favoritas.
+              </div>
+            ) : (
+              recentFavorites.map((shop) => (
+                <div key={shop.id} className={panelStyles.panelAccountRow}>
+                  <LogoBubble
+                    src={shop.logoUrl}
+                    alt={shop.name}
+                    size={42}
+                    seed={shop.id || shop.name}
+                  />
+                  <div className={panelStyles.panelAccountMeta}>
+                    <span className={panelStyles.panelAccountTitle}>{shop.name}</span>
+                    <span className={panelStyles.panelAccountSub}>Tienda favorita</span>
+                  </div>
+                  <div className={panelStyles.panelAccountActions}>
+                    <button
+                      type="button"
+                      className={panelStyles.panelAccountAction}
+                      onClick={() => onOpenShop(shop)}
+                    >
+                      Ver
+                    </button>
+                    <button
+                      type="button"
+                      className={`${panelStyles.panelAccountAction} ${panelStyles.panelAccountActionDanger}`}
+                      onClick={() => onToggleFavorite(shop.id)}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </>
+        )}
+
+        {accountTab === "RECORDATORIOS" && (
+          <>
+            {recentReminders.length === 0 ? (
+              <div className={panelStyles.panelAccountEmpty}>
+                No hay recordatorios activos todavia.
+              </div>
+            ) : (
+              recentReminders.map((stream) => (
+                <div key={stream.id} className={panelStyles.panelAccountRow}>
+                  <LogoBubble
+                    src={stream.shop.logoUrl}
+                    alt={stream.shop.name}
+                    size={42}
+                    seed={stream.shop.id || stream.shop.name}
+                  />
+                  <div className={panelStyles.panelAccountMeta}>
+                    <span className={panelStyles.panelAccountTitle}>{stream.title}</span>
+                    <span className={panelStyles.panelAccountSub}>{formatStreamMeta(stream)}</span>
+                  </div>
+                  <div className={panelStyles.panelAccountActions}>
+                    <button
+                      type="button"
+                      className={panelStyles.panelAccountAction}
+                      onClick={() => onOpenStream(stream)}
+                    >
+                      Ir
+                    </button>
+                    <button
+                      type="button"
+                      className={panelStyles.panelAccountAction}
+                      onClick={() => onOpenCalendarInvite(stream)}
+                    >
+                      Calendar
+                    </button>
+                    <button
+                      type="button"
+                      className={`${panelStyles.panelAccountAction} ${panelStyles.panelAccountActionDanger}`}
+                      onClick={() => onToggleReminder(stream.id)}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </>
+        )}
+
+        {accountTab === "NOTIFICACIONES" && (
+          <>
+            <div className={panelStyles.panelAccountHeader}>
+              <span className={panelStyles.panelSubheading}>Notificaciones</span>
+              <button
+                type="button"
+                className={panelStyles.panelAccountHeaderButton}
+                onClick={onMarkAllNotificationsRead}
+              >
+                Marcar todo
+              </button>
+            </div>
+            {recentNotifications.length === 0 ? (
+              <div className={panelStyles.panelAccountEmpty}>
+                No hay alertas nuevas por ahora.
+              </div>
+            ) : (
+              recentNotifications.map((note) => (
+                <div key={note.id} className={panelStyles.panelAccountRow}>
+                  <div className={panelStyles.panelAccountMeta}>
+                    <span className={panelStyles.panelAccountTitle}>{note.message}</span>
+                    <span className={panelStyles.panelAccountSub}>
+                      {formatNotificationMeta(note)}
+                    </span>
+                  </div>
+                  <div className={panelStyles.panelAccountActions}>
+                    {!note.read && (
+                      <button
+                        type="button"
+                        className={panelStyles.panelAccountAction}
+                        onClick={() => onMarkNotificationRead(note.id)}
+                      >
+                        Leida
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className={panelStyles.panelAccountAction}
+                      onClick={() => {
+                        if (!note.refId) {
+                          onNotify("Sin referencia", "Esta alerta no tiene destino directo.", "info");
+                          return;
+                        }
+                        onNotificationAction(note);
+                      }}
+                    >
+                      Ver
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  ) : null;
 
   return (
     <aside className={panelStyles.desktopPanel} aria-label="Panel lateral de escritorio">
@@ -137,6 +400,7 @@ export const ClientDesktopPanel: React.FC<ClientDesktopPanelProps> = ({
           </button>
         ))}
       </nav>
+      {accountPanel}
       <ul className={panelStyles.panelList}>
         {desktopPanelStats.map((item) => (
           <li key={item.label} className={panelStyles.panelItem}>

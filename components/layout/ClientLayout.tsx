@@ -11,6 +11,7 @@ interface ClientLayoutProps {
   previewBanner?: React.ReactNode;
   isPreview?: boolean;
   hideChrome?: boolean;
+  compactDesktop?: boolean;
   children: React.ReactNode;
 }
 
@@ -22,6 +23,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({
   previewBanner,
   isPreview,
   hideChrome,
+  compactDesktop,
   children,
 }) => {
   return (
@@ -32,7 +34,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({
       <main
         className={`${styles.main} ${isPreview ? styles.mainPreview : ""} ${
           hideChrome ? styles.mainNoChrome : ""
-        }`}
+        } ${compactDesktop ? styles.mainDesktopCompact : ""}`}
       >
         {children}
       </main>

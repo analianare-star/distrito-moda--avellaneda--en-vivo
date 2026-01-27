@@ -41,6 +41,7 @@ type UseRoleViewPropsArgs = {
   sortedLiveStreams: Stream[];
   activeReels: Reel[];
   featuredShops: Shop[];
+  favoriteShops: Shop[];
   filteredPublicShops: Shop[];
   filteredFavoriteShops: Shop[];
   reminderStreams: Stream[];
@@ -74,6 +75,8 @@ type UseRoleViewPropsArgs = {
   onOpenLogin: () => void;
   onQueueModalChange: (isOpen: boolean) => void;
   onOpenCalendarInvite: (stream: Stream) => void;
+  onOpenStream: (stream: Stream) => void;
+  onNotificationAction: (note: NotificationItem) => void;
   queueStreamsSource: Stream[];
 };
 
@@ -111,6 +114,7 @@ export const useRoleViewProps = ({
   sortedLiveStreams,
   activeReels,
   featuredShops,
+  favoriteShops,
   filteredPublicShops,
   filteredFavoriteShops,
   reminderStreams,
@@ -140,6 +144,8 @@ export const useRoleViewProps = ({
   onOpenLogin,
   onQueueModalChange,
   onOpenCalendarInvite,
+  onOpenStream,
+  onNotificationAction,
   queueStreamsSource,
 }: UseRoleViewPropsArgs) => {
   const adminViewProps = useMemo(
@@ -223,10 +229,13 @@ export const useRoleViewProps = ({
         sortedLiveStreams,
         activeReels,
         featuredShops,
+        favoriteShops,
         filteredPublicShops,
         filteredFavoriteShops,
         reminderStreams,
         notifications,
+        onMarkNotificationRead,
+        onMarkAllNotificationsRead,
         selectedShopForModal,
         selectedReel,
         shopModalTab,
@@ -254,6 +263,8 @@ export const useRoleViewProps = ({
         onOpenLogin,
         onQueueModalChange,
         onOpenCalendarInvite,
+        onOpenStream,
+        onNotificationAction,
         streams,
         queueStreamsSource,
       }),
@@ -269,7 +280,11 @@ export const useRoleViewProps = ({
       filteredPublicShops,
       filteredStreams,
       featuredShops,
+      favoriteShops,
       notifications,
+      onMarkAllNotificationsRead,
+      onMarkNotificationRead,
+      onNotificationAction,
       onCloseReel,
       onCloseShopModal,
       onDownloadCard,
@@ -280,6 +295,7 @@ export const useRoleViewProps = ({
       onOpenLogin,
       onOpenShop,
       onOpenShopModalTab,
+      onOpenStream,
       onQueueModalChange,
       onRate,
       onRefreshData,

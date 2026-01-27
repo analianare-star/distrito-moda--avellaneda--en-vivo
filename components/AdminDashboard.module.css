@@ -51,7 +51,12 @@
 }
 
 .mobileTabList {
-  @apply flex gap-2 overflow-x-auto no-scrollbar;
+  @apply flex gap-2 overflow-x-auto;
+  scrollbar-width: none;
+}
+
+.mobileTabList::-webkit-scrollbar {
+  display: none;
 }
 
 .mobileTabButton {
@@ -975,7 +980,12 @@
 }
 
 .createModalForm {
-  @apply p-8 space-y-8 overflow-y-auto no-scrollbar;
+  @apply p-8 space-y-8 overflow-y-auto;
+  scrollbar-width: none;
+}
+
+.createModalForm::-webkit-scrollbar {
+  display: none;
 }
 
 .createModalSteps {

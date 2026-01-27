@@ -84,6 +84,16 @@
 }
 
 @media (min-width: 1024px) {
+  .searchBar {
+    max-width: 96rem;
+  }
+
+  .listWrap {
+    max-width: 1600px;
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
   .shopsGrid {
     grid-auto-flow: dense;
     grid-auto-rows: 140px;

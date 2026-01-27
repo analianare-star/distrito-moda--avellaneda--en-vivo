@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ShopDetailModal } from "../../components/ShopDetailModal";
 import { StoryModal } from "../../components/StoryModal";
@@ -22,10 +22,13 @@ interface ClientViewProps {
   sortedLiveStreams: Stream[];
   activeReels: Reel[];
   featuredShops: Shop[];
+  favoriteShops: Shop[];
   filteredPublicShops: Shop[];
   filteredFavoriteShops: Shop[];
   reminderStreams: Stream[];
   notifications: NotificationItem[];
+  onMarkNotificationRead: (id: string) => void;
+  onMarkAllNotificationsRead: () => void;
   selectedShopForModal: Shop | null;
   selectedReel: Reel | null;
   shopModalTab: "INFO" | "CARD";
@@ -53,6 +56,8 @@ interface ClientViewProps {
   onOpenLogin: () => void;
   onQueueModalChange: (isOpen: boolean) => void;
   onOpenCalendarInvite: (stream: Stream) => void;
+  onOpenStream: (stream: Stream) => void;
+  onNotificationAction: (note: NotificationItem) => void;
   streams: Stream[];
   queueStreamsSource: Stream[];
 }
@@ -68,10 +73,13 @@ export const ClientView: React.FC<ClientViewProps> = ({
   sortedLiveStreams,
   activeReels,
   featuredShops,
+  favoriteShops,
   filteredPublicShops,
   filteredFavoriteShops,
   reminderStreams,
   notifications,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
   selectedShopForModal,
   selectedReel,
   shopModalTab,
@@ -99,10 +107,25 @@ export const ClientView: React.FC<ClientViewProps> = ({
   onOpenLogin,
   onQueueModalChange,
   onOpenCalendarInvite,
+  onOpenStream,
+  onNotificationAction,
   streams,
   queueStreamsSource,
 }) => {
   const isDataLoading = isLoading || hasFetchError;
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(min-width: 1024px)").matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(min-width: 1024px)");
+    const handleChange = () => setIsDesktop(media.matches);
+    handleChange();
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
   const renderGuestGate = (title: string, message: string) => (
     <section aria-label={title}>
       <EmptyState title={title} message={message} actionLabel="Ingresar" onAction={onRequireLogin} />
@@ -124,8 +147,11 @@ export const ClientView: React.FC<ClientViewProps> = ({
               sortedLiveStreams={sortedLiveStreams}
               activeReels={activeReels}
               featuredShops={featuredShops}
+              favoriteShops={favoriteShops}
               queueStreamsSource={queueStreamsSource}
               user={user}
+              notifications={notifications}
+              reminderStreams={reminderStreams}
               canClientInteract={canClientInteract}
               onFilterChange={onFilterChange}
               onSelectBottomNav={onSelectBottomNav}
@@ -133,6 +159,10 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onViewReel={onViewReel}
               onReport={onReport}
               onToggleReminder={onToggleReminder}
+              onToggleFavorite={onToggleFavorite}
+              onOpenCalendarInvite={onOpenCalendarInvite}
+              onMarkNotificationRead={onMarkNotificationRead}
+              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
               onLike={onLike}
               onRate={onRate}
               onDownloadCard={onDownloadCard}
@@ -140,6 +170,8 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onOpenLogin={onOpenLogin}
               onLogout={onLogout}
               onQueueModalChange={onQueueModalChange}
+              onOpenStream={onOpenStream}
+              onNotificationAction={onNotificationAction}
             />
           }
         />
@@ -155,8 +187,11 @@ export const ClientView: React.FC<ClientViewProps> = ({
               sortedLiveStreams={sortedLiveStreams}
               activeReels={activeReels}
               featuredShops={featuredShops}
+              favoriteShops={favoriteShops}
               queueStreamsSource={queueStreamsSource}
               user={user}
+              notifications={notifications}
+              reminderStreams={reminderStreams}
               canClientInteract={canClientInteract}
               onFilterChange={onFilterChange}
               onSelectBottomNav={onSelectBottomNav}
@@ -164,6 +199,10 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onViewReel={onViewReel}
               onReport={onReport}
               onToggleReminder={onToggleReminder}
+              onToggleFavorite={onToggleFavorite}
+              onOpenCalendarInvite={onOpenCalendarInvite}
+              onMarkNotificationRead={onMarkNotificationRead}
+              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
               onLike={onLike}
               onRate={onRate}
               onDownloadCard={onDownloadCard}
@@ -171,6 +210,8 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onOpenLogin={onOpenLogin}
               onLogout={onLogout}
               onQueueModalChange={onQueueModalChange}
+              onOpenStream={onOpenStream}
+              onNotificationAction={onNotificationAction}
             />
           }
         />
@@ -186,8 +227,11 @@ export const ClientView: React.FC<ClientViewProps> = ({
               sortedLiveStreams={sortedLiveStreams}
               activeReels={activeReels}
               featuredShops={featuredShops}
+              favoriteShops={favoriteShops}
               queueStreamsSource={queueStreamsSource}
               user={user}
+              notifications={notifications}
+              reminderStreams={reminderStreams}
               canClientInteract={canClientInteract}
               onFilterChange={onFilterChange}
               onSelectBottomNav={onSelectBottomNav}
@@ -195,6 +239,10 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onViewReel={onViewReel}
               onReport={onReport}
               onToggleReminder={onToggleReminder}
+              onToggleFavorite={onToggleFavorite}
+              onOpenCalendarInvite={onOpenCalendarInvite}
+              onMarkNotificationRead={onMarkNotificationRead}
+              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
               onLike={onLike}
               onRate={onRate}
               onDownloadCard={onDownloadCard}
@@ -202,6 +250,8 @@ export const ClientView: React.FC<ClientViewProps> = ({
               onOpenLogin={onOpenLogin}
               onLogout={onLogout}
               onQueueModalChange={onQueueModalChange}
+              onOpenStream={onOpenStream}
+              onNotificationAction={onNotificationAction}
             />
           }
         />
@@ -217,9 +267,20 @@ export const ClientView: React.FC<ClientViewProps> = ({
               user={user}
               activeBottomNav={activeBottomNav}
               featuredShops={featuredShops}
+              favoriteShops={favoriteShops}
               queueStreamsSource={queueStreamsSource}
+              notifications={notifications}
+              reminderStreams={reminderStreams}
               onSelectBottomNav={onSelectBottomNav}
               onOpenShop={onOpenShop}
+              onToggleFavorite={onToggleFavorite}
+              onToggleReminder={onToggleReminder}
+              onOpenCalendarInvite={onOpenCalendarInvite}
+              onOpenStream={onOpenStream}
+              onMarkNotificationRead={onMarkNotificationRead}
+              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+              onNotificationAction={onNotificationAction}
+              onNotify={onNotify}
               onOpenLogin={onOpenLogin}
               onLogout={onLogout}
             />
@@ -237,9 +298,20 @@ export const ClientView: React.FC<ClientViewProps> = ({
               user={user}
               activeBottomNav={activeBottomNav}
               featuredShops={featuredShops}
+              favoriteShops={favoriteShops}
               queueStreamsSource={queueStreamsSource}
+              notifications={notifications}
+              reminderStreams={reminderStreams}
               onSelectBottomNav={onSelectBottomNav}
               onOpenShop={onOpenShop}
+              onToggleFavorite={onToggleFavorite}
+              onToggleReminder={onToggleReminder}
+              onOpenCalendarInvite={onOpenCalendarInvite}
+              onOpenStream={onOpenStream}
+              onMarkNotificationRead={onMarkNotificationRead}
+              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+              onNotificationAction={onNotificationAction}
+              onNotify={onNotify}
               onOpenLogin={onOpenLogin}
               onLogout={onLogout}
             />
@@ -260,13 +332,59 @@ export const ClientView: React.FC<ClientViewProps> = ({
         <Route
           path="/cuenta"
           element={
-            user.isLoggedIn ? (
-              <ClientAccountPage
-                isLoggedIn={user.isLoggedIn}
+            isDesktop ? (
+              <ClientHomePage
+                isLoading={isDataLoading}
+                brandLogo={brandLogo}
+                activeBottomNav={activeBottomNav}
+                activeFilter={activeFilter}
+                filteredStreams={filteredStreams}
+                sortedLiveStreams={sortedLiveStreams}
+                activeReels={activeReels}
+                featuredShops={featuredShops}
+                favoriteShops={favoriteShops}
+                queueStreamsSource={queueStreamsSource}
                 user={user}
                 notifications={notifications}
                 reminderStreams={reminderStreams}
+                canClientInteract={canClientInteract}
+                onFilterChange={onFilterChange}
+                onSelectBottomNav={onSelectBottomNav}
+                onOpenShop={onOpenShop}
+                onViewReel={onViewReel}
+                onReport={onReport}
+                onToggleReminder={onToggleReminder}
+                onToggleFavorite={onToggleFavorite}
                 onOpenCalendarInvite={onOpenCalendarInvite}
+                onMarkNotificationRead={onMarkNotificationRead}
+                onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+                onLike={onLike}
+                onRate={onRate}
+                onDownloadCard={onDownloadCard}
+                onNotify={onNotify}
+                onOpenLogin={onOpenLogin}
+                onLogout={onLogout}
+                onQueueModalChange={onQueueModalChange}
+                onOpenStream={onOpenStream}
+                onNotificationAction={onNotificationAction}
+              />
+            ) : user.isLoggedIn ? (
+              <ClientAccountPage
+                isLoggedIn={user.isLoggedIn}
+                user={user}
+                favoriteShops={favoriteShops}
+                notifications={notifications}
+                reminderStreams={reminderStreams}
+                onRequireLogin={onRequireLogin}
+                onOpenShop={(shop) => onOpenShop(shop)}
+                onToggleFavorite={onToggleFavorite}
+                onToggleReminder={onToggleReminder}
+                onOpenCalendarInvite={onOpenCalendarInvite}
+                onOpenStream={onOpenStream}
+                onMarkNotificationRead={onMarkNotificationRead}
+                onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+                onNotificationAction={onNotificationAction}
+                onNotify={onNotify}
               />
             ) : (
               renderGuestGate(

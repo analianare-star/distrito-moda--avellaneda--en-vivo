@@ -79,6 +79,7 @@ export const RoleRouter: React.FC<RoleRouterProps> = ({
 }) => {
   const location = useLocation();
   const showClientLogoOnDesktop = location.pathname.startsWith("/tiendas");
+  const hideClientHeaderOnDesktop = location.pathname.startsWith("/tiendas");
   const commonHeaderProps = {
     brandLogo,
     bottomNavItems,
@@ -168,6 +169,7 @@ export const RoleRouter: React.FC<RoleRouterProps> = ({
                 userName={clientUserName}
                 hideUserInfoOnDesktop
                 showLogoOnDesktop={showClientLogoOnDesktop}
+                hideOnDesktop={hideClientHeaderOnDesktop}
               />
             }
             headerAccessory={
@@ -186,6 +188,7 @@ export const RoleRouter: React.FC<RoleRouterProps> = ({
             previewBanner={clientPreviewBanner}
             isPreview={clientIsPreview}
             hideChrome={clientHideChrome}
+            compactDesktop={hideClientHeaderOnDesktop}
           >
             <ClientView {...clientViewProps} />
           </ClientLayout>

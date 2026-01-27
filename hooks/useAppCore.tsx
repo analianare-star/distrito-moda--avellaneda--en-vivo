@@ -228,6 +228,7 @@ export const useAppCore = () => {
     ? allShops.find((shop) => shop.id === adminPreview.shopId)
     : null;
   const {
+    favoriteShops,
     featuredShops,
     sortedLiveStreams,
     filteredStreams,
@@ -393,6 +394,13 @@ export const useAppCore = () => {
     navigateTo,
     canClientInteract,
   });
+  const handleOpenStream = (stream: Stream) => {
+    if (!stream?.id) return;
+    setActiveBottomNav("live");
+    setActiveFilter("En Vivo");
+    navigateTo(`/en-vivo/${stream.id}`);
+    pushHistory(`Abrio vivo: ${stream.shop?.name || "Tienda"}`);
+  };
 
   useRoleRouteSync({
     isResetView,
@@ -478,6 +486,7 @@ export const useAppCore = () => {
     sortedLiveStreams,
     activeReels,
     featuredShops,
+    favoriteShops,
     filteredPublicShops,
     filteredFavoriteShops,
     reminderStreams,
@@ -515,6 +524,8 @@ export const useAppCore = () => {
     onNotify: notify,
     onQueueModalChange: setIsLiveQueueOpen,
     onOpenCalendarInvite: handleOpenCalendarInvite,
+    onOpenStream: handleOpenStream,
+    onNotificationAction: handleNotificationAction,
     queueStreamsSource,
   });
 

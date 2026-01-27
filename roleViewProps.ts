@@ -87,10 +87,13 @@ type ClientViewArgs = {
   sortedLiveStreams: Stream[];
   activeReels: Reel[];
   featuredShops: Shop[];
+  favoriteShops: Shop[];
   filteredPublicShops: Shop[];
   filteredFavoriteShops: Shop[];
   reminderStreams: Stream[];
   notifications: NotificationItem[];
+  onMarkNotificationRead: (id: string) => void;
+  onMarkAllNotificationsRead: () => void;
   selectedShopForModal: Shop | null;
   selectedReel: Reel | null;
   shopModalTab: "INFO" | "CARD";
@@ -118,6 +121,8 @@ type ClientViewArgs = {
   onOpenLogin: () => void;
   onQueueModalChange: (isOpen: boolean) => void;
   onOpenCalendarInvite: (stream: Stream) => void;
+  onOpenStream: (stream: Stream) => void;
+  onNotificationAction: (note: NotificationItem) => void;
   streams: Stream[];
   queueStreamsSource: Stream[];
 };
@@ -133,10 +138,13 @@ export const buildClientViewProps = (args: ClientViewArgs): ClientViewProps => (
   sortedLiveStreams: args.sortedLiveStreams,
   activeReels: args.activeReels,
   featuredShops: args.featuredShops,
+  favoriteShops: args.favoriteShops,
   filteredPublicShops: args.filteredPublicShops,
   filteredFavoriteShops: args.filteredFavoriteShops,
   reminderStreams: args.reminderStreams,
   notifications: args.notifications,
+  onMarkNotificationRead: args.onMarkNotificationRead,
+  onMarkAllNotificationsRead: args.onMarkAllNotificationsRead,
   selectedShopForModal: args.selectedShopForModal,
   selectedReel: args.selectedReel,
   shopModalTab: args.shopModalTab,
@@ -164,6 +172,8 @@ export const buildClientViewProps = (args: ClientViewArgs): ClientViewProps => (
   onOpenLogin: args.onOpenLogin,
   onQueueModalChange: args.onQueueModalChange,
   onOpenCalendarInvite: args.onOpenCalendarInvite,
+  onOpenStream: args.onOpenStream,
+  onNotificationAction: args.onNotificationAction,
   streams: args.streams,
   queueStreamsSource: args.queueStreamsSource,
 });

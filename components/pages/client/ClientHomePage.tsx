@@ -4,7 +4,7 @@ import { HeroSection } from "../../HeroSection";
 import { ReelsStrip } from "../../ReelsStrip";
 import { StreamCard } from "../../StreamCard";
 import { EmptyState } from "../../EmptyState";
-import { Reel, Shop, Stream, StreamStatus, UserContext } from "../../../types";
+import { Reel, Shop, Stream, StreamStatus, UserContext, NotificationItem } from "../../../types";
 import { getShopCoverUrl } from "../../../utils/shopMedia";
 import { LiveQueueModal } from "../../LiveQueueModal";
 import { LogoBubble } from "../../LogoBubble";
@@ -22,8 +22,11 @@ interface ClientHomePageProps {
   sortedLiveStreams: Stream[];
   activeReels: Reel[];
   featuredShops: Shop[];
+  favoriteShops: Shop[];
   queueStreamsSource: Stream[];
   user: UserContext;
+  notifications: NotificationItem[];
+  reminderStreams: Stream[];
   canClientInteract: boolean;
   onFilterChange: (value: string) => void;
   onSelectBottomNav: (value: string) => void;
@@ -31,6 +34,12 @@ interface ClientHomePageProps {
   onViewReel: (reel: Reel) => void;
   onReport: (stream: Stream) => void;
   onToggleReminder: (streamId: string) => void;
+  onToggleFavorite: (shopId: string) => void;
+  onOpenCalendarInvite: (stream: Stream) => void;
+  onOpenStream: (stream: Stream) => void;
+  onMarkNotificationRead: (id: string) => void;
+  onMarkAllNotificationsRead: () => void;
+  onNotificationAction: (note: NotificationItem) => void;
   onLike: (streamId: string) => void;
   onRate: (streamId: string, rating: number) => void;
   onDownloadCard: (stream: Stream) => void;
@@ -53,8 +62,11 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
   sortedLiveStreams,
   activeReels,
   featuredShops,
+  favoriteShops,
   queueStreamsSource,
   user,
+  notifications,
+  reminderStreams,
   canClientInteract,
   onFilterChange,
   onSelectBottomNav,
@@ -62,6 +74,12 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
   onViewReel,
   onReport,
   onToggleReminder,
+  onToggleFavorite,
+  onOpenCalendarInvite,
+  onOpenStream,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+  onNotificationAction,
   onLike,
   onRate,
   onDownloadCard,
@@ -269,9 +287,20 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
       user={user}
       activeBottomNav={activeBottomNav}
       featuredShops={featuredShops}
+      favoriteShops={favoriteShops}
       queueStreamsSource={queueStreamsSource}
+      notifications={notifications}
+      reminderStreams={reminderStreams}
       onSelectBottomNav={onSelectBottomNav}
       onOpenShop={onOpenShop}
+      onToggleFavorite={onToggleFavorite}
+      onToggleReminder={onToggleReminder}
+      onOpenCalendarInvite={onOpenCalendarInvite}
+      onOpenStream={onOpenStream}
+      onMarkNotificationRead={onMarkNotificationRead}
+      onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+      onNotificationAction={onNotificationAction}
+      onNotify={onNotify}
       onOpenLogin={onOpenLogin}
       onLogout={onLogout}
     />

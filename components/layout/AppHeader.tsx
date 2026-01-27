@@ -23,6 +23,7 @@ interface AppHeaderProps {
   onLogout: () => void;
   hideUserInfoOnDesktop?: boolean;
   showLogoOnDesktop?: boolean;
+  hideOnDesktop?: boolean;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -37,6 +38,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onLogout,
   hideUserInfoOnDesktop,
   showLogoOnDesktop,
+  hideOnDesktop,
 }) => {
   const headerRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -57,7 +59,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   }, []);
 
   return (
-    <header className={styles.header} ref={headerRef}>
+    <header
+      className={`${styles.header} ${
+        hideOnDesktop ? styles.headerDesktopHidden : ""
+      }`}
+      ref={headerRef}
+    >
       <nav className={styles.nav} aria-label="Navegacion principal">
         <div
           className={`${styles.logoWrap} ${

@@ -74,11 +74,15 @@ export const useRoleNavigation = ({
       setHasBottomNavInteraction(true);
       setShowLoginPrompt(false);
       setViewMode("CLIENT");
-      if (id !== "account") {
+      const requiresLogin =
+        id === "account" || id === "reminders" || id === "favorites";
+      if (!requiresLogin) {
         postLoginRedirect.current = null;
       }
-      if (id === "account" && !userIsLoggedIn) {
+      if (requiresLogin && !userIsLoggedIn) {
         postLoginRedirect.current = "/cuenta";
+        // Keep the nav coherent even when we gate the action.
+        setActiveBottomNav("account");
         openLoginModal();
         return;
       }
@@ -89,9 +93,6 @@ export const useRoleNavigation = ({
       navigateTo(config.path);
       if (config.filter) setActiveFilter(config.filter);
       if (config.savedTab) setSavedTab(config.savedTab);
-      if (id === "account" && !userIsLoggedIn) {
-        openLoginModal();
-      }
     },
     [
       navigateTo,

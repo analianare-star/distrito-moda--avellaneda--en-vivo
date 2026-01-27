@@ -35,9 +35,7 @@
   @apply font-serif text-[20px] md:text-2xl text-dm-dark;
 }
 
-.showcaseAction {
-  @apply rounded-full border border-gray-200 px-3 py-1 text-[10px] font-bold text-gray-500 hover:border-dm-crimson hover:text-dm-crimson;
-}
+
 
 .showcaseGrid {
   @apply w-full grid grid-cols-2 gap-[4px] auto-rows-[90px] sm:auto-rows-[110px] md:grid-cols-3 md:auto-rows-[130px];
@@ -54,13 +52,13 @@
 
 @media (min-width: 1024px) {
   .showcaseHeader {
-    max-width: 1040px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
   }
 
   .showcaseGrid {
-    max-width: 1040px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
   }
 
   .showcaseGrid {
@@ -142,9 +140,14 @@
 }
 
 .reelsScroller {
-  @apply max-w-7xl mx-auto px-4 overflow-x-auto no-scrollbar overscroll-x-contain;
+  @apply max-w-7xl mx-auto px-4 overflow-x-auto overscroll-x-contain;
   position: relative;
   z-index: 1;
+  scrollbar-width: none;
+}
+
+.reelsScroller::-webkit-scrollbar {
+  display: none;
 }
 
 .reelsRow {
@@ -160,7 +163,7 @@
 }
 
 .reelsNavButton {
-  @apply pointer-events-auto flex items-center justify-center h-12 w-12 rounded-full border border-dm-crimson/40 bg-white text-dm-crimson text-2xl shadow-md hover:bg-dm-crimson hover:text-white transition;
+  @apply pointer-events-auto m-1 flex items-center justify-center h-12 max-w-10 rounded-full border border-dm-crimson/40 bg-white text-dm-crimson text-2xl shadow-md hover:bg-dm-crimson hover:text-white transition;
 }
 
 .reelCard {
@@ -237,27 +240,27 @@
   }
 
   .reelsWrap {
-    padding-left: 48px;
-    padding-right: 48px;
+    padding-left: 32px;
+    padding-right: 32px;
   }
 
   .reelsScroller {
     padding-left: 0;
     padding-right: 0;
-    max-width: 1040px;
+    max-width: 100%;
   }
 
   .reelsNav {
-    left: 50%;
-    right: auto;
-    width: 1040px;
+    left: 0;
+    right: 0;
+    width: 100%;
     padding-left: 0;
     padding-right: 0;
-    transform: translate(-50%, -50%);
+    transform: translateY(-50%);
   }
 
   .liveContent {
-    max-width: 1040px;
+    max-width: 100%;
     padding-left: 0;
     padding-right: 0;
     gap: 24px;
@@ -490,7 +493,12 @@
 }
 
 .filtersInner {
-  @apply max-w-7xl mx-auto px-4 py-4 overflow-x-auto no-scrollbar overscroll-x-contain;
+  @apply max-w-7xl mx-auto px-4 py-4 overflow-x-auto overscroll-x-contain;
+  scrollbar-width: none;
+}
+
+.filtersInner::-webkit-scrollbar {
+  display: none;
 }
 
 .filtersRow {
@@ -499,7 +507,7 @@
 
 @media (min-width: 1024px) {
   .filtersInner {
-    max-width: 1040px;
+    max-width: 100%;
   }
 }
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState } from "../../EmptyState";
-import { Shop, Stream, UserContext } from "../../../types";
+import { NotificationItem, Shop, Stream, UserContext } from "../../../types";
 import { ClientDesktopPanel } from "./ClientDesktopPanel";
 import panelStyles from "./ClientHomePage.module.css";
 import styles from "./ClientShopsPage.module.css";
@@ -16,9 +16,24 @@ interface ClientShopsPageProps {
   user: UserContext;
   activeBottomNav: string;
   featuredShops: Shop[];
+  favoriteShops: Shop[];
   queueStreamsSource: Stream[];
+  notifications: NotificationItem[];
+  reminderStreams: Stream[];
   onSelectBottomNav: (value: string) => void;
   onOpenShop: (shop: Shop) => void;
+  onToggleFavorite: (shopId: string) => void;
+  onToggleReminder: (streamId: string) => void;
+  onOpenCalendarInvite: (stream: Stream) => void;
+  onOpenStream: (stream: Stream) => void;
+  onMarkNotificationRead: (id: string) => void;
+  onMarkAllNotificationsRead: () => void;
+  onNotificationAction: (note: NotificationItem) => void;
+  onNotify: (
+    title: string,
+    message: string,
+    tone?: "info" | "success" | "warning" | "error"
+  ) => void;
   onOpenLogin: () => void;
   onLogout: () => void;
 }
@@ -32,9 +47,20 @@ export const ClientShopsPage: React.FC<ClientShopsPageProps> = ({
   user,
   activeBottomNav,
   featuredShops,
+  favoriteShops,
   queueStreamsSource,
+  notifications,
+  reminderStreams,
   onSelectBottomNav,
   onOpenShop,
+  onToggleFavorite,
+  onToggleReminder,
+  onOpenCalendarInvite,
+  onOpenStream,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+  onNotificationAction,
+  onNotify,
   onOpenLogin,
   onLogout,
 }) => {
@@ -125,9 +151,20 @@ export const ClientShopsPage: React.FC<ClientShopsPageProps> = ({
             user={user}
             activeBottomNav={activeBottomNav}
             featuredShops={featuredShops}
+            favoriteShops={favoriteShops}
             queueStreamsSource={queueStreamsSource}
+            notifications={notifications}
+            reminderStreams={reminderStreams}
             onSelectBottomNav={onSelectBottomNav}
             onOpenShop={onOpenShop}
+            onToggleFavorite={onToggleFavorite}
+            onToggleReminder={onToggleReminder}
+            onOpenCalendarInvite={onOpenCalendarInvite}
+            onOpenStream={onOpenStream}
+            onMarkNotificationRead={onMarkNotificationRead}
+            onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+            onNotificationAction={onNotificationAction}
+            onNotify={onNotify}
             onOpenLogin={onOpenLogin}
             onLogout={onLogout}
           />
