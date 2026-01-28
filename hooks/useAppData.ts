@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../services/api";
 import { Reel, Shop, Stream } from "../types";
 import {
@@ -26,6 +26,10 @@ export const useAppData = ({
   const [activeReels, setActiveReels] = useState<Reel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasFetchError, setHasFetchError] = useState(false);
+  const mockReelsRef = useRef<{ seed: string; data: Reel[] }>({
+    seed: "",
+    data: [],
+  });
 
   const refreshData = useCallback(async () => {
     setHasFetchError(false);
@@ -38,8 +42,15 @@ export const useAppData = ({
 
       const computeActiveReels = (shops: Shop[]) => {
         const enrichedReels = enrichReelsWithShop(reels, shops);
-        const mockReels = buildMockReels(shops, enrichedReels, MOCK_REEL_COUNT);
-        return [...enrichedReels, ...mockReels].filter(
+        const dailySeed = new Date().toLocaleDateString("en-CA");
+        const seed = `${dailySeed}:${reels.length}`;
+        if (mockReelsRef.current.seed !== seed || mockReelsRef.current.data.length === 0) {
+          mockReelsRef.current = {
+            seed,
+            data: buildMockReels(shops, enrichedReels, MOCK_REEL_COUNT),
+          };
+        }
+        return [...enrichedReels, ...mockReelsRef.current.data].filter(
           (reel) => new Date(reel.expiresAtISO).getTime() > Date.now()
         );
       };

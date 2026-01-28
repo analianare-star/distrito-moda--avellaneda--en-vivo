@@ -34,6 +34,11 @@ const fetchWithAuth = async (path: string, options: RequestInit = {}) => {
   return fetch(`${API_URL}${path}`, { ...options, headers });
 };
 
+const fetchWithAuthForm = async (path: string, options: RequestInit = {}) => {
+  const headers = await buildHeaders({ json: false, headers: options.headers as Record<string, string> | undefined });
+  return fetch(`${API_URL}${path}`, { ...options, headers });
+};
+
 const PLAN_BY_BACKEND: Record<string, ShopPlan> = {
   basic: 'Estandar',
   estandar: 'Estandar',
@@ -216,25 +221,36 @@ const mapStream = (stream: any): Stream => {
 
 const mapReel = (reel: any): Reel => {
   const createdAtISO = reel?.createdAt ? new Date(reel.createdAt).toISOString() : new Date().toISOString();
-  const expiresAtISO = new Date(new Date(createdAtISO).getTime() + 24 * 60 * 60 * 1000).toISOString();
+  const expiresAtISO = reel?.expiresAt
+    ? new Date(reel.expiresAt).toISOString()
+    : new Date(new Date(createdAtISO).getTime() + 24 * 60 * 60 * 1000).toISOString();
   const isExpired = new Date(expiresAtISO).getTime() < Date.now();
-  const status = reel?.hidden ? 'HIDDEN' : isExpired ? 'EXPIRED' : 'ACTIVE';
+  const status = reel?.status || (reel?.hidden ? 'HIDDEN' : isExpired ? 'EXPIRED' : 'ACTIVE');
   const shop = reel?.shop || {};
+  const videoUrl = reel?.videoUrl || reel?.url || '';
+  const photoUrls = Array.isArray(reel?.photoUrls) ? reel.photoUrls : [];
+  const fallbackUrl = videoUrl || photoUrls[0] || '';
+  const thumbnailUrl = reel?.thumbnailUrl || reel?.thumbnail || '';
 
-  return {
-    id: reel.id,
-    shopId: reel.shopId,
-    shopName: shop.name || '',
-    shopLogo: normalizeMediaUrl(shop.logoUrl || ''),
-    url: reel.url || '',
-    thumbnail: normalizeMediaUrl(reel.thumbnail || '') || undefined,
-    createdAtISO,
-    expiresAtISO,
-    status,
-    origin: reel.origin || 'PLAN',
-    platform: reel.platform as SocialPlatform,
-    views: Number(reel.views ?? 0),
-  };
+    return {
+      id: reel.id,
+      shopId: reel.shopId,
+      shopName: shop.name || '',
+      shopLogo: normalizeMediaUrl(shop.logoUrl || ''),
+      url: fallbackUrl,
+      type: reel?.type || (photoUrls.length ? 'PHOTO_SET' : 'VIDEO'),
+      videoUrl: normalizeMediaUrl(videoUrl || '') || undefined,
+      photoUrls: photoUrls.map((item: string) => normalizeMediaUrl(item) || item),
+      durationSeconds: Number(reel?.durationSeconds ?? 10),
+      thumbnail: normalizeMediaUrl(thumbnailUrl || '') || undefined,
+      processingJobId: reel?.processingJobId || undefined,
+      createdAtISO,
+      expiresAtISO,
+      status,
+      origin: reel.origin || 'PLAN',
+      platform: reel.platform as SocialPlatform,
+      views: Number(reel.views ?? 0),
+    };
 };
 
 export const api = {
@@ -604,6 +620,21 @@ export const api = {
   buyQuota: async (shopId: string, amount: number) => {
     return api.buyStreamQuota(shopId, amount);
   },
+  uploadReelMedia: async (payload: { shopId: string; type: 'VIDEO' | 'PHOTO_SET'; files: FileList | File[] }) => {
+    const form = new FormData();
+    form.append('shopId', payload.shopId);
+    form.append('type', payload.type);
+    Array.from(payload.files).forEach((file) => form.append('files', file));
+    const res = await fetchWithAuthForm('/storage/reels/upload', {
+      method: 'POST',
+      body: form,
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error?.message || 'No se pudo subir el reel.');
+    }
+    return res.json();
+  },
 
   createMercadoPagoPreference: async (payload: { type: string; quantity: number; shopId?: string }) => {
     const res = await fetchWithAuth(`/payments/mercadopago/preference`, {
@@ -812,22 +843,23 @@ export const api = {
     }
   },
 
-  createReel: async (
-    shopId: string,
-    url: string,
-    platform: SocialPlatform,
-    options?: { isAdminOverride?: boolean }
-  ) => {
+    createReel: async (payload: {
+      shopId: string;
+      type?: 'VIDEO' | 'PHOTO_SET';
+      videoUrl?: string;
+      photoUrls?: string[];
+      thumbnailUrl?: string;
+      durationSeconds?: number;
+      platform: SocialPlatform;
+      isAdminOverride?: boolean;
+      status?: string;
+      processingJobId?: string;
+    }) => {
     try {
       const res = await fetchWithAuth('/reels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          shopId,
-          url,
-          platform,
-          isAdminOverride: options?.isAdminOverride,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Error al crear reel');
@@ -835,6 +867,23 @@ export const api = {
     } catch (error: any) {
       return { success: false, message: error.message || 'Error de conexion' };
     }
+  },
+
+  createReelUploadUrls: async (payload: {
+    shopId: string;
+    type: 'VIDEO' | 'PHOTO_SET';
+    files: { fileName: string; contentType: string }[];
+  }) => {
+    const res = await fetchWithAuth('/storage/reels/upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || 'No se pudo generar URLs de subida');
+    }
+    return data as { bucket: string; uploads: { path: string; signedUrl: string; publicUrl: string }[] };
   },
 
   hideReel: async (id: string) => {

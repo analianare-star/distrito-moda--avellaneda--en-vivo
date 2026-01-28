@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo } from "react";
+import { useDeferredValue, useMemo, useRef } from "react";
 import { buildMockStreams, MOCK_STREAM_COUNT } from "../services/mockData";
 import { Shop, Stream, StreamStatus, UserContext } from "../types";
 
@@ -99,6 +99,10 @@ export const useClientSelectors = ({
   activeFilter,
   shopQuery,
 }: UseClientSelectorsArgs) => {
+  const mockStreamsRef = useRef<{ seed: string; data: Stream[] }>({
+    seed: "",
+    data: [],
+  });
   const publicShops = useMemo(
     () => sortShopsByPriority(allShops.filter(isPublicShop)),
     [allShops]
@@ -109,10 +113,17 @@ export const useClientSelectors = ({
       sortShopsByPriority(allShops.filter((shop) => user.favorites.includes(shop.id))),
     [allShops, user.favorites]
   );
-  const mockStreams = useMemo(
-    () => buildMockStreams(publicShops, allStreams, MOCK_STREAM_COUNT),
-    [publicShops, allStreams]
-  );
+  const mockStreams = useMemo(() => {
+    const dailySeed = new Date().toLocaleDateString("en-CA");
+    const seed = `${dailySeed}:${allStreams.length}`;
+    if (mockStreamsRef.current.seed !== seed || mockStreamsRef.current.data.length === 0) {
+      mockStreamsRef.current = {
+        seed,
+        data: buildMockStreams(publicShops, allStreams, MOCK_STREAM_COUNT),
+      };
+    }
+    return mockStreamsRef.current.data;
+  }, [publicShops, allStreams]);
   const streamSource = useMemo(
     () => [...allStreams, ...mockStreams],
     [allStreams, mockStreams]

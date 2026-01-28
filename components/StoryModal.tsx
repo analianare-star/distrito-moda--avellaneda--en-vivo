@@ -34,13 +34,23 @@ export const StoryModal: React.FC<StoryModalProps> = ({
     const diffMs = expires.getTime() - now.getTime();
     const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
     const minutesLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    const storyImage = reel.thumbnail || reel.shopLogo;
-    const hasMedia = Boolean(storyImage);
     const catalogUrl = reel.shopCatalogUrl || '';
     const [liked, setLiked] = useState(false);
     const [isMapOpen, setIsMapOpen] = useState(false);
     const [mapFocusName, setMapFocusName] = useState<string | null>(null);
     const [progress, setProgress] = useState(0);
+    const isVideo = reel.type === "VIDEO" && Boolean(reel.videoUrl);
+    const durationSeconds = Math.max(5, Number(reel.durationSeconds ?? 10));
+    const photoUrls = Array.isArray(reel.photoUrls) ? reel.photoUrls : [];
+    const photoCount = photoUrls.length;
+    const activePhotoIndex = photoCount
+      ? Math.min(photoCount - 1, Math.floor((progress / 100) * photoCount))
+      : 0;
+    const activePhoto = photoCount ? photoUrls[activePhotoIndex] : "";
+    const storyBackdrop = isVideo
+      ? reel.thumbnail || reel.shopLogo || activePhoto
+      : activePhoto || reel.thumbnail || reel.shopLogo;
+    const hasMedia = Boolean(isVideo ? reel.videoUrl : storyBackdrop);
     const reelIndex = Math.max(0, reels.findIndex((item) => item.id === reel.id));
     const totalReels = reels.length;
 
@@ -127,6 +137,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({
     useEffect(() => {
         if (isMapOpen) return;
         setProgress(0);
+        const step = 100 / Math.max(1, Math.round(durationSeconds * 10));
         const timer = window.setInterval(() => {
             setProgress((value) => {
                 if (value >= 100) {
@@ -134,11 +145,11 @@ export const StoryModal: React.FC<StoryModalProps> = ({
                     handleNext();
                     return 100;
                 }
-                return value + 1;
+                return value + step;
             });
         }, 100);
         return () => window.clearInterval(timer);
-    }, [reel.id, handleNext, isMapOpen]);
+    }, [reel.id, handleNext, isMapOpen, durationSeconds]);
 
     const progressBars = useMemo(
         () =>
@@ -204,17 +215,33 @@ export const StoryModal: React.FC<StoryModalProps> = ({
                 <div className={styles.content}>
                     {/* Background blurry effect */}
                     <div className={styles.contentBackdrop}>
-                         <img src={storyImage} className={styles.contentBackdropImage} alt={reel.shopName} />
+                         <img
+                           src={storyBackdrop}
+                           className={styles.contentBackdropImage}
+                           alt={reel.shopName}
+                         />
                     </div>
                     {hasMedia ? (
                         <div className={styles.mediaWrap}>
-                            <img
-                                src={storyImage}
+                            {isVideo && reel.videoUrl ? (
+                              <video
+                                src={reel.videoUrl}
+                                poster={reel.thumbnail || reel.shopLogo}
+                                className={styles.mediaImage}
+                                muted
+                                playsInline
+                                autoPlay
+                                loop
+                              />
+                            ) : (
+                              <img
+                                src={activePhoto || storyBackdrop}
                                 alt={reel.shopName}
                                 loading="lazy"
                                 decoding="async"
                                 className={styles.mediaImage}
-                            />
+                              />
+                            )}
                         </div>
                     ) : (
                         <div className={styles.contentStack}>

@@ -74,21 +74,26 @@ export interface Penalty {
 
 // Nuevo Modelo de Reel / Historia
 export interface Reel {
-  id: string;
-  shopId: string;
-  shopName: string; // Desnormalizado para facilitar UI admin
-  shopLogo: string; // Desnormalizado
-  url: string;
-  thumbnail?: string; // Opcional
-  shopMapsUrl?: string;
-  shopCatalogUrl?: string;
-  createdAtISO: string;
-  expiresAtISO: string; // createdAt + 24h
-  status: 'ACTIVE' | 'EXPIRED' | 'HIDDEN';
-  origin: 'PLAN' | 'EXTRA';
-  platform: SocialPlatform;
-  views?: number;
-}
+    id: string;
+    shopId: string;
+    shopName: string; // Desnormalizado para facilitar UI admin
+    shopLogo: string; // Desnormalizado
+    url: string;
+    type?: 'VIDEO' | 'PHOTO_SET';
+    videoUrl?: string;
+    photoUrls?: string[];
+    durationSeconds?: number;
+    thumbnail?: string; // Opcional
+    processingJobId?: string;
+    shopMapsUrl?: string;
+    shopCatalogUrl?: string;
+    createdAtISO: string;
+    expiresAtISO: string; // createdAt + 24h
+    status: 'ACTIVE' | 'EXPIRED' | 'HIDDEN' | 'PROCESSING';
+    origin: 'PLAN' | 'EXTRA';
+    platform: SocialPlatform;
+    views?: number;
+  }
 
 export interface Shop {
   id: string;

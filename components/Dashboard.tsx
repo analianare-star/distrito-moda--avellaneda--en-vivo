@@ -132,6 +132,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   // Reel Form States
   const [reelUrl, setReelUrl] = useState('');
   const [reelPlatform, setReelPlatform] = useState<SocialPlatform | ''>('');
+  const [reelMode, setReelMode] = useState<'VIDEO' | 'PHOTO_SET'>('VIDEO');
+  const [reelPhotoUrls, setReelPhotoUrls] = useState<string[]>([]);
+  const [isReelUploading, setIsReelUploading] = useState(false);
+  const [reelProcessingJobId, setReelProcessingJobId] = useState<string | null>(null);
 
   // Sync Logic & Load Reels
   const loadPurchases = async () => {
@@ -519,33 +523,100 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   // --- REELS HANDLERS ---
+  const uploadReelFiles = async (files: FileList | null, mode: 'VIDEO' | 'PHOTO_SET') => {
+      if (!files || files.length === 0) return;
+      if (blockPreviewAction()) return;
+      if (!currentShop.id || currentShop.id === 'empty') return;
+
+      const list = Array.from(files);
+      const limited = mode === 'PHOTO_SET' ? list.slice(0, 5) : list.slice(0, 1);
+      setIsReelUploading(true);
+
+        try {
+            const result = await api.uploadReelMedia({
+                shopId: currentShop.id,
+                type: mode,
+                files: limited,
+            });
+
+            if (result?.processing) {
+                setReelProcessingJobId(result?.jobId || null);
+                setReelMode(mode);
+                setReelPhotoUrls([]);
+                setReelUrl('');
+                setNotice({
+                    title: 'Procesando video',
+                    message: 'Tu video es pesado. Lo procesaremos en segundo plano y la historia se activará cuando termine.',
+                    tone: 'info',
+                });
+            } else if (mode === 'VIDEO') {
+                setReelProcessingJobId(null);
+                setReelMode('VIDEO');
+                setReelPhotoUrls([]);
+                setReelUrl(result?.videoUrl || '');
+                setNotice({
+                    title: 'Archivos cargados',
+                    message: 'Tu video se subió correctamente.',
+                    tone: 'success',
+                });
+            } else {
+                setReelProcessingJobId(null);
+                setReelMode('PHOTO_SET');
+                setReelPhotoUrls(Array.isArray(result?.photoUrls) ? result.photoUrls : []);
+                setReelUrl('');
+                setNotice({
+                    title: 'Archivos cargados',
+                    message: 'Tus fotos se subieron correctamente.',
+                    tone: 'success',
+                });
+            }
+        } catch (error: any) {
+            setNotice({
+                title: 'Error de carga',
+                message: error?.message || 'No se pudo subir el archivo.',
+              tone: 'error',
+          });
+      } finally {
+          setIsReelUploading(false);
+      }
+  };
+
   const handleUploadReel = async () => {
       if (blockPreviewAction()) return;
-      if (!reelUrl || !reelPlatform) {
-          setNotice({
-              title: 'Datos incompletos',
-              message: 'Debes ingresar la URL y la plataforma.',
-              tone: 'warning',
-          });
-          return;
-      }
-      const result = await api.createReel(
-          currentShop.id,
-          reelUrl,
-          reelPlatform as SocialPlatform,
-          { isAdminOverride: adminOverride }
-      );
-      if (result.success) {
-          setNotice({
-              title: 'Historia publicada',
-              message: result.message,
-              tone: 'success',
-          });
-          setReelUrl('');
-          setReelPlatform('');
-          if (onReelChange) onReelChange();
-          const myReels = await api.fetchReelsByShop(currentShop.id);
-          setShopReels(myReels);
+    const isProcessingVideo = reelMode === 'VIDEO' && !reelUrl && Boolean(reelProcessingJobId);
+    if ((!reelUrl && reelPhotoUrls.length === 0 && !isProcessingVideo) || !reelPlatform) {
+        setNotice({
+            title: 'Datos incompletos',
+            message: 'Completa el contenido y la plataforma.',
+            tone: 'warning',
+        });
+        return;
+    }
+    const result = await api.createReel({
+        shopId: currentShop.id,
+        type: reelMode,
+        videoUrl: reelMode === 'VIDEO' ? reelUrl : undefined,
+        photoUrls: reelMode === 'PHOTO_SET' ? reelPhotoUrls : undefined,
+        durationSeconds: 10,
+        platform: reelPlatform as SocialPlatform,
+        isAdminOverride: adminOverride,
+        status: isProcessingVideo ? 'PROCESSING' : undefined,
+        processingJobId: isProcessingVideo ? reelProcessingJobId || undefined : undefined,
+    });
+    if (result.success) {
+        setNotice({
+            title: 'Historia publicada',
+            message: result.message,
+            tone: 'success',
+        });
+        setReelUrl('');
+        setReelPhotoUrls([]);
+        setReelMode('VIDEO');
+        setReelPlatform('');
+        setReelProcessingJobId(null);
+        if (onReelChange) onReelChange();
+        const myReels = await api.fetchReelsByShop(currentShop.id);
+        setShopReels(myReels);
       } else {
           setNotice({
               title: 'No se pudo publicar',
@@ -1091,16 +1162,94 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <div className={`${styles.reelsPanel} ${styles.reelsPanelFit}`}>
                           <h3 className={styles.reelsPanelTitle}><Plus size={16}/> Subir Historia</h3>
                           <div className={styles.reelsForm}>
-                              <div>
-                                  <label className={styles.reelsLabel}>Enlace del Video</label>
-                                  <input 
-                                    type="text" 
-                                    value={reelUrl}
-                                    onChange={e => setReelUrl(e.target.value)}
-                                    placeholder="https://instagram.com/reel/..."
-                                    className={styles.reelsInput}
-                                  />
+                              <div className={styles.reelModeRow}>
+                                  <button
+                                    type="button"
+                                    onClick={() => setReelMode('VIDEO')}
+                                    className={`${styles.reelModeButton} ${reelMode === 'VIDEO' ? styles.reelModeActive : ''}`}
+                                  >
+                                    Video 10s
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setReelMode('PHOTO_SET')}
+                                    className={`${styles.reelModeButton} ${reelMode === 'PHOTO_SET' ? styles.reelModeActive : ''}`}
+                                  >
+                                    5 Fotos
+                                  </button>
                               </div>
+
+                              {reelMode === 'VIDEO' ? (
+                                  <>
+                                      <div>
+                                          <label className={styles.reelsLabel}>Enlace del video</label>
+                                          <input
+                                            type="text"
+                                            value={reelUrl}
+                                            onChange={e => setReelUrl(e.target.value)}
+                                            placeholder="https://instagram.com/reel/..."
+                                            className={styles.reelsInput}
+                                          />
+                                      </div>
+                                      <div>
+                                          <label className={styles.reelsLabel}>Subir video (galerÃ­a o cÃ¡mara)</label>
+                                          <input
+                                            type="file"
+                                            accept="video/*"
+                                            capture="environment"
+                                            className={styles.reelsFileInput}
+                                            disabled={isReelUploading}
+                                            onChange={async (e) => {
+                                              const input = e.currentTarget;
+                                              const files = input.files;
+                                              await uploadReelFiles(files, 'VIDEO');
+                                              if (input) input.value = '';
+                                            }}
+                                          />
+                                          {isReelUploading && (
+                                            <div className={styles.reelsProcessing}>
+                                              <span className={styles.reelsProcessingDot} />
+                                              Procesando y optimizando archivos...
+                                            </div>
+                                          )}
+                                      </div>
+                                  </>
+                              ) : (
+                                  <>
+                                      <div>
+                                          <label className={styles.reelsLabel}>Fotos (hasta 5)</label>
+                                          <div className={styles.reelPhotoGrid}>
+                                              {reelPhotoUrls.map((url, index) => (
+                                                  <img key={`${url}-${index}`} src={url} alt={`Foto ${index + 1}`} className={styles.reelPhotoThumb} />
+                                              ))}
+                                          </div>
+                                      </div>
+                                      <div>
+                                          <label className={styles.reelsLabel}>Subir fotos (galerÃ­a o cÃ¡mara)</label>
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            capture="environment"
+                                            className={styles.reelsFileInput}
+                                            disabled={isReelUploading}
+                                            onChange={async (e) => {
+                                              const input = e.currentTarget;
+                                              const files = input.files;
+                                              await uploadReelFiles(files, 'PHOTO_SET');
+                                              if (input) input.value = '';
+                                            }}
+                                          />
+                                          <p className={styles.reelsHint}>Cada foto se muestra ~2s (10s total).</p>
+                                          {isReelUploading && (
+                                            <div className={styles.reelsProcessing}>
+                                              <span className={styles.reelsProcessingDot} />
+                                              Procesando y optimizando archivos...
+                                            </div>
+                                          )}
+                                      </div>
+                                  </>
+                              )}
                               <div>
                                   <label className={styles.reelsLabel}>Plataforma</label>
                                   <select 
@@ -1117,11 +1266,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               </div>
                               <Button 
                                 onClick={handleUploadReel} 
-                                disabled={availableReelPlan === 0 && reelsExtra === 0}
+                                disabled={isReelUploading || (availableReelPlan === 0 && reelsExtra === 0)}
                                 className={styles.buttonFull}
                               >
                                   Publicar Historia
                               </Button>
+                              {isReelUploading && (
+                                <p className={styles.reelsProcessingNote}>No cierres esta ventana hasta que termine el procesamiento.</p>
+                              )}
                               {(availableReelPlan === 0 && reelsExtra === 0) && (
                                   <p className={styles.reelsDisabledNote}>Sin cupos disponibles hoy.</p>
                               )}
@@ -1132,28 +1284,43 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <div className={styles.reelsPanel}>
                            <h3 className={styles.reelsPanelTitle}><Film size={16}/> Activas (últimas 24h)</h3>
                            <div className={styles.reelsList}>
-                               {shopReels.filter(r => r.status === 'ACTIVE').length === 0 ? (
-                                   <p className={styles.reelsEmpty}>No tienes historias activas.</p>
-                               ) : (
-                                   shopReels.filter(r => r.status === 'ACTIVE').map(reel => {
-                                       const now = new Date();
-                                       const expires = new Date(reel.expiresAtISO);
-                                       const diffMs = expires.getTime() - now.getTime();
-                                       const hours = Math.floor(diffMs / (1000 * 60 * 60));
-                                       return (
-                                           <div key={reel.id} className={styles.reelsItem}>
-                                               <div className={styles.reelsItemInfo}>
-                                                   <p className={styles.reelsItemTitle}>{reel.url}</p>
-                                                   <p className={styles.reelsItemMeta}>
-                                                     {reel.platform} • Expira en {hours}h • {reel.views || 0} vistas
-                                                   </p>
-                                               </div>
-                                               <span className={styles.reelsItemBadge}>ACTIVA</span>
-                                           </div>
-                                       );
-                                   })
-                               )}
-                           </div>
+                            {shopReels.filter(r => r.status === 'ACTIVE' || r.status === 'PROCESSING').length === 0 ? (
+                                <p className={styles.reelsEmpty}>No tienes historias activas.</p>
+                            ) : (
+                                shopReels.filter(r => r.status === 'ACTIVE' || r.status === 'PROCESSING').map(reel => {
+                                    const now = new Date();
+                                    const expires = new Date(reel.expiresAtISO);
+                                    const diffMs = expires.getTime() - now.getTime();
+                                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                                    const isProcessing = reel.status === 'PROCESSING';
+                                    const thumb = reel.thumbnail || reel.photoUrls?.[0] || reel.videoUrl || '';
+                                    return (
+                                        <div key={reel.id} className={styles.reelsItem}>
+                                            {thumb && (
+                                                <div className={styles.reelsItemMedia}>
+                                                    <img
+                                                        src={thumb}
+                                                        alt={reel.shopName}
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                        className={styles.reelsItemThumb}
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className={styles.reelsItemInfo}>
+                                                <p className={styles.reelsItemTitle}>{reel.url}</p>
+                                                <p className={styles.reelsItemMeta}>
+                                                  {reel.platform} • {isProcessing ? 'Procesando…' : `Expira en ${hours}h`} • {reel.views || 0} vistas
+                                                </p>
+                                            </div>
+                                            <span className={isProcessing ? styles.reelsItemBadgeProcessing : styles.reelsItemBadge}>{
+                                                isProcessing ? 'PROCESANDO' : 'ACTIVA'
+                                            }</span>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
                            
                            {/* EXPIRED LIST */}
                            {shopReels.some(r => r.status === 'EXPIRED') && (

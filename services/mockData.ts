@@ -1,9 +1,14 @@
 import { Reel, Shop, Stream, StreamStatus } from "../types";
 
 export const MOCK_REEL_COUNT = 10;
-export const MOCK_REEL_TTL_HOURS = 2;
+export const MOCK_REEL_TTL_HOURS = 24;
 export const MOCK_STREAM_COUNT = 10;
 const DAILY_MOCK_SEED = new Date().toLocaleDateString("en-CA");
+
+const getDailyBaseTime = () => {
+  const [year, month, day] = DAILY_MOCK_SEED.split("-").map(Number);
+  return new Date(year, month - 1, day, 9, 0, 0, 0).getTime();
+};
 
 const createSeededRandom = (seed: string) => {
   let hash = 2166136261;
@@ -132,7 +137,7 @@ export const buildMockReels = (shops: Shop[], reels: Reel[], targetCount: number
   const candidates = shops.filter((shop) => !usedShopIds.has(shop.id));
   const shuffled = shuffleWithSeed(candidates, `${DAILY_MOCK_SEED}-reels`);
   const count = Math.min(targetCount, shuffled.length);
-  const now = Date.now();
+  const baseTime = getDailyBaseTime();
 
   return shuffled.slice(0, count).map((shop, index) => ({
     id: `mock-${shop.id}`,
@@ -141,8 +146,8 @@ export const buildMockReels = (shops: Shop[], reels: Reel[], targetCount: number
     shopLogo: shop.logoUrl,
     url: resolveCatalogUrl(shop) || "https://www.distritomoda.com.ar",
     thumbnail: shop.coverUrl || shop.logoUrl,
-    createdAtISO: new Date(now - index * 1000).toISOString(),
-    expiresAtISO: new Date(now + MOCK_REEL_TTL_HOURS * 60 * 60 * 1000).toISOString(),
+    createdAtISO: new Date(baseTime + index * 1000).toISOString(),
+    expiresAtISO: new Date(baseTime + MOCK_REEL_TTL_HOURS * 60 * 60 * 1000).toISOString(),
     status: "ACTIVE",
     origin: "PLAN",
     platform: "Instagram",

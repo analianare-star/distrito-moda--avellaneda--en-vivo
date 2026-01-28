@@ -370,6 +370,46 @@
   @apply space-y-4;
 }
 
+.reelModeRow {
+  @apply flex gap-2;
+}
+
+.reelModeButton {
+  @apply flex-1 rounded-full border border-gray-200 px-3 py-2 text-xs font-bold uppercase tracking-wider text-gray-500 transition;
+}
+
+.reelModeActive {
+  @apply border-dm-crimson text-dm-crimson bg-dm-crimson/5;
+}
+
+.reelsFileInput {
+  @apply w-full text-xs text-gray-500 file:mr-3 file:rounded-full file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-xs file:font-bold file:text-gray-600;
+}
+
+.reelPhotoGrid {
+  @apply grid grid-cols-3 gap-2;
+}
+
+.reelPhotoThumb {
+  @apply h-16 w-full rounded-lg object-cover border border-gray-100;
+}
+
+.reelsHint {
+  @apply mt-2 text-[10px] text-gray-400;
+}
+
+.reelsProcessing {
+  @apply mt-3 flex items-center gap-2 text-[11px] font-semibold text-dm-crimson;
+}
+
+.reelsProcessingDot {
+  @apply h-2 w-2 rounded-full bg-dm-crimson animate-pulse;
+}
+
+.reelsProcessingNote {
+  @apply mt-2 text-[10px] text-gray-400 text-center;
+}
+
 .reelsLabel {
   @apply block text-xs font-bold text-gray-500 mb-1;
 }
@@ -395,7 +435,15 @@
 }
 
 .reelsItem {
-  @apply flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-100;
+  @apply flex items-center gap-3 p-3 bg-gray-50 rounded border border-gray-100;
+}
+
+.reelsItemMedia {
+  @apply w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0;
+}
+
+.reelsItemThumb {
+  @apply w-full h-full object-cover;
 }
 
 .reelsItemInfo {
@@ -411,7 +459,11 @@
 }
 
 .reelsItemBadge {
-  @apply text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded font-bold;
+  @apply ml-auto text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded font-bold;
+}
+
+.reelsItemBadgeProcessing {
+  @apply ml-auto text-[10px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold;
 }
 
 .reelsExpiredWrap {

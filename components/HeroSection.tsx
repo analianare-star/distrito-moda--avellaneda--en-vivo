@@ -44,6 +44,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     [featuredShops]
   );
   const [showcaseShops, setShowcaseShops] = useState<Shop[]>([]);
+  const [stableShowcasePool, setStableShowcasePool] = useState<Shop[]>([]);
   const lastShowcaseIdsRef = useRef<string[]>([]);
   const showcaseLayout = ["wide", "tall", "small", "small", "wide", "small"];
 
@@ -74,16 +75,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   };
 
   useEffect(() => {
-    if (showcasePool.length === 0) {
+    if (stableShowcasePool.length > 0) return;
+    if (showcasePool.length === 0) return;
+    setStableShowcasePool(showcasePool);
+  }, [showcasePool, stableShowcasePool.length]);
+
+  useEffect(() => {
+    if (stableShowcasePool.length === 0) {
       setShowcaseShops([]);
       return;
     }
-    const initial = pickRandomShops(showcasePool, 6, lastShowcaseIdsRef.current);
+    const initial = pickRandomShops(
+      stableShowcasePool,
+      6,
+      lastShowcaseIdsRef.current
+    );
     setShowcaseShops(initial);
     lastShowcaseIdsRef.current = initial.map((shop) => shop.id);
     const timer = setInterval(() => {
       const nextBatch = pickRandomShops(
-        showcasePool,
+        stableShowcasePool,
         6,
         lastShowcaseIdsRef.current
       );
@@ -91,7 +102,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       lastShowcaseIdsRef.current = nextBatch.map((shop) => shop.id);
     }, 7000);
     return () => clearInterval(timer);
-  }, [showcasePool]);
+  }, [stableShowcasePool]);
 
   // Reset index if the list of live streams changes
   useEffect(() => {
