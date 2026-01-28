@@ -6,7 +6,7 @@ import { StreamCard } from "../../StreamCard";
 import { EmptyState } from "../../EmptyState";
 import { Reel, Shop, Stream, StreamStatus, UserContext, NotificationItem } from "../../../types";
 import { getShopCoverUrl } from "../../../utils/shopMedia";
-import { LiveQueueModal } from "../../LiveQueueModal";
+import { LiveQueueScreen } from "../../LiveQueueScreen";
 import { LogoBubble } from "../../LogoBubble";
 import { ClientDesktopPanel } from "./ClientDesktopPanel";
 import styles from "./ClientHomePage.module.css";
@@ -415,7 +415,7 @@ export const ClientHomePage: React.FC<ClientHomePageProps> = ({
     <>
       {isLoading ? loadingContent : loadedContent}
       {queueStream && (
-        <LiveQueueModal
+        <LiveQueueScreen
           streams={queueList}
           activeStreamId={queueStream.id}
           user={user}

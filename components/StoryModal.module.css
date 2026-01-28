@@ -1,13 +1,15 @@
 .overlay {
-  @apply fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200;
+  @apply fixed inset-0 z-[100] bg-black/95 animate-in fade-in duration-200;
 }
 
 .closeButton {
-  @apply absolute top-4 right-4 z-50 p-2 text-white hover:text-dm-crimson;
+  @apply absolute top-4 right-4 z-[9999] p-2 text-white hover:text-dm-crimson;
+  pointer-events: auto;
 }
 
 .card {
-  @apply relative w-full max-w-sm h-[80vh] bg-dm-dark rounded-xl overflow-hidden shadow-2xl flex flex-col border border-white/10;
+  @apply relative w-full h-full bg-black overflow-hidden;
+  --story-footer-height: 140px;
 }
 
 .progressRow {
@@ -23,16 +25,8 @@
   transition: width 0.1s linear;
 }
 
-.tapZoneLeft {
-  @apply absolute inset-y-0 left-0 w-1/2 z-[15] bg-transparent;
-}
-
-.tapZoneRight {
-  @apply absolute inset-y-0 right-0 w-1/2 z-[15] bg-transparent;
-}
-
 .header {
-  @apply absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/80 to-transparent z-20 flex items-center gap-3;
+  @apply absolute top-0 left-0 right-0 px-4 pt-8 pb-2 bg-gradient-to-b from-black/80 to-transparent z-[50] flex items-center gap-3;
 }
 
 .avatarWrap {
@@ -68,7 +62,7 @@
 }
 
 .content {
-  @apply flex-1 bg-black flex flex-col items-center justify-center text-center p-8 relative;
+  @apply absolute inset-0 bg-black flex items-center justify-center;
 }
 
 .contentBackdrop {
@@ -80,11 +74,11 @@
 }
 
 .contentStack {
-  @apply relative z-10 space-y-6;
+  @apply relative z-10 space-y-6 text-center px-8;
 }
 
 .mediaWrap {
-  @apply relative z-10 w-full h-full;
+  @apply absolute inset-0 z-20 flex items-center justify-center;
 }
 
 .mediaImage {
@@ -110,7 +104,7 @@
 }
 
 .footer {
-  @apply p-4 bg-gradient-to-t from-black/80 to-transparent z-20 flex flex-col gap-3;
+  @apply absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent z-[55] flex flex-col gap-3;
 }
 
 .footerActions {
@@ -139,4 +133,55 @@
 
 .footerLabel {
   @apply text-[10px] text-gray-500 uppercase tracking-widest font-sans;
+}
+
+
+.audioCue {
+  @apply absolute inset-0 z-[30] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300;
+}
+
+.audioCueVisible {
+  @apply opacity-100;
+}
+
+.audioCueBadge {
+  @apply h-16 w-16 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-2xl;
+}
+
+.likeCue {
+  @apply absolute inset-0 z-[40] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300;
+}
+
+.likeCueVisible {
+  @apply opacity-100;
+}
+
+.likeCueIcon {
+  @apply text-white drop-shadow-[0_10px_30px_rgba(236,22,80,0.6)];
+}
+
+.likeCueGlow {
+  @apply absolute h-36 w-36 rounded-full bg-gradient-to-br from-dm-crimson/60 via-pink-500/40 to-white/10 blur-2xl;
+}
+
+.tapZoneLeft,
+.tapZoneRight {
+  @apply absolute top-20 bottom-[var(--story-footer-height)] z-20 w-[25%] bg-transparent;
+  border: none;
+  padding: 0;
+}
+
+.tapZoneLeft {
+  left: 0;
+}
+
+.tapZoneRight {
+  right: 0;
+}
+
+.audioTapZone {
+  @apply absolute top-20 bottom-[var(--story-footer-height)] left-[25%] right-[25%] z-[25] bg-transparent;
+  border: none;
+  padding: 0;
+  touch-action: manipulation;
 }

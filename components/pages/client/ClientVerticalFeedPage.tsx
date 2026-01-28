@@ -1,19 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { X } from "lucide-react";
-import { Shop, Stream, StreamStatus, UserContext } from "../types";
-import { StreamCard } from "./StreamCard";
-import styles from "./LiveQueueModal.module.css";
+import { Shop, Stream, StreamStatus, UserContext } from "../../../types";
+import { StreamCard } from "../../StreamCard";
+import styles from "./ClientVerticalFeedPage.module.css";
 
-// LiveQueueModal shows a vertical feed of live/upcoming streams.
-// LiveQueueModal muestra un feed vertical de vivos y próximos.
-interface LiveQueueModalProps {
+interface ClientVerticalFeedPageProps {
   streams: Stream[];
-  activeStreamId: string;
   user: UserContext;
   canClientInteract: boolean;
-  onClose: () => void;
   onOpenShop: (shop: Shop, options?: { navigate?: boolean }) => void;
-  onReport: (streamId: string) => void;
+  onReport: (stream: Stream) => void;
   onToggleReminder: (streamId: string) => void;
   onRequireLogin?: () => void;
   onLike?: (streamId: string) => void;
@@ -22,12 +19,10 @@ interface LiveQueueModalProps {
   onNotify?: (title: string, message: string, tone?: "info" | "success" | "warning" | "error") => void;
 }
 
-export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
+export const ClientVerticalFeedPage: React.FC<ClientVerticalFeedPageProps> = ({
   streams,
-  activeStreamId,
   user,
   canClientInteract,
-  onClose,
   onOpenShop,
   onReport,
   onToggleReminder,
@@ -37,14 +32,19 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
   onDownloadCard,
   onNotify,
 }) => {
+  const navigate = useNavigate();
+  const { streamId } = useParams();
   const listRef = useRef<HTMLDivElement | null>(null);
   const isScrollingRef = useRef(false);
   const touchStartRef = useRef<number | null>(null);
   const scrollTimerRef = useRef<number | null>(null);
-  const initialIndex = useMemo(
-    () => Math.max(0, streams.findIndex((item) => item.id === activeStreamId)),
-    [activeStreamId, streams]
-  );
+
+  const initialIndex = useMemo(() => {
+    if (!streams.length) return 0;
+    const found = streams.findIndex((item) => item.id === streamId);
+    return Math.max(0, found === -1 ? 0 : found);
+  }, [streamId, streams]);
+
   const [activeIndex, setActiveIndex] = useState(initialIndex);
 
   useEffect(() => {
@@ -54,8 +54,7 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
   useEffect(() => {
     const list = listRef.current;
     if (!list) return;
-    const offset = list.clientHeight * initialIndex;
-    list.scrollTo({ top: offset, behavior: "auto" });
+    list.scrollTo({ top: list.clientHeight * initialIndex, behavior: "auto" });
   }, [initialIndex]);
 
   useEffect(() => {
@@ -67,9 +66,7 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
       frame = window.requestAnimationFrame(() => {
         frame = 0;
         const nextIndex = Math.round(list.scrollTop / list.clientHeight);
-        if (nextIndex !== activeIndex) {
-          setActiveIndex(nextIndex);
-        }
+        if (nextIndex !== activeIndex) setActiveIndex(nextIndex);
       });
     };
     list.addEventListener("scroll", onScroll);
@@ -138,38 +135,37 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
 
   return (
     <div className={styles.overlay}>
-      <button className={styles.closeButton} onClick={onClose} aria-label="Cerrar">
+      <button className={styles.closeButton} onClick={() => navigate(-1)} aria-label="Cerrar">
         <X size={28} />
       </button>
-      <div className={styles.modal}>
-        <div
-          ref={listRef}
-          className={styles.scroller}
-          onWheel={handleWheel}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {streams.map((stream) => (
-            <div key={stream.id} className={styles.slide}>
-              <div className={styles.slideInner}>
-                <StreamCard
-                  stream={stream}
-                  user={user}
-                  canClientInteract={canClientInteract}
-                  onNotify={onNotify}
-                  onRequireLogin={onRequireLogin}
-                  onOpenShop={() => onOpenShop(stream.shop, { navigate: false })}
-                  onReport={onReport}
-                  onToggleReminder={onToggleReminder}
-                  onLike={onLike}
-                  onRate={onRate}
-                  onDownloadCard={onDownloadCard}
-                />
-              </div>
+      <div
+        ref={listRef}
+        className={styles.scroller}
+        onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {streams.length === 0 && <div className={styles.empty}>No hay vivos disponibles.</div>}
+        {streams.map((stream) => (
+          <div key={stream.id} className={styles.slide}>
+            <div className={styles.slideInner}>
+              <StreamCard
+                stream={stream}
+                user={user}
+                canClientInteract={canClientInteract}
+                onNotify={onNotify}
+                onRequireLogin={onRequireLogin}
+                onOpenShop={() => onOpenShop(stream.shop, { navigate: false })}
+                onReport={onReport}
+                onToggleReminder={onToggleReminder}
+                onLike={onLike}
+                onRate={onRate}
+                onDownloadCard={onDownloadCard}
+              />
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );

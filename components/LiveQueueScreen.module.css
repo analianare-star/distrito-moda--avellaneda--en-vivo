@@ -1,0 +1,30 @@
+.overlay {
+  @apply fixed inset-0 z-[120] bg-black;
+}
+
+.closeButton {
+  @apply absolute top-4 right-4 z-[140] text-white hover:text-dm-crimson;
+}
+
+.scroller {
+  @apply h-[100dvh] w-full overflow-y-auto scroll-smooth;
+  scroll-snap-type: y mandatory;
+  scroll-snap-stop: always;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.slide {
+  @apply h-[100dvh] w-full flex items-center justify-center;
+  scroll-snap-align: start;
+}
+
+.slideInner {
+  @apply w-full h-full;
+}

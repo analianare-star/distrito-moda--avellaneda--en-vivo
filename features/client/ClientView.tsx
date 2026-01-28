@@ -7,6 +7,7 @@ import { ClientHomePage } from "../../components/pages/client/ClientHomePage";
 import { ClientShopsPage } from "../../components/pages/client/ClientShopsPage";
 import { ClientAccountPage } from "../../components/pages/client/ClientAccountPage";
 import { ClientMapPage } from "../../components/pages/client/ClientMapPage";
+import { ClientVerticalFeedPage } from "../../components/pages/client/ClientVerticalFeedPage";
 import { EmptyState } from "../../components/EmptyState";
 
 // ClientView muestra la experiencia publica y de cliente.
@@ -178,80 +179,36 @@ export const ClientView: React.FC<ClientViewProps> = ({
         <Route
           path="/en-vivo"
           element={
-            <ClientHomePage
-              isLoading={isDataLoading}
-              brandLogo={brandLogo}
-              activeBottomNav={activeBottomNav}
-              activeFilter={activeFilter}
-              filteredStreams={filteredStreams}
-              sortedLiveStreams={sortedLiveStreams}
-              activeReels={activeReels}
-              featuredShops={featuredShops}
-              favoriteShops={favoriteShops}
-              queueStreamsSource={queueStreamsSource}
+            <ClientVerticalFeedPage
+              streams={queueStreamsSource}
               user={user}
-              notifications={notifications}
-              reminderStreams={reminderStreams}
               canClientInteract={canClientInteract}
-              onFilterChange={onFilterChange}
-              onSelectBottomNav={onSelectBottomNav}
               onOpenShop={onOpenShop}
-              onViewReel={onViewReel}
-              onReport={onReport}
+              onReport={(stream) => onReport(stream)}
               onToggleReminder={onToggleReminder}
-              onToggleFavorite={onToggleFavorite}
-              onOpenCalendarInvite={onOpenCalendarInvite}
-              onMarkNotificationRead={onMarkNotificationRead}
-              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+              onRequireLogin={onRequireLogin}
               onLike={onLike}
               onRate={onRate}
               onDownloadCard={onDownloadCard}
               onNotify={onNotify}
-              onOpenLogin={onOpenLogin}
-              onLogout={onLogout}
-              onQueueModalChange={onQueueModalChange}
-              onOpenStream={onOpenStream}
-              onNotificationAction={onNotificationAction}
             />
           }
         />
         <Route
           path="/en-vivo/:streamId"
           element={
-            <ClientHomePage
-              isLoading={isDataLoading}
-              brandLogo={brandLogo}
-              activeBottomNav={activeBottomNav}
-              activeFilter={activeFilter}
-              filteredStreams={filteredStreams}
-              sortedLiveStreams={sortedLiveStreams}
-              activeReels={activeReels}
-              featuredShops={featuredShops}
-              favoriteShops={favoriteShops}
-              queueStreamsSource={queueStreamsSource}
+            <ClientVerticalFeedPage
+              streams={queueStreamsSource}
               user={user}
-              notifications={notifications}
-              reminderStreams={reminderStreams}
               canClientInteract={canClientInteract}
-              onFilterChange={onFilterChange}
-              onSelectBottomNav={onSelectBottomNav}
               onOpenShop={onOpenShop}
-              onViewReel={onViewReel}
-              onReport={onReport}
+              onReport={(stream) => onReport(stream)}
               onToggleReminder={onToggleReminder}
-              onToggleFavorite={onToggleFavorite}
-              onOpenCalendarInvite={onOpenCalendarInvite}
-              onMarkNotificationRead={onMarkNotificationRead}
-              onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+              onRequireLogin={onRequireLogin}
               onLike={onLike}
               onRate={onRate}
               onDownloadCard={onDownloadCard}
               onNotify={onNotify}
-              onOpenLogin={onOpenLogin}
-              onLogout={onLogout}
-              onQueueModalChange={onQueueModalChange}
-              onOpenStream={onOpenStream}
-              onNotificationAction={onNotificationAction}
             />
           }
         />

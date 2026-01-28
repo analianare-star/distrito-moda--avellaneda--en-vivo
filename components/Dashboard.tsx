@@ -1196,7 +1196,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                           <input
                                             type="file"
                                             accept="video/*"
-                                            capture="environment"
                                             className={styles.reelsFileInput}
                                             disabled={isReelUploading}
                                             onChange={async (e) => {
@@ -1230,7 +1229,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                             type="file"
                                             accept="image/*"
                                             multiple
-                                            capture="environment"
                                             className={styles.reelsFileInput}
                                             disabled={isReelUploading}
                                             onChange={async (e) => {
