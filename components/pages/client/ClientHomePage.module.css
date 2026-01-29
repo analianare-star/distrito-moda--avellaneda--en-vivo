@@ -556,7 +556,7 @@
 }
 
 .skeletonWrap {
-  @apply mt-6 px-[15px] space-y-8;
+  @apply mt-10 px-[15px] space-y-8;
 }
 
 .skeletonRow {
