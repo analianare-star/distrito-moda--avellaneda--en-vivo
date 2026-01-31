@@ -5,7 +5,7 @@ import { AdminPage } from "../../components/pages/admin/AdminPage";
 
 // AdminView envuelve el panel admin con semantica clara.
 // AdminView wraps the admin dashboard with semantic structure.
-interface AdminViewProps {
+export interface AdminViewProps {
   streams: Stream[];
   setStreams: React.Dispatch<React.SetStateAction<Stream[]>>;
   shops: Shop[];

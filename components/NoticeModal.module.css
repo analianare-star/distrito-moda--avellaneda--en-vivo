@@ -17,3 +17,7 @@
 .message {
   @apply mt-4 text-sm text-gray-600;
 }
+
+.actions {
+  @apply mt-6 flex w-full gap-3;
+}

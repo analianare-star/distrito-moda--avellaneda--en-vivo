@@ -1,18 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { Button } from './Button';
 import { getShopCoverUrl } from '../utils/shopMedia';
-import { Plus, X, Instagram, Facebook, Video, AlertOctagon, Check, Save, Lock, RefreshCw, Pencil, Trash2, Star, History, LayoutDashboard, Store, Radio, Globe, Phone, MapPin, ExternalLink, User, CreditCard, ShoppingCart, AlertTriangle, Info, ArrowUpCircle, Film } from 'lucide-react';
+import { Plus, X, Instagram, Facebook, Video, AlertOctagon, Check, Save, Lock, RefreshCw, Pencil, Trash2, Star, History, LayoutDashboard, Store, Radio, Globe, Phone, MapPin, ExternalLink, User, CreditCard, ShoppingCart, AlertTriangle, Info, Film } from 'lucide-react';
 import { StreamStatus, Shop, SocialHandles, Stream, SocialPlatform, WhatsappLine, WhatsappLabel, Reel, NotificationItem } from '../types';
-import { PLANES_URL } from '../constants';
 import { AddressAutocomplete } from './AddressAutocomplete';
 
 // Dashboard is the shop control panel for schedule, reels, and profile data.
 // Dashboard es el panel de tienda para agenda, reels y datos de perfil.
-import { api } from '../services/api';
+import { fetchPurchasesByShop, confirmMercadoPagoPayment } from '../domains/purchases';
+import { fetchReelsByShop, uploadReelMedia, createReel } from '../domains/reels';
+import { acceptShop } from '../domains/shops';
 import { NoticeModal } from './NoticeModal';
 import { LogoBubble } from './LogoBubble';
 import { ShopPurchaseModal } from './payments/ShopPurchaseModal';
+import { PlanUpgradeModal } from './payments/PlanUpgradeModal';
 import styles from './Dashboard.module.css';
+
+const MerchantStreamsTab = React.lazy(async () => {
+  const mod = await import('./merchant-tabs/MerchantStreamsTab');
+  return { default: mod.default };
+});
+const MerchantReelsTab = React.lazy(async () => {
+  const mod = await import('./merchant-tabs/MerchantReelsTab');
+  return { default: mod.default };
+});
 
 interface DashboardProps {
     currentShop: Shop;
@@ -80,6 +91,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [activeTab, setActiveTab] = useState<Tab>('RESUMEN');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [showPlanUpgradeModal, setShowPlanUpgradeModal] = useState(false);
   const [purchaseType, setPurchaseType] = useState<'LIVE_PACK' | 'REEL_PACK'>('LIVE_PACK');
   const [notice, setNotice] = useState<{ title: string; message: string; tone?: 'info' | 'success' | 'warning' | 'error' } | null>(null);
   const [showPendingNotice, setShowPendingNotice] = useState(false);
@@ -126,8 +138,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [waLines, setWaLines] = useState<{label: WhatsappLabel | '', number: string}[]>([
       { label: 'Ventas por mayor', number: '' },
       { label: 'Consulta ingreso', number: '' },
-      { label: 'Envíos', number: '' }
+      { label: 'EnvÃ­os', number: '' }
   ]);
+  const [activeProfileSection, setActiveProfileSection] = useState<'identity' | 'address' | 'sales'>('identity');
 
   // Reel Form States
   const [reelUrl, setReelUrl] = useState('');
@@ -143,7 +156,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       if (!currentShop.id || currentShop.id === 'empty' || isPurchaseBlocked) return;
       setIsPurchaseLoading(true);
       try {
-          const data = await api.fetchPurchasesByShop(currentShop.id);
+          const data = await fetchPurchasesByShop(currentShop.id);
           setPurchaseHistory(data || []);
           purchasesLoadedRef.current = true;
       } catch (error) {
@@ -193,7 +206,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           if (isPreview) return;
           if (!currentShop.id || currentShop.id === 'empty') return;
           try {
-            const myReels = await api.fetchReelsByShop(currentShop.id);
+            const myReels = await fetchReelsByShop(currentShop.id);
             setShopReels(myReels);
           } catch (error) {
             console.error("Error cargando reels", error);
@@ -240,7 +253,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           let approvedFromConfirm: boolean | null = null;
           if (payload?.paymentId || payload?.purchaseId) {
               try {
-                  const result = await api.confirmMercadoPagoPayment({
+                  const result = await confirmMercadoPagoPayment({
                       paymentId: payload.paymentId,
                       purchaseId: payload.purchaseId,
                   });
@@ -320,7 +333,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const isAlta = currentShop.plan === 'Alta Visibilidad';
   const isMaxima = currentShop.plan === 'Maxima Visibilidad';
   
-  const whatsappLimit = isMaxima ? 3 : isAlta ? 2 : 1;
+  const whatsappLimit = 3;
   const isAgendaSuspended = shopStatus === 'AGENDA_SUSPENDED';
   const canManageAgenda = shopStatus === 'ACTIVE' && !isPenalized;
   const canSchedule = canManageAgenda && availableQuota > 0;
@@ -380,6 +393,108 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
   const statusLabel = statusLabels[shopStatus] || 'Activa';
   const statusTone = statusTones[shopStatus] || statusTones.ACTIVE;
+  const reelsAvailableTotal = Math.max(0, availableReelPlan + reelsExtra);
+  const livePlanLimit = Math.max(
+      0,
+      wallet ? Number(wallet.weeklyLiveBaseLimit) : Number(currentShop.baseQuota) || 0
+  );
+  const livePlanUsed = Math.max(
+      0,
+      wallet ? Number(wallet.weeklyLiveUsed) : Math.min(usedQuota, livePlanLimit)
+  );
+  const livePlanUsagePercent =
+      livePlanLimit > 0 ? Math.min(100, Math.round((livePlanUsed / livePlanLimit) * 100)) : 0;
+  const reelPlanUsagePercent =
+      reelPlanLimit > 0 ? Math.min(100, Math.round((reelDailyUsed / reelPlanLimit) * 100)) : 0;
+
+  const parseStreamDate = (stream: Stream) => {
+      if (!stream.fullDateISO) return null;
+      const datePart = stream.fullDateISO.split('T')[0] || stream.fullDateISO;
+      const timePart = stream.scheduledTime || '00:00';
+      const parsed = new Date(`${datePart}T${timePart}:00`);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const liveNow = myStreams.find(s => s.status === StreamStatus.LIVE) || null;
+  const nextUpcoming = myStreams
+      .filter(s => s.status === StreamStatus.UPCOMING)
+      .map(stream => ({ stream, date: parseStreamDate(stream) }))
+      .sort((a, b) => {
+          const aTime = a.date ? a.date.getTime() : Number.POSITIVE_INFINITY;
+          const bTime = b.date ? b.date.getTime() : Number.POSITIVE_INFINITY;
+          return aTime - bTime;
+      })[0]?.stream || null;
+
+  const formatStreamDate = (stream: Stream) => {
+      const parsed = parseStreamDate(stream);
+      if (!parsed) return stream.fullDateISO;
+      return parsed.toLocaleDateString('es-AR', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+      });
+  };
+  const todayLabel = new Date().toLocaleDateString('es-AR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'short',
+  });
+
+  const resolveText = (value?: string) => (value || '').trim();
+  const resolveNumber = (value?: number) => (typeof value === 'number' ? value : 0);
+  const resolveAddressField = (field: keyof NonNullable<Shop['addressDetails']>) =>
+      resolveText(shopForm.addressDetails?.[field] || currentShop.addressDetails?.[field] || '');
+  const normalizedPayments = (list?: string[]) => (list || []).slice().sort().join('|');
+
+  const identityFields = [
+      resolveText(shopForm.name || currentShop.name),
+      resolveText(shopForm.razonSocial || currentShop.razonSocial || ''),
+      resolveText(shopForm.cuit || currentShop.cuit || ''),
+  ];
+  const addressFields = [
+      resolveAddressField('street'),
+      resolveAddressField('number'),
+      resolveAddressField('city'),
+      resolveAddressField('province'),
+      resolveAddressField('zip'),
+  ];
+  const salesFields = [
+      resolveNumber(
+          typeof shopForm.minimumPurchase === 'number'
+              ? shopForm.minimumPurchase
+              : currentShop.minimumPurchase || 0
+      ),
+      (shopForm.paymentMethods || currentShop.paymentMethods || []).length,
+  ];
+  const countFilled = (values: Array<string | number>) =>
+      values.filter((value) => (typeof value === 'number' ? value > 0 : value.trim().length > 0)).length;
+
+  const identityFilled = countFilled(identityFields);
+  const addressFilled = countFilled(addressFields);
+  const salesFilled = countFilled(salesFields);
+  const totalFields = identityFields.length + addressFields.length + salesFields.length;
+  const totalFilled = identityFilled + addressFilled + salesFilled;
+  const profileCompletion = totalFields > 0 ? Math.round((totalFilled / totalFields) * 100) : 0;
+  const profileChecklist = [
+      { key: 'identity', label: 'Identidad & Legal', filled: identityFilled, total: identityFields.length },
+      { key: 'address', label: 'Dirección', filled: addressFilled, total: addressFields.length },
+      { key: 'sales', label: 'Condiciones de Venta', filled: salesFilled, total: salesFields.length },
+  ];
+  const missingSections = profileChecklist.filter((section) => section.filled < section.total).map((section) => section.label);
+
+  const profileDirty =
+      resolveText(shopForm.name || '') !== resolveText(currentShop.name || '') ||
+      resolveText(shopForm.razonSocial || '') !== resolveText(currentShop.razonSocial || '') ||
+      resolveText(shopForm.cuit || '') !== resolveText(currentShop.cuit || '') ||
+      resolveText(shopForm.address || '') !== resolveText(currentShop.address || '') ||
+      resolveText(shopForm.addressDetails?.street || '') !== resolveText(currentShop.addressDetails?.street || '') ||
+      resolveText(shopForm.addressDetails?.number || '') !== resolveText(currentShop.addressDetails?.number || '') ||
+      resolveText(shopForm.addressDetails?.city || '') !== resolveText(currentShop.addressDetails?.city || '') ||
+      resolveText(shopForm.addressDetails?.province || '') !== resolveText(currentShop.addressDetails?.province || '') ||
+      resolveText(shopForm.addressDetails?.zip || '') !== resolveText(currentShop.addressDetails?.zip || '') ||
+      resolveText(shopForm.addressDetails?.mapsUrl || '') !== resolveText(currentShop.addressDetails?.mapsUrl || '') ||
+      resolveNumber(shopForm.minimumPurchase ?? 0) !== resolveNumber(currentShop.minimumPurchase ?? 0) ||
+      normalizedPayments(shopForm.paymentMethods || currentShop.paymentMethods) !== normalizedPayments(currentShop.paymentMethods);
 
   const purchaseStatusLabels: Record<string, string> = {
       PENDING: 'Pendiente',
@@ -390,6 +505,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const purchaseTypeLabels: Record<string, string> = {
       LIVE_PACK: 'Cupos de vivos',
       REEL_PACK: 'Cupos de historias',
+      PLAN_UPGRADE: 'Upgrade de plan',
   };
 
   const formatPurchaseDate = (value?: string) => {
@@ -421,7 +537,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleAcceptShop = async () => {
       if (blockPreviewAction()) return;
       try {
-          await api.acceptShop(currentShop.id);
+          await acceptShop(currentShop.id);
           setNotice({
               title: 'Datos confirmados',
               message: 'Tu aceptación fue registrada. Espera la aprobación del administrador.',
@@ -451,7 +567,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   // --- HELPERS ---
-  const isSensitiveLocked = !adminOverride;
+  const isSensitiveLocked = isPreview && !adminOverride;
   const isCommercialLocked = isPreview && !adminOverride;
   const isProfileLocked = isSensitiveLocked;
   const guardSensitiveEdit = () => {
@@ -533,7 +649,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       setIsReelUploading(true);
 
         try {
-            const result = await api.uploadReelMedia({
+            const result = await uploadReelMedia({
                 shopId: currentShop.id,
                 type: mode,
                 files: limited,
@@ -592,7 +708,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         });
         return;
     }
-    const result = await api.createReel({
+    const result = await createReel({
         shopId: currentShop.id,
         type: reelMode,
         videoUrl: reelMode === 'VIDEO' ? reelUrl : undefined,
@@ -615,7 +731,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         setReelPlatform('');
         setReelProcessingJobId(null);
         if (onReelChange) onReelChange();
-        const myReels = await api.fetchReelsByShop(currentShop.id);
+        const myReels = await fetchReelsByShop(currentShop.id);
         setShopReels(myReels);
       } else {
           setNotice({
@@ -732,13 +848,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
       setEditingStream(stream);
       setShowCreateModal(true);
   };
-  const openPlanPage = () => window.open(PLANES_URL, '_blank');
+  const openPlanUpgradeModal = () => setShowPlanUpgradeModal(true);
 
   // --- STREAM FORM STATES ---
   const [formTitle, setFormTitle] = useState('');
   const [formDate, setFormDate] = useState('');
   const [formTime, setFormTime] = useState('');
   const [formPlatform, setFormPlatform] = useState<SocialPlatform | ''>('');
+
+  const primaryActionLabel = liveNow
+      ? 'Gestionar vivo'
+      : nextUpcoming
+          ? 'Ver agenda'
+          : 'Agendar vivo';
+  const PrimaryActionIcon = liveNow ? Radio : nextUpcoming ? LayoutDashboard : Plus;
+  const primaryActionClick = liveNow || nextUpcoming ? () => setTab('VIVOS') : handleCreateClick;
+  const primaryActionDisabled = !liveNow && !nextUpcoming ? (!canSchedule || isPreview) : false;
 
   return (
     <div className={styles.root}>
@@ -781,77 +906,163 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* MAIN CONTENT */}
       <main className={styles.main}>
-          <div className={styles.mobileHeader}>
-              <div className={styles.mobileCard}>
-                  <LogoBubble
-                    src={currentShop.logoUrl}
-                    alt={currentShop.name}
-                    size={56}
-                    seed={currentShop.id || currentShop.name}
-                  />
-                  <div className={styles.mobileBody}>
-                      <p className={styles.mobileLabel}>Tienda</p>
-                      <h2 className={styles.mobileTitle}>{currentShop.name}</h2>
-                      <p className={styles.mobilePlan}>{currentShop.plan}</p>
+          {activeTab !== 'RESUMEN' && activeTab !== 'PERFIL' && (
+              <div className={styles.mobileHeader}>
+                  <div className={styles.mobileCard}>
+                      <LogoBubble
+                        src={currentShop.logoUrl}
+                        alt={currentShop.name}
+                        size={56}
+                        seed={currentShop.id || currentShop.name}
+                      />
+                      <div className={styles.mobileBody}>
+                          <p className={styles.mobileLabel}>Tienda</p>
+                          <h2 className={styles.mobileTitle}>{currentShop.name}</h2>
+                          <p className={styles.mobilePlan}>{currentShop.plan}</p>
+                      </div>
+                      <div className={`${styles.mobileStatus} ${statusTone}`}>
+                          {statusLabel}
+                      </div>
                   </div>
-                  <div className={`${styles.mobileStatus} ${statusTone}`}>
-                      {statusLabel}
+                  <div className={styles.mobileActions}>
+                      <button
+                          onClick={() => setTab('VIVOS')}
+                          className={styles.mobileActionButton}
+                      >
+                          Gestionar vivos
+                      </button>
+                      <button
+                          onClick={() => setTab('PERFIL')}
+                          className={styles.mobileActionButton}
+                      >
+                          Editar perfil
+                      </button>
                   </div>
               </div>
-              <div className={styles.mobileActions}>
-                  <button
-                      onClick={() => setTab('VIVOS')}
-                      className={styles.mobileActionButton}
-                  >
-                      Gestionar vivos
-                  </button>
-                  <button
-                      onClick={() => setTab('PERFIL')}
-                      className={styles.mobileActionButton}
-                  >
-                      Editar perfil
-                  </button>
-              </div>
-          </div>
+          )}
           
           {/* TAB 1: RESUMEN (HOME) */}
           {activeTab === 'RESUMEN' && (
               <div className={styles.summarySection}>
                   <header className={styles.summaryHeader}>
                       <h1 className={styles.summaryTitle}>Panel de Control</h1>
-                      <p className={styles.summarySubtitle}>Visión general de tu rendimiento y disponibilidad.</p>
+                      <p className={styles.summarySubtitle}>Todo lo que necesitas para vender en vivo, en un solo lugar.</p>
                   </header>
 
-                  <div className={styles.statusPanel}>
-                      <div className={styles.statusRow}>
-                          <div>
-                              <p className={styles.statusLabel}>Estado de cuenta</p>
-                              <div className={styles.statusTags}>
-                                  <span className={`${styles.statusTag} ${statusTone}`}>
-                                      {statusLabel}
-                                  </span>
+                  <div className={styles.summaryHeroGrid}>
+                      <section className={styles.summaryHeroCard}>
+                          <div className={styles.summaryHeroTop}>
+                              <LogoBubble
+                                src={currentShop.logoUrl}
+                                alt={currentShop.name}
+                                size={60}
+                                seed={currentShop.id || currentShop.name}
+                              />
+                              <div className={styles.summaryHeroMeta}>
+                                  <p className={styles.summaryHeroLabel}>Tienda</p>
+                                  <h2 className={styles.summaryHeroTitle}>{currentShop.name}</h2>
+                                  <div className={styles.summaryHeroBadges}>
+                                      <span className={styles.summaryHeroPlan}>{currentShop.plan}</span>
+                                      <span className={`${styles.statusTag} ${statusTone}`}>{statusLabel}</span>
+                                  </div>
                                   {currentShop.ownerAcceptedAt && (
                                       <span className={styles.statusConfirmed}>
                                           Datos confirmados {new Date(currentShop.ownerAcceptedAt).toLocaleDateString('es-AR')}
                                       </span>
                                   )}
                               </div>
-                              <p className={styles.statusMessage}>{getStatusMessage()}</p>
                           </div>
-                          <div className={styles.statusActions}>
+                          <p className={styles.summaryHeroMessage}>{getStatusMessage()}</p>
+                          <div className={styles.summaryHeroActions}>
                               {canAcceptShop && (
                                   <Button size="sm" onClick={handleAcceptShop} className={styles.primaryActionButton}>
                                       Confirmar datos
                                   </Button>
                               )}
-                              <Button size="sm" variant="outline" onClick={() => setTab('PERFIL')}>
+                              <Button
+                                  size="md"
+                                  className={styles.summaryHeroPrimary}
+                                  onClick={primaryActionClick}
+                                  disabled={primaryActionDisabled}
+                              >
+                                  <PrimaryActionIcon size={14} className={styles.buttonIcon}/> {primaryActionLabel}
+                              </Button>
+                              <Button
+                                  size="md"
+                                  variant="outline"
+                                  className={styles.summaryHeroSecondary}
+                                  onClick={() => setTab('REELS')}
+                              >
+                                  <Film size={14} className={styles.buttonIcon}/> Subir historia
+                              </Button>
+                              <Button
+                                  size="md"
+                                  variant="outline"
+                                  className={styles.summaryHeroSecondary}
+                                  onClick={() => setTab('PERFIL')}
+                              >
                                   Editar perfil
                               </Button>
-                              <Button size="sm" variant="outline" onClick={() => setTab('VIVOS')}>
-                                  Ver agenda
-                              </Button>
                           </div>
-                      </div>
+                          {!canSchedule && (
+                              <div className={styles.summaryHeroHint}>{getRestrictionMessage()}</div>
+                          )}
+                      </section>
+
+                      <section className={styles.summaryTodayCard}>
+                          <div className={styles.summaryTodayHeader}>
+                              <span className={styles.summaryTodayLabel}>Hoy</span>
+                              <span className={styles.summaryTodayDate}>{todayLabel}</span>
+                          </div>
+                          <div className={styles.summaryTodayFocus}>
+                              <p className={styles.summaryTodayStatLabel}>Actividad de hoy</p>
+                              <div className={styles.summaryTodayFocusRow}>
+                                  <span>Historias publicadas</span>
+                                  <span className={styles.summaryTodayFocusValue}>{reelsToday}</span>
+                              </div>
+                              <div className={styles.summaryTodayFocusRow}>
+                                  <span>Vivos activos</span>
+                                  <span className={styles.summaryTodayFocusValue}>{liveCount}</span>
+                              </div>
+                          </div>
+                          <div className={styles.summaryNextLive}>
+                              {liveNow ? (
+                                  <>
+                                      <p className={styles.summaryNextLiveLabel}>En vivo ahora</p>
+                                      <p className={styles.summaryNextLiveTitle}>{liveNow.title || 'Vivo en curso'}</p>
+                                      <p className={styles.summaryNextLiveMeta}>{liveNow.platform}</p>
+                                      <Button size="sm" variant="outline" onClick={() => setTab('VIVOS')} className={styles.summaryNextLiveAction}>
+                                          Ver agenda
+                                      </Button>
+                                  </>
+                              ) : nextUpcoming ? (
+                                  <>
+                                      <p className={styles.summaryNextLiveLabel}>Proximo vivo</p>
+                                      <p className={styles.summaryNextLiveTitle}>{nextUpcoming.title || 'Vivo programado'}</p>
+                                      <p className={styles.summaryNextLiveMeta}>
+                                          {formatStreamDate(nextUpcoming)} · {nextUpcoming.scheduledTime}
+                                      </p>
+                                      <Button size="sm" variant="outline" onClick={() => setTab('VIVOS')} className={styles.summaryNextLiveAction}>
+                                          Ver agenda
+                                      </Button>
+                                  </>
+                              ) : (
+                                  <>
+                                      <p className={styles.summaryNextLiveLabel}>Agenda vacia</p>
+                                      <p className={styles.summaryNextLiveMeta}>Todavia no hay vivos programados.</p>
+                                      <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={handleCreateClick}
+                                          disabled={!canSchedule || isPreview}
+                                          className={styles.summaryNextLiveAction}
+                                      >
+                                          Agendar ahora
+                                      </Button>
+                                  </>
+                              )}
+                          </div>
+                      </section>
                   </div>
 
                   {/* PENALTY ALERT */}
@@ -870,471 +1081,222 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </div>
                   )}
 
-                  <div className={styles.cardsGrid}>
-                      
-                      {/* QUOTA CARD */}
-                      <div className={styles.quotaCard}>
-                          <div className={styles.quotaHeader}>
+                  <div className={styles.summaryOpsGrid}>
+                      <section className={styles.summaryQuotaCard}>
+                          <div className={styles.summaryCardHeader}>
                               <div>
-                                  <h3 className={styles.quotaTitle}>Cupos para Vivos</h3>
-                                  <p className={styles.quotaSubtitle}>Disponibilidad semanal</p>
+                                  <h3 className={styles.summaryCardTitle}>Disponibilidad</h3>
+                                  <p className={styles.summaryCardSubtitle}>Cupos de vivos e historias</p>
                               </div>
-                              <Button
-                                  size="sm"
-                                  onClick={openBuyModal}
-                                  disabled={isAgendaSuspended || isPreview}
-                                  className={styles.quotaBuyButton}
-                              >
-                                  <ShoppingCart size={16} className={styles.buttonIcon}/> Comprar Extras
-                              </Button>
-                          </div>
-
-                          <div className={styles.quotaBody}>
-                              {/* Circle Chart */}
-                              <div className={styles.quotaCircle}>
-                                  <div className={styles.quotaCenter}>
-                                      <span className={`${styles.quotaCircleValue} ${availableQuota > 0 ? styles.quotaCircleValueNormal : styles.quotaCircleValueNegative}`}>{isNaN(availableQuota) ? 0 : availableQuota}</span>
-                                      <span className={styles.quotaCircleLabel}>Disp.</span>
-                                  </div>
-                              </div>
-                              
-                              <div className={styles.quotaDetails}>
-                                  <div className={styles.quotaRow}>
-                                      <span className={styles.quotaLabel}>Plan Base ({currentShop.plan})</span>
-                                      <span className={styles.quotaValue}>{baseQuota}</span>
-                                  </div>
-                                  <div className={styles.quotaRow}>
-                                      <span className={styles.quotaExtraLabel}><Plus size={12} className={styles.quotaExtraIcon}/> Cupos Extras</span>
-                                      <span className={styles.quotaValuePositive}>{extraQuota}</span>
-                                  </div>
-                                  <div className={styles.quotaRowLast}>
-                                      <span className={styles.quotaLabel}>Usados (En curso/Prog.)</span>
-                                      <span className={styles.quotaValueNegative}>-{usedQuota}</span>
-                                  </div>
-                                  {availableQuota <= 0 && (
-                                      <div className={styles.quotaWarning}>
-                                          <p className={styles.quotaWarningTitle}>Sin cupos disponibles</p>
-                                          <p className={styles.quotaWarningText}>
-                                              {isAgendaSuspended
-                                                  ? 'Agenda suspendida: no podés comprar cupos de vivos.'
-                                                  : 'Comprá cupos extras o mejorá tu plan para agendar.'}
-                                          </p>
-                                      </div>
-                                  )}
-                              </div>
-                          </div>
-                      </div>
-
-                      {/* PLAN STATUS */}
-                      <div className={styles.planCard}>
-                           <div className={styles.planHeader}>
-                                <h3 className={styles.planTitle}>
-                                    Tu Suscripción
-                                </h3>
-                                <p className={styles.planSubtitle}>Nivel de visibilidad actual</p>
-                           </div>
-                           
-                           <div className={styles.planBody}>
-                                <span className={`${styles.planBadge} ${
-                                    isMaxima ? styles.planBadgeMaxima :
-                                    isAlta ? styles.planBadgeAlta :
-                                    styles.planBadgeStandard
-                                }`}>
-                                    Plan {currentShop.plan}
-                                </span>
-
-                                {isStandard && (
-                                    <div className={styles.planHint}>
-                                        <p className={styles.planHintTitle}>Estás en el plan básico.</p>
-                                        <p className={`${styles.planHintUpgrade} ${styles.planHintUpgradeBlue}`}>
-                                            <ArrowUpCircle size={14}/> Pásate a ALTA
-                                        </p>
-                                    </div>
-                                )}
-                                {isAlta && (
-                                    <div className={styles.planHint}>
-                                        <p className={styles.planHintTitle}>Tienes buena visibilidad.</p>
-                                        <p className={`${styles.planHintUpgrade} ${styles.planHintUpgradePurple}`}>
-                                            <ArrowUpCircle size={14}/> Pásate a MÁXIMA
-                                        </p>
-                                    </div>
-                                )}
-                                {isMaxima && (
-                                    <div className={styles.planHint}>
-                                        <p>¡Eres un líder en la plataforma!</p>
-                                        <p>Disfrutas de máxima exposición y cupos.</p>
-                                    </div>
-                                )}
-                                <div className={styles.planInfo}>
-                                    <div className={styles.planInfoRow}>
-                                        <span>Vivos base/semana</span>
-                                        <span>{isStandard ? '0' : isAlta ? '1' : '3'}</span>
-                                    </div>
-                                    <div className={styles.planInfoRow}>
-                                        <span>Reels diarios</span>
-                                        <span>{isStandard ? '1' : isAlta ? '3' : '5'}</span>
-                                    </div>
-                                    <p className={styles.planInfoNote}>
-                                        Precios y upgrades se definen por Distrito Moda.
-                                    </p>
-                                </div>
-                           </div>
-
-                           {!isMaxima && (
-                               <Button variant="secondary" size="sm" onClick={openPlanPage} className={styles.planUpgradeButton}>
-                                   Mejorar mi Plan
-                               </Button>
-                           )}
-                      </div>
-                  </div>
-
-                  <div className={styles.infoGrid}>
-                      <div className={styles.infoCard}>
-                          <h3 className={styles.infoCardTitle}>Acciones rápidas</h3>
-                          <div className={styles.infoCardStack}>
-                              <Button size="sm" className={styles.buttonFull} onClick={handleCreateClick} disabled={!canSchedule || isPreview}>
-                                  <Plus size={14} className={styles.buttonIcon}/> Agendar vivo
-                              </Button>
-                              <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className={styles.buttonFull}
-                                  onClick={openBuyModal}
-                                  disabled={isAgendaSuspended || isPreview}
-                              >
-                                  <ShoppingCart size={14} className={styles.buttonIcon}/> Comprar cupo
-                              </Button>
-                              <Button size="sm" variant="outline" className={styles.buttonFull} onClick={() => setTab('REELS')}>
-                                  <Film size={14} className={styles.buttonIcon}/> Subir historia
-                              </Button>
-                              <Button size="sm" variant="outline" className={styles.buttonFull} onClick={() => setTab('PERFIL')}>
-                                  <Store size={14} className={styles.buttonIcon}/> Editar perfil
-                              </Button>
-                          </div>
-                          {!canSchedule && (
-                              <p className={styles.infoDanger}>{getRestrictionMessage()}</p>
-                          )}
-                      </div>
-                      <div className={styles.infoCard}>
-                          <h3 className={styles.infoCardTitle}>Agenda actual</h3>
-                          <div className={styles.infoCardList}>
-                              <div className={styles.infoRow}><span>En vivo</span><span className={styles.infoValue}>{liveCount}</span></div>
-                              <div className={styles.infoRow}><span>Programados</span><span className={styles.infoValue}>{upcomingCount}</span></div>
-                              <div className={styles.infoRow}><span>Finalizados</span><span className={styles.infoValue}>{finishedCount}</span></div>
-                              <div className={styles.infoRow}><span>No realizados</span><span className={styles.infoValue}>{missedCount}</span></div>
-                              <div className={styles.infoRow}><span>Reprogramar</span><span className={styles.infoValue}>{pendingReprogramCount}</span></div>
-                          </div>
-                          {pendingReprogramCount > 0 && (
-                              <p className={styles.infoWarning}>
-                                  Tenés {pendingReprogramCount} vivos pendientes de reprogramación.
-                              </p>
-                          )}
-                      </div>
-                      <div className={styles.infoCard}>
-                          <h3 className={styles.infoCardTitle}>Historias hoy</h3>
-                          <div className={styles.infoCardList}>
-                              <div className={styles.infoRow}><span>Plan disponible</span><span className={styles.infoValue}>{availableReelPlan}</span></div>
-                              <div className={styles.infoRow}><span>Extras comprados</span><span className={styles.infoValuePositive}>{reelsExtra}</span></div>
-                              <div className={styles.infoRow}><span>Publicadas hoy</span><span className={styles.infoValue}>{reelsToday}</span></div>
-                          </div>
-                          <button
-                              onClick={openBuyReelModal}
-                              className={`${styles.infoLink} ${isPreview ? styles.infoLinkDisabled : styles.infoLinkActive}`}
-                          >
-                              Comprar extras
-                          </button>
-                      </div>
-                  </div>
-                  <div className={styles.notificationCard}>
-                      <div className={styles.notificationHeader}>
-                          <h3 className={styles.notificationTitle}>
-                              <AlertTriangle size={16} /> Notificaciones
-                          </h3>
-                          <div className={styles.notificationCount}>
-                              <span>{unreadNotifications.length} nuevas</span>
-                              {unreadNotifications.length > 0 && onMarkAllNotificationsRead && (
-                                  <button
-                                      className={styles.notificationAction}
-                                      onClick={onMarkAllNotificationsRead}
+                              <div className={styles.summaryCardActions}>
+                                  <Button
+                                      size="sm"
+                                      onClick={openBuyModal}
+                                      disabled={isAgendaSuspended || isPreview}
+                                      className={styles.summaryActionGreen}
                                   >
-                                      Marcar todo
-                                  </button>
+                                      <ShoppingCart size={14} className={styles.buttonIcon}/> Comprar extras
+                                  </Button>
+                              </div>
+                          </div>
+                          <div className={styles.summaryQuotaRows}>
+                              <div className={styles.summaryQuotaRow}>
+                                  <div className={styles.summaryQuotaMain}>
+                                      <p className={styles.summaryQuotaLabel}>Vivos disponibles</p>
+                                      <p className={styles.summaryQuotaValue}>{isNaN(availableQuota) ? 0 : availableQuota}</p>
+                                      <p className={styles.summaryQuotaMeta}>Plan {livePlanLimit} · Usados {livePlanUsed} · Extras {extraQuota}</p>
+                                  </div>
+                                  <div className={styles.summaryQuotaActions}>
+                                      <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={openBuyModal}
+                                          disabled={isAgendaSuspended || isPreview}
+                                      >
+                                          Comprar cupos
+                                      </Button>
+                                  </div>
+                                  <div className={styles.summaryProgress}>
+                                      <span className={styles.summaryProgressFill} style={{ width: `${livePlanUsagePercent}%` }} />
+                                  </div>
+                              </div>
+                              <div className={styles.summaryQuotaDivider} />
+                              <div className={styles.summaryQuotaRow}>
+                                  <div className={styles.summaryQuotaMain}>
+                                      <p className={styles.summaryQuotaLabel}>Historias disponibles</p>
+                                      <p className={styles.summaryQuotaValue}>{reelsAvailableTotal}</p>
+                                      <p className={styles.summaryQuotaMeta}>Plan {reelPlanLimit} · Usadas {reelDailyUsed} · Extras {reelsExtra}</p>
+                                  </div>
+                                  <div className={styles.summaryQuotaActions}>
+                                      <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={openBuyReelModal}
+                                          disabled={isPreview}
+                                      >
+                                          Comprar historias
+                                      </Button>
+                                  </div>
+                                  <div className={styles.summaryProgress}>
+                                      <span className={styles.summaryProgressFill} style={{ width: `${reelPlanUsagePercent}%` }} />
+                                  </div>
+                              </div>
+                          </div>
+                          {(availableQuota <= 0 || reelsAvailableTotal <= 0) && (
+                              <div className={styles.summaryQuotaNotice}>
+                                  {availableQuota <= 0
+                                      ? 'Te quedaste sin cupos de vivos. Compra extras o mejora tu plan.'
+                                      : 'Te quedaste sin historias disponibles. Compra extras para publicar hoy.'}
+                              </div>
+                          )}
+                      </section>
+
+                      <section className={styles.summaryAgendaCard}>
+                          <div className={styles.summaryCardHeader}>
+                              <div>
+                                  <h3 className={styles.summaryCardTitle}>Agenda</h3>
+                                  <p className={styles.summaryCardSubtitle}>Estado de tus vivos</p>
+                              </div>
+                              <Button size="sm" variant="outline" onClick={() => setTab('VIVOS')} className={styles.summaryAgendaButton}>
+                                  Ver agenda
+                              </Button>
+                          </div>
+                          <div className={styles.summaryAgendaSummary}>
+                              <div className={styles.summaryAgendaItem}>
+                                  <span>En vivo</span>
+                                  <span className={styles.summaryAgendaValue}>{liveCount}</span>
+                              </div>
+                              <div className={styles.summaryAgendaItem}>
+                                  <span>Programados</span>
+                                  <span className={styles.summaryAgendaValue}>{upcomingCount}</span>
+                              </div>
+                              <div className={styles.summaryAgendaItem}>
+                                  <span>Reprogramar</span>
+                                  <span className={styles.summaryAgendaValue}>{pendingReprogramCount}</span>
+                              </div>
+                          </div>
+                          <div className={styles.summaryAgendaMeta}>
+                              Finalizados {finishedCount} · No realizados {missedCount}
+                          </div>
+                          <div className={styles.summaryAgendaNext}>
+                              {liveNow ? (
+                                  <>
+                                      <p className={styles.summaryNextLiveLabel}>En vivo ahora</p>
+                                      <p className={styles.summaryNextLiveTitle}>{liveNow.title || 'Vivo en curso'}</p>
+                                      <p className={styles.summaryNextLiveMeta}>{liveNow.platform}</p>
+                                  </>
+                              ) : nextUpcoming ? (
+                                  <>
+                                      <p className={styles.summaryNextLiveLabel}>Proximo vivo</p>
+                                      <p className={styles.summaryNextLiveTitle}>{nextUpcoming.title || 'Vivo programado'}</p>
+                                      <p className={styles.summaryNextLiveMeta}>
+                                          {formatStreamDate(nextUpcoming)} · {nextUpcoming.scheduledTime}
+                                      </p>
+                                  </>
+                              ) : (
+                                  <>
+                                      <p className={styles.summaryNextLiveLabel}>Agenda vacia</p>
+                                      <p className={styles.summaryNextLiveMeta}>Todavia no hay vivos programados.</p>
+                                      <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={handleCreateClick}
+                                          disabled={!canSchedule || isPreview}
+                                          className={styles.summaryNextLiveAction}
+                                      >
+                                          Agendar ahora
+                                      </Button>
+                                  </>
                               )}
                           </div>
+                          {pendingReprogramCount > 0 && (
+                              <p className={styles.summaryAgendaWarning}>
+                                  Tenes {pendingReprogramCount} vivo{pendingReprogramCount > 1 ? 's' : ''} pendiente{pendingReprogramCount > 1 ? 's' : ''} de reprogramacion.
+                              </p>
+                          )}
+                      </section>
+                  </div>
+
+                  <section className={styles.summaryGrowthCard}>
+                      <div className={styles.summaryCardHeader}>
+                          <div>
+                              <h3 className={styles.summaryCardTitle}>Tu plan</h3>
+                              <p className={styles.summaryCardSubtitle}>Visibilidad y beneficios activos</p>
+                          </div>
+                          <span className={`${styles.planBadge} ${
+                              isMaxima ? styles.planBadgeMaxima :
+                              isAlta ? styles.planBadgeAlta :
+                              styles.planBadgeStandard
+                          }`}>
+                              Plan {currentShop.plan}
+                          </span>
                       </div>
-                      {notifications.length === 0 ? (
-                          <p className={styles.notificationEmpty}>Sin notificaciones por ahora.</p>
-                      ) : (
-                          <div className={styles.notificationList}>
-                              {notifications.slice(0, 6).map((note) => (
-                                  <div key={note.id} className={styles.notificationItem}>
-                                      <div className={styles.notificationBody}>
-                                          <p className={`${styles.notificationMessage} ${note.read ? styles.notificationMessageRead : styles.notificationMessageUnread}`}>
-                                              {note.message}
-                                          </p>
-                                          <p className={styles.notificationMeta}>{formatNotificationDate(note.createdAt)}</p>
-                                      </div>
-                                      {!note.read && onMarkNotificationRead && (
-                                          <button
-                                              className={styles.notificationReadAction}
-                                              onClick={() => onMarkNotificationRead(note.id)}
-                                          >
-                                              Leído
-                                          </button>
-                                      )}
-                                  </div>
-                              ))}
+                      <div className={styles.summaryGrowthBody}>
+                          <div className={styles.summaryGrowthMetrics}>
+                              <div className={styles.summaryGrowthMetricRow}>
+                                  <span>Vivos base/semana</span>
+                                  <span>{isStandard ? '0' : isAlta ? '1' : '3'}</span>
+                              </div>
+                              <div className={styles.summaryGrowthMetricRow}>
+                                  <span>Historias diarias</span>
+                                  <span>{isStandard ? '1' : isAlta ? '3' : '5'}</span>
+                              </div>
+                              <div className={styles.summaryGrowthMetricRow}>
+                                  <span>WhatsApp visible</span>
+                                  <span>{isStandard ? '1' : isAlta ? '2' : '3'}</span>
+                              </div>
+                          </div>
+                          {isStandard && (
+                              <div className={styles.summaryGrowthHint}>
+                                  Estas en el plan basico. Subi a Alta para mejorar visibilidad y cupos.
+                              </div>
+                          )}
+                          {isAlta && (
+                              <div className={styles.summaryGrowthHint}>
+                                  Tu tienda tiene buena visibilidad. Subi a Maxima para el mejor rendimiento.
+                              </div>
+                          )}
+                          {isMaxima && (
+                              <div className={styles.summaryGrowthHint}>
+                                  Estas en el nivel mas alto de visibilidad. Manten tu presencia activa.
+                              </div>
+                          )}
+                          <p className={styles.summaryGrowthNote}>
+                              Precios y upgrades se coordinan con Distrito Moda.
+                          </p>
+                      </div>
+                      {!isMaxima && (
+                          <div className={styles.summaryGrowthActions}>
+                              <Button variant="secondary" size="sm" onClick={openPlanUpgradeModal} className={styles.planUpgradeButton}>
+                                  Mejorar mi plan
+                              </Button>
                           </div>
                       )}
-                  </div>
-                  <div className={styles.historyCard}>
-                      <div className={styles.historyHeader}>
-                          <h3 className={styles.historyTitle}>
-                              <History size={16} /> Historial de compras
-                          </h3>
-                          <span className={styles.historyCount}>{purchaseHistory.length} movimientos</span>
-                      </div>
-                      {isPurchaseLoading ? (
-                          <p className={styles.historyEmpty}>Cargando compras...</p>
-                      ) : purchaseHistory.length === 0 ? (
-                          <p className={styles.historyEmpty}>Sin compras registradas todavía.</p>
-                      ) : (
-                          <div className={styles.historyList}>
-                              {purchaseHistory.slice(0, 6).map((purchase) => {
-                                  const statusLabel = purchaseStatusLabels[purchase.status] || purchase.status;
-                                  const typeLabel = purchaseTypeLabels[purchase.type] || purchase.type;
-                                  return (
-                                      <div key={purchase.purchaseId} className={styles.historyItem}>
-                                          <div>
-                                              <p className={styles.historyItemTitle}>{typeLabel}</p>
-                                              <p className={styles.historyItemMeta}>
-                                                  {formatPurchaseDate(purchase.createdAt)} • Cantidad {purchase.quantity}
-                                              </p>
-                                          </div>
-                                          <span className={`${styles.historyStatus} ${
-                                              purchase.status === 'APPROVED'
-                                                  ? styles.historyStatusApproved
-                                                  : purchase.status === 'REJECTED'
-                                                  ? styles.historyStatusRejected
-                                                  : styles.historyStatusPending
-                                          }`}>
-                                              {statusLabel}
-                                          </span>
-                                      </div>
-                                  );
-                              })}
-                          </div>
-                      )}
-                  </div>
+                  </section>
               </div>
           )}
 
           {/* TAB: MIS REELS */}
           {activeTab === 'REELS' && (
-              <div className={styles.reelsSection}>
-                  <header className={styles.reelsHeader}>
-                      <div>
-                          <h1 className={styles.reelsTitle}>Mis Historias</h1>
-                          <p className={styles.reelsSubtitle}>Comparte contenido corto por 24 horas.</p>
-                      </div>
-                      <div className={styles.reelsStats}>
-                          <p className={styles.reelsStatLine}>
-                              Disponibles hoy (Plan): <span className={styles.reelsStatValue}>{availableReelPlan}</span>
-                          </p>
-                          <p className={styles.reelsStatLine}>
-                              Extras comprados: <span className={styles.reelsStatValuePositive}>{reelsExtra}</span>
-                          </p>
-                          <button
-                              onClick={openBuyReelModal}
-                              className={`${styles.reelsBuyLink} ${isPreview ? styles.reelsBuyLinkDisabled : styles.reelsBuyLinkActive}`}
-                          >
-                              Comprar Extras
-                          </button>
-                          {(availableReelPlan === 0 && reelsExtra === 0) && (
-                              <p className={styles.reelsWarning}>Sin cupos disponibles hoy.</p>
-                          )}
-                      </div>
-                  </header>
-
-                  <div className={styles.reelsGrid}>
-                      
-                      {/* UPLOAD FORM */}
-                      <div className={`${styles.reelsPanel} ${styles.reelsPanelFit}`}>
-                          <h3 className={styles.reelsPanelTitle}><Plus size={16}/> Subir Historia</h3>
-                          <div className={styles.reelsForm}>
-                              <div className={styles.reelModeRow}>
-                                  <button
-                                    type="button"
-                                    onClick={() => setReelMode('VIDEO')}
-                                    className={`${styles.reelModeButton} ${reelMode === 'VIDEO' ? styles.reelModeActive : ''}`}
-                                  >
-                                    Video 10s
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setReelMode('PHOTO_SET')}
-                                    className={`${styles.reelModeButton} ${reelMode === 'PHOTO_SET' ? styles.reelModeActive : ''}`}
-                                  >
-                                    5 Fotos
-                                  </button>
-                              </div>
-
-                              {reelMode === 'VIDEO' ? (
-                                  <>
-                                      <div>
-                                          <label className={styles.reelsLabel}>Enlace del video</label>
-                                          <input
-                                            type="text"
-                                            value={reelUrl}
-                                            onChange={e => setReelUrl(e.target.value)}
-                                            placeholder="https://instagram.com/reel/..."
-                                            className={styles.reelsInput}
-                                          />
-                                      </div>
-                                      <div>
-                                          <label className={styles.reelsLabel}>Subir video (galerÃ­a o cÃ¡mara)</label>
-                                          <input
-                                            type="file"
-                                            accept="video/*"
-                                            className={styles.reelsFileInput}
-                                            disabled={isReelUploading}
-                                            onChange={async (e) => {
-                                              const input = e.currentTarget;
-                                              const files = input.files;
-                                              await uploadReelFiles(files, 'VIDEO');
-                                              if (input) input.value = '';
-                                            }}
-                                          />
-                                          {isReelUploading && (
-                                            <div className={styles.reelsProcessing}>
-                                              <span className={styles.reelsProcessingDot} />
-                                              Procesando y optimizando archivos...
-                                            </div>
-                                          )}
-                                      </div>
-                                  </>
-                              ) : (
-                                  <>
-                                      <div>
-                                          <label className={styles.reelsLabel}>Fotos (hasta 5)</label>
-                                          <div className={styles.reelPhotoGrid}>
-                                              {reelPhotoUrls.map((url, index) => (
-                                                  <img key={`${url}-${index}`} src={url} alt={`Foto ${index + 1}`} className={styles.reelPhotoThumb} />
-                                              ))}
-                                          </div>
-                                      </div>
-                                      <div>
-                                          <label className={styles.reelsLabel}>Subir fotos (galerÃ­a o cÃ¡mara)</label>
-                                          <input
-                                            type="file"
-                                            accept="image/*"
-                                            multiple
-                                            className={styles.reelsFileInput}
-                                            disabled={isReelUploading}
-                                            onChange={async (e) => {
-                                              const input = e.currentTarget;
-                                              const files = input.files;
-                                              await uploadReelFiles(files, 'PHOTO_SET');
-                                              if (input) input.value = '';
-                                            }}
-                                          />
-                                          <p className={styles.reelsHint}>Cada foto se muestra ~2s (10s total).</p>
-                                          {isReelUploading && (
-                                            <div className={styles.reelsProcessing}>
-                                              <span className={styles.reelsProcessingDot} />
-                                              Procesando y optimizando archivos...
-                                            </div>
-                                          )}
-                                      </div>
-                                  </>
-                              )}
-                              <div>
-                                  <label className={styles.reelsLabel}>Plataforma</label>
-                                  <select 
-                                    value={reelPlatform}
-                                    onChange={e => setReelPlatform(e.target.value as SocialPlatform)}
-                                    className={styles.reelsSelect}
-                                  >
-                                      <option value="">Seleccionar...</option>
-                                      <option value="Instagram">Instagram</option>
-                                      <option value="TikTok">TikTok</option>
-                                      <option value="YouTube">YouTube Shorts</option>
-                                      <option value="Facebook">Facebook</option>
-                                  </select>
-                              </div>
-                              <Button 
-                                onClick={handleUploadReel} 
-                                disabled={isReelUploading || (availableReelPlan === 0 && reelsExtra === 0)}
-                                className={styles.buttonFull}
-                              >
-                                  Publicar Historia
-                              </Button>
-                              {isReelUploading && (
-                                <p className={styles.reelsProcessingNote}>No cierres esta ventana hasta que termine el procesamiento.</p>
-                              )}
-                              {(availableReelPlan === 0 && reelsExtra === 0) && (
-                                  <p className={styles.reelsDisabledNote}>Sin cupos disponibles hoy.</p>
-                              )}
-                          </div>
-                      </div>
-
-                      {/* ACTIVE LIST */}
-                      <div className={styles.reelsPanel}>
-                           <h3 className={styles.reelsPanelTitle}><Film size={16}/> Activas (últimas 24h)</h3>
-                           <div className={styles.reelsList}>
-                            {shopReels.filter(r => r.status === 'ACTIVE' || r.status === 'PROCESSING').length === 0 ? (
-                                <p className={styles.reelsEmpty}>No tienes historias activas.</p>
-                            ) : (
-                                shopReels.filter(r => r.status === 'ACTIVE' || r.status === 'PROCESSING').map(reel => {
-                                    const now = new Date();
-                                    const expires = new Date(reel.expiresAtISO);
-                                    const diffMs = expires.getTime() - now.getTime();
-                                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-                                    const isProcessing = reel.status === 'PROCESSING';
-                                    const thumb = reel.thumbnail || reel.photoUrls?.[0] || reel.videoUrl || '';
-                                    return (
-                                        <div key={reel.id} className={styles.reelsItem}>
-                                            {thumb && (
-                                                <div className={styles.reelsItemMedia}>
-                                                    <img
-                                                        src={thumb}
-                                                        alt={reel.shopName}
-                                                        loading="lazy"
-                                                        decoding="async"
-                                                        className={styles.reelsItemThumb}
-                                                    />
-                                                </div>
-                                            )}
-                                            <div className={styles.reelsItemInfo}>
-                                                <p className={styles.reelsItemTitle}>{reel.url}</p>
-                                                <p className={styles.reelsItemMeta}>
-                                                  {reel.platform} • {isProcessing ? 'Procesando…' : `Expira en ${hours}h`} • {reel.views || 0} vistas
-                                                </p>
-                                            </div>
-                                            <span className={isProcessing ? styles.reelsItemBadgeProcessing : styles.reelsItemBadge}>{
-                                                isProcessing ? 'PROCESANDO' : 'ACTIVA'
-                                            }</span>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
-                           
-                           {/* EXPIRED LIST */}
-                           {shopReels.some(r => r.status === 'EXPIRED') && (
-                               <div className={styles.reelsExpiredWrap}>
-                                   <h4 className={styles.reelsExpiredTitle}>Expiradas recientemente</h4>
-                                   {shopReels.filter(r => r.status === 'EXPIRED').slice(0, 3).map(reel => (
-                                       <div key={reel.id} className={styles.reelsExpiredRow}>
-                                           <span className={styles.reelsExpiredLink}>{reel.url}</span>
-                                           <span>EXPIRED</span>
-                                       </div>
-                                   ))}
-                               </div>
-                           )}
-                      </div>
-                  </div>
-              </div>
+            <Suspense fallback={<div className={styles.reelsSection} />}>
+              <MerchantReelsTab
+                availableReelPlan={availableReelPlan}
+                reelsExtra={reelsExtra}
+                openBuyReelModal={openBuyReelModal}
+                isPreview={isPreview}
+                reelMode={reelMode}
+                setReelMode={setReelMode}
+                reelUrl={reelUrl}
+                setReelUrl={setReelUrl}
+                reelPhotoUrls={reelPhotoUrls}
+                uploadReelFiles={uploadReelFiles}
+                isReelUploading={isReelUploading}
+                reelPlatform={reelPlatform}
+                setReelPlatform={setReelPlatform}
+                handleUploadReel={handleUploadReel}
+                shopReels={shopReels}
+              />
+            </Suspense>
           )}
 
           {/* TAB 2: MIS REDES (KEEP EXISTING) */}
@@ -1343,12 +1305,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <header className={styles.socialsHeader}>
                       <h1 className={styles.socialsTitle}>Mis Redes</h1>
                       <p className={styles.socialsSubtitle}>Configura dónde transmitirás tus vivos y cómo te contactan.</p>
-                      {isProfileLocked && (
-                          <div className={styles.profileLockedNote}>
-                              <Lock size={14} />
-                              <span>Datos sensibles validados por administracion. Solo podes editar condiciones comerciales.</span>
-                          </div>
-                      )}
                   </header>
                   <div className={styles.socialsCard}>
                       <form onSubmit={saveSocials} className={styles.socialsForm}>
@@ -1428,238 +1384,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           {/* TAB 3: MIS VIVOS (KEEP EXISTING) */}
           {activeTab === 'VIVOS' && (
-              <div className={styles.streamsSection}>
-                  <header className={styles.streamsHeader}>
-                      <div>
-                          <h1 className={styles.streamsTitle}>Mis Vivos</h1>
-                          <p className={styles.streamsSubtitle}>Gestiona tu agenda y monitorea el rendimiento.</p>
-                      </div>
-                      <div className={styles.streamsHeaderRight}>
-                           <div className={`${styles.streamsActionWrap} group`}>
-                                <Button 
-                                    onClick={handleCreateClick} 
-                                    disabled={!canSchedule}
-                                    className={!canSchedule ? styles.streamsActionDisabled : ''}
-                                >
-                                    <Plus size={18} className={styles.buttonIcon} /> Agendar Vivo
-                                </Button>
-                                {!canSchedule && (
-                                    <div className={styles.streamsTooltip}>
-                                        {getRestrictionMessage()}
-                                    </div>
-                                )}
-                           </div>
-                           <p className={styles.streamsQuotaNote}>Cupos Disponibles: {availableQuota}</p>
-                      </div>
-                  </header>
-
-                  <div className={styles.streamsRules}>
-                      <div className={styles.streamsRulesRow}>
-                          <span className={styles.streamsRulesLabel}>Reglas clave:</span>
-                          <span>Máximo 1 vivo por día.</span>
-                          <span>Máximo 7 vivos por semana.</span>
-                          <span>Requiere cupo disponible.</span>
-                          {pendingReprogramCount > 0 && (
-                              <span className={styles.streamsRulesWarning}>Tenés {pendingReprogramCount} vivos para reprogramar.</span>
-                          )}
-                      </div>
-                  </div>
-
-                  <div className={styles.streamsCard}>
-                      <div className={styles.streamsMobileList}>
-                          {myStreams.length > 0 ? myStreams.map(stream => (
-                              <div key={stream.id} className={styles.streamsMobileItem}>
-                                  <div className={styles.streamsMobileHeader}>
-                                      <div>
-                                          <p className={styles.streamsMobileTitle}>{stream.title}</p>
-                                          <p className={styles.streamsMobileDate}>
-                                              {new Date(stream.fullDateISO).toLocaleDateString()} - {stream.scheduledTime} hs
-                                          </p>
-                                      </div>
-                                      <span className={
-                                          stream.status === StreamStatus.LIVE ? styles.streamsStatusLive :
-                                          stream.status === StreamStatus.UPCOMING ? styles.streamsStatusUpcoming :
-                                          stream.status === StreamStatus.MISSED ? styles.streamsStatusMissed :
-                                          stream.status === StreamStatus.CANCELLED ? styles.streamsStatusCancelled :
-                                          stream.status === StreamStatus.BANNED ? styles.streamsStatusBanned :
-                                          stream.status === StreamStatus.PENDING_REPROGRAMMATION ? styles.streamsStatusPending :
-                                          styles.streamsStatusFinished
-                                      }>
-                                          {stream.status === StreamStatus.UPCOMING ? 'PROGRAMADO' :
-                                           stream.status === StreamStatus.LIVE ? 'EN VIVO' :
-                                           stream.status === StreamStatus.MISSED ? 'NO REALIZADO' :
-                                           stream.status === StreamStatus.CANCELLED ? 'CANCELADO' :
-                                           stream.status === StreamStatus.BANNED ? 'BLOQUEADO' :
-                                           stream.status === StreamStatus.PENDING_REPROGRAMMATION ? 'REPROGRAMAR' :
-                                           'FINALIZADO'}
-                                      </span>
-                                  </div>
-                                  <div className={styles.streamsMobileMeta}>
-                                      <span className={`${styles.platformBadge} ${
-                                         stream.platform === 'Instagram' ? styles.platformInstagram : 
-                                         stream.platform === 'TikTok' ? styles.platformTiktok :
-                                         styles.platformDefault
-                                      }`}>
-                                         {stream.platform}
-                                      </span>
-                                      <div className={styles.ratingRow}>
-                                          <Star size={12} className={stream.rating ? styles.ratingStarActive : styles.ratingStarInactive} />
-                                          <span className={styles.streamsRatingRowText}>{stream.rating || '-'}</span>
-                                      </div>
-                                  </div>
-                                  <div className={styles.streamsMobileActions}>
-                                      {stream.status === StreamStatus.LIVE && onExtendStream && stream.extensionCount < 3 && (
-                                          <Button 
-                                              size="sm" 
-                                              className={styles.streamsActionConfirm}
-                                              onClick={() => onExtendStream(stream.id)}
-                                              title="Extender 30 minutos más"
-                                          >
-                                              <RefreshCw size={10} className={styles.buttonIconSm}/> Continuamos
-                                          </Button>
-                                      )}
-                                      {(stream.status === StreamStatus.UPCOMING || stream.status === StreamStatus.PENDING_REPROGRAMMATION) && (
-                                          <>
-                                            <button
-                                                onClick={() => openEditModal(stream)}
-                                                disabled={!canManageAgenda}
-                                                title={!canManageAgenda ? getRestrictionMessage() : 'Editar vivo'}
-                                                className={`${styles.iconButton} ${!canManageAgenda ? styles.iconButtonDisabled : styles.iconButtonEdit}`}
-                                            >
-                                                <Pencil size={14} />
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    if (!canManageAgenda) return;
-                                                    setConfirmDialog({
-                                                        title: 'Cancelar vivo',
-                                                        message: '¿Confirmas la cancelación de este vivo?',
-                                                        confirmLabel: 'Cancelar vivo',
-                                                        onConfirm: () => onStreamDelete(stream.id),
-                                                    });
-                                                }}
-                                                disabled={!canManageAgenda}
-                                                title={!canManageAgenda ? getRestrictionMessage() : 'Cancelar vivo'}
-                                                className={`${styles.iconButton} ${!canManageAgenda ? styles.iconButtonDisabled : styles.iconButtonDelete}`}
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                          </>
-                                      )}
-                                  </div>
-                              </div>
-                          )) : (
-                              <div className={styles.streamsMobileEmpty}>No has creado ningún vivo aún.</div>
-                          )}
-                      </div>
-                      <div className={styles.streamsDesktopTable}>
-                          <table className={styles.streamsTable}>
-                              <thead className={styles.streamsTableHead}>
-                                  <tr>
-                                      <th className={styles.streamsTableHeadCell}>Información</th>
-                                      <th className={styles.streamsTableHeadCell}>Red Social</th>
-                                      <th className={styles.streamsTableHeadCell}>Estado</th>
-                                      <th className={styles.streamsTableHeadCell}>Calificación</th>
-                                      <th className={`${styles.streamsTableHeadCell} ${styles.streamsTableHeadRight}`}>Acciones</th>
-                                  </tr>
-                              </thead>
-                              <tbody className={styles.streamsTableBody}>
-                                  {myStreams.length > 0 ? myStreams.map(stream => (
-                                      <tr key={stream.id} className={styles.streamsTableRow}>
-                                          <td className={styles.streamsTableCell}>
-                                              <div className={styles.streamsInfoStack}>
-                                                  <span className={styles.streamsInfoTitle}>{stream.title}</span>
-                                                  <span className={styles.streamsInfoDate}>
-                                                      {new Date(stream.fullDateISO).toLocaleDateString()} - {stream.scheduledTime} hs
-                                                  </span>
-                                              </div>
-                                          </td>
-                                          <td className={styles.streamsTableCell}>
-                                              <span className={`${styles.platformBadge} ${
-                                                 stream.platform === 'Instagram' ? styles.platformInstagram : 
-                                                 stream.platform === 'TikTok' ? styles.platformTiktok :
-                                                 styles.platformDefault
-                                              }`}>
-                                                 {stream.platform}
-                                              </span>
-                                          </td>
-                                          <td className={styles.streamsTableCell}>
-                                               {stream.status === StreamStatus.LIVE ? (
-                                                   <span className={styles.streamsStatusLive}>EN VIVO</span>
-                                               ) : stream.status === StreamStatus.UPCOMING ? (
-                                                   <span className={styles.streamsStatusUpcoming}>PROGRAMADO</span>
-                                               ) : stream.status === StreamStatus.MISSED ? (
-                                                   <span className={styles.streamsStatusMissed}>NO REALIZADO</span>
-                                               ) : stream.status === StreamStatus.CANCELLED ? (
-                                                   <span className={styles.streamsStatusCancelled}>CANCELADO</span>
-                                               ) : stream.status === StreamStatus.BANNED ? (
-                                                   <span className={styles.streamsStatusBanned}>BLOQUEADO</span>
-                                               ) : stream.status === StreamStatus.PENDING_REPROGRAMMATION ? (
-                                                   <span className={styles.streamsStatusPending}>REPROGRAMAR</span>
-                                               ) : (
-                                                   <span className={styles.streamsStatusFinished}>FINALIZADO</span>
-                                               )}
-                                          </td>
-                                          <td className={styles.streamsTableCell}>
-                                              <div className={styles.streamsRatingRow}>
-                                                  <Star size={14} className={stream.rating ? styles.ratingStarActive : styles.ratingStarInactive} />
-                                                  <span className={styles.streamsRatingRowText}>{stream.rating || '-'}</span>
-                                                  {stream.rating && <span className={styles.streamsRatingCount}>({Math.floor(Math.random() * 50) + 5})</span>}
-                                              </div>
-                                          </td>
-                                          <td className={`${styles.streamsTableCell} ${styles.streamsTableCellRight}`}>
-                                              <div className={styles.streamsActionsRow}>
-                                                  {stream.status === StreamStatus.LIVE && onExtendStream && stream.extensionCount < 3 && (
-                                                      <Button 
-                                                          size="sm" 
-                                                          className={styles.streamsActionConfirm}
-                                                          onClick={() => onExtendStream(stream.id)}
-                                                          title="Extender 30 minutos más"
-                                                      >
-                                                          <RefreshCw size={10} className={styles.buttonIconSm}/> Continuamos
-                                                      </Button>
-                                                  )}
-                                                  {(stream.status === StreamStatus.UPCOMING || stream.status === StreamStatus.PENDING_REPROGRAMMATION) && (
-                                                      <>
-                                                        <button
-                                                            onClick={() => openEditModal(stream)}
-                                                            disabled={!canManageAgenda}
-                                                            title={!canManageAgenda ? getRestrictionMessage() : 'Editar vivo'}
-                                                            className={`${styles.iconButton} ${!canManageAgenda ? styles.iconButtonDisabled : styles.iconButtonEdit}`}
-                                                        >
-                                                            <Pencil size={14} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                if (!canManageAgenda) return;
-                                                                setConfirmDialog({
-                                                                    title: 'Cancelar vivo',
-                                                                    message: '¿Confirmas la cancelación de este vivo?',
-                                                                    confirmLabel: 'Cancelar vivo',
-                                                                    onConfirm: () => onStreamDelete(stream.id),
-                                                                });
-                                                            }}
-                                                            disabled={!canManageAgenda}
-                                                            title={!canManageAgenda ? getRestrictionMessage() : 'Cancelar vivo'}
-                                                            className={`${styles.iconButton} ${!canManageAgenda ? styles.iconButtonDisabled : styles.iconButtonDelete}`}
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                      </>
-                                                  )}
-                                              </div>
-                                          </td>
-                                      </tr>
-                                  )) : (
-                                      <tr>
-                                          <td colSpan={5} className={styles.streamsTableEmpty}>No has creado ningún vivo aún.</td>
-                                      </tr>
-                                  )}
-                              </tbody>
-                          </table>
-                      </div>
-                  </div>
-              </div>
+            <Suspense fallback={<div className={styles.streamsSection} />}>
+              <MerchantStreamsTab
+                myStreams={myStreams}
+                canSchedule={canSchedule}
+                canManageAgenda={canManageAgenda}
+                availableQuota={availableQuota}
+                pendingReprogramCount={pendingReprogramCount}
+                handleCreateClick={handleCreateClick}
+                getRestrictionMessage={getRestrictionMessage}
+                onExtendStream={onExtendStream}
+                openEditModal={openEditModal}
+                setConfirmDialog={setConfirmDialog}
+                onStreamDelete={onStreamDelete}
+              />
+            </Suspense>
           )}
 
           {/* TAB 4: PERFIL (KEEP EXISTING) */}
@@ -1668,14 +1407,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <header className={styles.profileHeader}>
                       <h1 className={styles.profileTitle}>Datos de Tienda</h1>
                       <p className={styles.profileSubtitle}>Información legal, ubicación y condiciones de venta.</p>
-                      {isProfileLocked && (
-                          <div className={styles.profileLockedNote}>
-                              <Lock size={14} />
-                              <span>Datos validados por administracion. Solo lectura.</span>
-                          </div>
-                      )}
                   </header>
-                  <div className={styles.profileCard}>
+
+                  <div id="profile-public" className={styles.profileCard}>
                       <p className={styles.profileLabel}>Vista pública</p>
                       <div className={styles.profileSummary}>
                           <LogoBubble
@@ -1710,109 +1444,174 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           )}
                       </div>
                   </div>
+
                   <form onSubmit={saveShopProfile} className={styles.profileForm}>
-                      <section className={styles.profileFormSection}>
-                          <h3 className={styles.profileFormTitle}><Store size={18}/> Identidad & Legal</h3>
-                          <div className={styles.profileGridTwo}>
-                              <label className={styles.profileField}>
-                                  <span className={styles.profileInputLabel}>Nombre de Fantasía</span>
-                                  <input type="text" value={shopForm.name || ''} onChange={e => handleInputChange('name', e.target.value)} className={styles.profileInputMuted} readOnly={isProfileLocked} />
-                              </label>
-                              <label className={styles.profileField}>
-                                  <span className={styles.profileInputLabel}>Razón Social</span>
-                                  <input type="text" value={shopForm.razonSocial || ''} onChange={e => handleInputChange('razonSocial', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
-                              </label>
-                              <label className={styles.profileField}>
-                                  <span className={styles.profileInputLabel}>CUIT</span>
-                                  <input type="text" value={shopForm.cuit || ''} onChange={e => handleInputChange('cuit', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
-                              </label>
+                      <div className={styles.profileActionBar}>
+                          <div className={styles.profileActionInfo}>
+                              <p className={styles.profileActionTitle}>Perfil {profileCompletion}% completo</p>
+                              <p className={styles.profileActionHint}>
+                                  {missingSections.length === 0
+                                      ? 'Perfil listo para publicar.'
+                                      : `Faltan ${missingSections.length} secciones por completar.`}
+                              </p>
                           </div>
-                      </section>
-                      <section className={styles.profileFormSection}>
-                          <h3 className={styles.profileFormTitle}><MapPin size={18}/> Dirección Física</h3>
-                          <div className={styles.profileGridThree}>
-                              <div className={styles.profileFieldWide}>
-                                  <label className={styles.profileInputLabel}>Buscador (Google Maps Simulado)</label>
-                                  {isProfileLocked ? (
-                                      <input
-                                          type="text"
-                                          value={shopForm.address || currentShop.address || ''}
-                                          className={styles.profileInput}
-                                          readOnly
-                                      />
-                                  ) : (
-                                      <AddressAutocomplete onSelect={handleAddressSelect} />
-                                  )}
+                          <div className={styles.profileActionProgress}>
+                              <div className={styles.profileActionBarTrack}>
+                                  <span style={{ width: `${profileCompletion}%` }} />
                               </div>
-                              <label className={styles.profileFieldSpanTwo}>
-                                  <span className={styles.profileInputLabel}>Calle</span>
-                                  <input type="text" value={shopForm.addressDetails?.street || ''} onChange={e => handleAddressChange('street', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
-                              </label>
-                              <label className={styles.profileField}>
-                                  <span className={styles.profileInputLabel}>Número</span>
-                                  <input type="text" value={shopForm.addressDetails?.number || ''} onChange={e => handleAddressChange('number', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
-                              </label>
-                              <label className={styles.profileField}>
-                                  <span className={styles.profileInputLabel}>Localidad / Barrio</span>
-                                  <input type="text" value={shopForm.addressDetails?.city || ''} onChange={e => handleAddressChange('city', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
-                              </label>
-                              <label className={styles.profileField}>
-                                  <span className={styles.profileInputLabel}>Provincia</span>
-                                  <input type="text" value={shopForm.addressDetails?.province || ''} onChange={e => handleAddressChange('province', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
-                              </label>
-                              <label className={styles.profileField}>
-                                  <span className={styles.profileInputLabel}>CP</span>
-                                  <input type="text" value={shopForm.addressDetails?.zip || ''} onChange={e => handleAddressChange('zip', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
-                              </label>
-                              <label className={styles.profileFieldSpanThree}>
-                                  <span className={styles.profileInputLabel}>Link Google Maps</span>
-                                  <input
-                                      type="text"
-                                      value={shopForm.addressDetails?.mapsUrl || ''}
-                                      onChange={e => handleAddressChange('mapsUrl', e.target.value)}
-                                      className={styles.profileInput}
-                                      placeholder="https://maps.google.com/..."
-                                      readOnly={isProfileLocked}
-                                  />
-                              </label>
+                              <p className={styles.profileActionMeta}>
+                                  {profileDirty ? 'Hay cambios sin guardar.' : 'Todo está guardado.'}
+                              </p>
                           </div>
-                      </section>
-                      <section className={styles.profileFormSection}>
-                          <h3 className={styles.profileFormTitle}><CreditCard size={18}/> Condiciones de Venta</h3>
-                          <div className={styles.profileGridTwo}>
-                              <div>
-                                  <label className={styles.profileField}>
-                                      <span className={styles.profileInputLabel}>Monto Mínimo de Compra ($)</span>
-                                      <div className={styles.profileFieldRelative}>
-                                          <span className={styles.profilePricePrefix}>$</span>
-                                          <input type="number" value={shopForm.minimumPurchase || ''} onChange={e => handleInputChange('minimumPurchase', e.target.value ? Number(e.target.value) : 0, { sensitive: false })} className={`${styles.profileInput} pl-6`} readOnly={isCommercialLocked} />
-                                      </div>
-                                  </label>
-                              </div>
-                              <div>
-                                  <label className={styles.profileField}>
-                                      <span className={styles.profileInputLabel}>Formas de Pago Aceptadas</span>
-                                  </label>
-                                  <div className={styles.profileGridPayments}>
-                                      {PAYMENT_OPTIONS.map(method => (
-                                          <label key={method} className={styles.profileCheckboxItem}>
-                                              <input 
-                                                type="checkbox" 
-                                                checked={(shopForm.paymentMethods || []).includes(method)}
-                                                onChange={() => togglePaymentMethod(method)}
-                                                className={styles.profileCheckboxInput}
-                                                disabled={isCommercialLocked}
-                                              />
-                                              <span>{method}</span>
-                                          </label>
-                                      ))}
+                          <div className={styles.profileActionButtons}>
+                              <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                      const target = document.getElementById('profile-public');
+                                      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                  }}
+                              >
+                                  Ver vista pública
+                              </Button>
+                              <Button type="submit" size="sm" disabled={isCommercialLocked}>
+                                  <Save size={16} className={styles.buttonIcon}/> Guardar cambios
+                              </Button>
+                          </div>
+                      </div>
+
+                      <section className={styles.profileAccordion}>
+                          <button
+                              type="button"
+                              className={styles.profileAccordionHeader}
+                              onClick={() => setActiveProfileSection('identity')}
+                          >
+                              <div className={styles.profileAccordionTitle}><Store size={18}/> Identidad & Legal</div>
+                          </button>
+                          {activeProfileSection === 'identity' && (
+                              <div className={styles.profileAccordionBody}>
+                                  <div className={styles.profileGridTwo}>
+                                      <label className={styles.profileField}>
+                                          <span className={styles.profileInputLabel}>Nombre de Fantasía</span>
+                                          <input type="text" value={shopForm.name || ''} onChange={e => handleInputChange('name', e.target.value)} className={styles.profileInputMuted} readOnly={isProfileLocked} />
+                                      </label>
+                                      <label className={styles.profileField}>
+                                          <span className={styles.profileInputLabel}>Razón Social</span>
+                                          <input type="text" value={shopForm.razonSocial || ''} onChange={e => handleInputChange('razonSocial', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
+                                      </label>
+                                      <label className={styles.profileField}>
+                                          <span className={styles.profileInputLabel}>CUIT</span>
+                                          <input type="text" value={shopForm.cuit || ''} onChange={e => handleInputChange('cuit', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
+                                      </label>
                                   </div>
                               </div>
-                          </div>
+                          )}
                       </section>
-                      <div className={styles.profileActions}>
-                          <Button type="submit" disabled={isCommercialLocked}><Save size={16} className={styles.buttonIcon}/> Guardar Perfil</Button>
-                      </div>
+
+                      <section className={styles.profileAccordion}>
+                          <button
+                              type="button"
+                              className={styles.profileAccordionHeader}
+                              onClick={() => setActiveProfileSection('address')}
+                          >
+                              <div className={styles.profileAccordionTitle}><MapPin size={18}/> Dirección Física</div>
+                          </button>
+                          {activeProfileSection === 'address' && (
+                              <div className={styles.profileAccordionBody}>
+                                  <div className={styles.profileGridThree}>
+                                      <div className={styles.profileFieldWide}>
+                                          <label className={styles.profileInputLabel}>Buscador (Google Maps Simulado)</label>
+                                          {isProfileLocked ? (
+                                              <input
+                                                  type="text"
+                                                  value={shopForm.address || currentShop.address || ''}
+                                                  className={styles.profileInput}
+                                                  readOnly
+                                              />
+                                          ) : (
+                                              <AddressAutocomplete onSelect={handleAddressSelect} />
+                                          )}
+                                      </div>
+                                      <label className={styles.profileFieldSpanTwo}>
+                                          <span className={styles.profileInputLabel}>Calle</span>
+                                          <input type="text" value={shopForm.addressDetails?.street || ''} onChange={e => handleAddressChange('street', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
+                                      </label>
+                                      <label className={styles.profileField}>
+                                          <span className={styles.profileInputLabel}>Número</span>
+                                          <input type="text" value={shopForm.addressDetails?.number || ''} onChange={e => handleAddressChange('number', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
+                                      </label>
+                                      <label className={styles.profileField}>
+                                          <span className={styles.profileInputLabel}>Localidad / Barrio</span>
+                                          <input type="text" value={shopForm.addressDetails?.city || ''} onChange={e => handleAddressChange('city', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
+                                      </label>
+                                      <label className={styles.profileField}>
+                                          <span className={styles.profileInputLabel}>Provincia</span>
+                                          <input type="text" value={shopForm.addressDetails?.province || ''} onChange={e => handleAddressChange('province', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
+                                      </label>
+                                      <label className={styles.profileField}>
+                                          <span className={styles.profileInputLabel}>CP</span>
+                                          <input type="text" value={shopForm.addressDetails?.zip || ''} onChange={e => handleAddressChange('zip', e.target.value)} className={styles.profileInput} readOnly={isProfileLocked} />
+                                      </label>
+                                      <label className={styles.profileFieldSpanThree}>
+                                          <span className={styles.profileInputLabel}>Link Google Maps</span>
+                                          <input
+                                              type="text"
+                                              value={shopForm.addressDetails?.mapsUrl || ''}
+                                              onChange={e => handleAddressChange('mapsUrl', e.target.value)}
+                                              className={styles.profileInput}
+                                              placeholder="https://maps.google.com/..."
+                                              readOnly={isProfileLocked}
+                                          />
+                                      </label>
+                                  </div>
+                              </div>
+                          )}
+                      </section>
+
+                      <section className={styles.profileAccordion}>
+                          <button
+                              type="button"
+                              className={styles.profileAccordionHeader}
+                              onClick={() => setActiveProfileSection('sales')}
+                          >
+                              <div className={styles.profileAccordionTitle}><CreditCard size={18}/> Condiciones de Venta</div>
+                          </button>
+                          {activeProfileSection === 'sales' && (
+                              <div className={styles.profileAccordionBody}>
+                                  <div className={styles.profileGridTwo}>
+                                      <div>
+                                          <label className={styles.profileField}>
+                                              <span className={styles.profileInputLabel}>Monto Mínimo de Compra ($)</span>
+                                              <div className={styles.profileFieldRelative}>
+                                                  <span className={styles.profilePricePrefix}>$</span>
+                                                  <input type="number" value={shopForm.minimumPurchase || ''} onChange={e => handleInputChange('minimumPurchase', e.target.value ? Number(e.target.value) : 0, { sensitive: false })} className={`${styles.profileInput} pl-6`} readOnly={isCommercialLocked} />
+                                              </div>
+                                          </label>
+                                      </div>
+                                      <div>
+                                          <label className={styles.profileField}>
+                                              <span className={styles.profileInputLabel}>Formas de Pago Aceptadas</span>
+                                          </label>
+                                          <div className={styles.profileGridPayments}>
+                                              {PAYMENT_OPTIONS.map(method => (
+                                                  <label key={method} className={styles.profileCheckboxItem}>
+                                                      <input 
+                                                        type="checkbox" 
+                                                        checked={(shopForm.paymentMethods || []).includes(method)}
+                                                        onChange={() => togglePaymentMethod(method)}
+                                                        className={styles.profileCheckboxInput}
+                                                        disabled={isCommercialLocked}
+                                                      />
+                                                      <span>{method}</span>
+                                                  </label>
+                                              ))}
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          )}
+                      </section>
                   </form>
               </div>
           )}
@@ -1829,6 +1628,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
           setNotice({ title, message, tone })
         }
         onPurchaseSync={() => {
+          void loadPurchasesOnce();
+          void loadPurchases();
+        }}
+      />
+
+      <PlanUpgradeModal
+        isOpen={showPlanUpgradeModal}
+        onClose={() => setShowPlanUpgradeModal(false)}
+        shopId={currentShop.id}
+        currentPlan={currentShop.plan}
+        isPreview={isPreview}
+        onNotice={(title, message, tone) =>
+          setNotice({ title, message, tone })
+        }
+        onPurchaseSync={() => {
+          void onRefreshData();
           void loadPurchasesOnce();
           void loadPurchases();
         }}

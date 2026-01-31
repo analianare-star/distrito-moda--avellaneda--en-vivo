@@ -10,7 +10,7 @@ import {
   verifyPasswordResetCode,
 } from "firebase/auth";
 import { auth, googleProvider } from "../firebase";
-import { api } from "../services/api";
+import { checkShopEmail } from "../domains/shops";
 
 type NoticePayload = {
   title: string;
@@ -178,7 +178,7 @@ export const useLoginFlow = ({
     setLoginBusy(true);
     setLoginError("");
     try {
-      const isShopEmail = await api.checkShopEmail(email);
+      const isShopEmail = await checkShopEmail(email);
       if (isShopEmail) {
         const message = "Ese correo ya esta registrado como tienda.";
         setLoginError(message);

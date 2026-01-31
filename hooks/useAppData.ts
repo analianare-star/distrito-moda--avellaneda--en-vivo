@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api } from "../services/api";
+import { fetchShops } from "../domains/shops";
+import { fetchStreams } from "../domains/streams";
+import { fetchReels } from "../domains/reels";
 import { Reel, Shop, Stream } from "../types";
 import {
   MOCK_REEL_COUNT,
@@ -35,9 +37,9 @@ export const useAppData = ({
     setHasFetchError(false);
     try {
       const [initialShops, streams, reels] = await Promise.all([
-        api.fetchShops({ limit: SHOP_PAGE_SIZE, offset: 0 }),
-        api.fetchStreams(),
-        api.fetchReels(),
+        fetchShops({ limit: SHOP_PAGE_SIZE, offset: 0 }),
+        fetchStreams(),
+        fetchReels(),
       ]);
 
       const computeActiveReels = (shops: Shop[]) => {
@@ -71,7 +73,7 @@ export const useAppData = ({
         let combined = initialShops;
         let pages = 0;
         while (pages < SHOP_MAX_PAGES) {
-          const next = await api.fetchShops({ limit: SHOP_PAGE_SIZE, offset });
+          const next = await fetchShops({ limit: SHOP_PAGE_SIZE, offset });
           if (!next.length) break;
           combined = mergeShops(combined, next);
           setAllShops(combined);

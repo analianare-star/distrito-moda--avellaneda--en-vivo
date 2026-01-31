@@ -1,14 +1,11 @@
-import type { ComponentProps, Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import type { Shop, Stream, NotificationItem, Reel, UserContext } from "./types";
 import type { AdminTab, MerchantTab } from "./navigation";
-import { AdminView } from "./features/admin/AdminView";
-import { MerchantView } from "./features/merchant/MerchantView";
-import { ClientView } from "./features/client/ClientView";
+import type { AdminViewProps } from "./features/admin";
+import type { MerchantViewProps } from "./features/merchant";
+import type { ClientViewProps } from "./features/client";
 
-type AdminViewProps = ComponentProps<typeof AdminView>;
-type MerchantViewProps = ComponentProps<typeof MerchantView>;
 type MerchantViewBaseProps = Omit<MerchantViewProps, "isPreview" | "adminOverride">;
-type ClientViewProps = ComponentProps<typeof ClientView>;
 
 type AdminViewArgs = {
   streams: Stream[];

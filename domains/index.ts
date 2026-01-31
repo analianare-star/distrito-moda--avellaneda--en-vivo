@@ -1,0 +1,10 @@
+﻿export * as authApi from './auth';
+export * as clientsApi from './clients';
+export * as shopsApi from './shops';
+export * as streamsApi from './streams';
+export * as reelsApi from './reels';
+export * as purchasesApi from './purchases';
+export * as notificationsApi from './notifications';
+export * as systemApi from './system';
+export * as reportsApi from './reports';
+export * as testpanelApi from './testpanel';

@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Shop, UserContext, Stream, StreamStatus } from '../types';
 import { getShopCoverUrl } from '../utils/shopMedia';
 import { Button } from './Button';
-import { ShareableCard } from './ShareableCard';
 import { LogoBubble } from './LogoBubble';
-import { ShopMapModal } from './ShopMapModal';
-import { X, MapPin, Globe, UserPlus, Check, AlertOctagon, Clock } from 'lucide-react';
+import { X, MapPin, Globe, UserPlus, Check, AlertOctagon, Clock, BookOpen } from 'lucide-react';
 import { FaWhatsapp, FaInstagram, FaFacebookF, FaYoutube, FaTiktok } from 'react-icons/fa6';
+import { NoticeModal } from './NoticeModal';
 import styles from './ShopDetailModal.module.css';
+
+const ShareableCard = React.lazy(async () => {
+  const mod = await import('./ShareableCard');
+  return { default: mod.ShareableCard };
+});
+const ShopMapModal = React.lazy(async () => {
+  const mod = await import('./ShopMapModal');
+  return { default: mod.ShopMapModal };
+});
 
 // ShopDetailModal presents the shop profile with contact and agenda actions.
 interface ShopDetailModalProps {
@@ -25,7 +33,16 @@ interface ShopDetailModalProps {
 export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStreams = [], user, canClientInteract, initialTab, onClose, onToggleFavorite, onRequireLogin, onNotify }) => {
   const [activeTab, setActiveTab] = useState<'INFO' | 'CARD'>(initialTab ?? 'INFO');
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isCatalogConfirmOpen, setIsCatalogConfirmOpen] = useState(false);
   const coverUrl = getShopCoverUrl(shop);
+  const catalogUrlRaw = shop.addressDetails?.catalogUrl ?? (shop as any)?.catalogUrl ?? '';
+  const catalogUrl = typeof catalogUrlRaw === 'string' ? catalogUrlRaw.trim() : '';
+  const websiteRaw = typeof shop.website === 'string' ? shop.website.trim() : '';
+  const isDmWebsite =
+    Boolean(websiteRaw) &&
+    (websiteRaw.toLowerCase().includes('distritomoda.com.ar') ||
+      (catalogUrl && websiteRaw.toLowerCase() === catalogUrl.toLowerCase()));
+  const websiteUrl = isDmWebsite ? '' : websiteRaw;
 
   useEffect(() => {
       if (initialTab) {
@@ -65,17 +82,33 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
     }
     openSocial(platform, handle);
   };
-  
+
+  const openExternalUrl = (value: string) => {
+      const trimmed = value.trim();
+      if (!trimmed) return;
+      const url = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+      window.open(url, '_blank');
+  };
+
+  const handleCatalog = () => {
+      if (!canClientInteract) {
+          onRequireLogin();
+          return;
+      }
+      if (!catalogUrl) {
+          onNotify?.('Catalogo no disponible', 'Esta tienda aun no cargo su catalogo.', 'warning');
+          return;
+      }
+      setIsCatalogConfirmOpen(true);
+  };
+
   const handleWeb = () => {
       if (!canClientInteract) {
           onRequireLogin();
           return;
       }
-      if (!shop.website) return;
-      const value = shop.website.trim();
-      if (!value) return;
-      const url = /^https?:\/\//i.test(value) ? value : `https://${value}`;
-      window.open(url, '_blank');
+      if (!websiteUrl) return;
+      openExternalUrl(websiteUrl);
   };
 
   const handleMaps = () => {
@@ -235,9 +268,17 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                             </Button>
                             <Button 
                                 variant="outline" 
-                                className={`${styles.socialButton} ${shop.website && canClientInteract ? styles.socialWeb : styles.socialDisabled}`}
+                                className={`${styles.socialButton} ${catalogUrl && canClientInteract ? styles.socialWeb : styles.socialDisabled}`}
+                                onClick={handleCatalog}
+                                disabled={!catalogUrl}
+                            >
+                                <BookOpen size={14} className="mr-1.5" /> Catalogo DM
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                className={`${styles.socialButton} ${websiteUrl && canClientInteract ? styles.socialWeb : styles.socialDisabled}`}
                                 onClick={handleWeb}
-                                disabled={!shop.website}
+                                disabled={!websiteUrl}
                             >
                                 <Globe size={14} className="mr-1.5" /> Web
                             </Button>
@@ -285,14 +326,16 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
                         </div>
                     ) : canDownloadCard ? (
                         <>
-                            <div className={styles.cardWrapper}>
+                        <div className={styles.cardWrapper}>
+                            <Suspense fallback={<div className="min-h-[280px] w-full animate-pulse bg-white/60" />}>
                                 <ShareableCard 
                                     shop={shop} 
                                     stream={priorityStream} 
                                     mode="CLIENT" // Client mode = Contact Info & Real Links
                                     onNotify={onNotify}
                                 />
-                            </div>
+                            </Suspense>
+                        </div>
                         </>
                     ) : (
                         <div className={styles.alertBox}>
@@ -306,22 +349,39 @@ export const ShopDetailModal: React.FC<ShopDetailModalProps> = ({ shop, shopStre
         </div>
       </div>
       </div>
-      <ShopMapModal
-        open={isMapOpen}
-        onClose={() => setIsMapOpen(false)}
-        focusName={shop.name}
-        focusLat={shop.addressDetails?.lat}
-        focusLng={shop.addressDetails?.lng}
-        focusKeys={[
-          shop.name,
-          shop.email,
-          shop.razonSocial,
-          shop.cuit,
-          shop.id,
-          shop.addressDetails?.legacyUser,
-          shop.addressDetails?.legacyUid,
-        ].filter(Boolean) as string[]}
+      <NoticeModal
+        isOpen={isCatalogConfirmOpen}
+        title="Catalogo DM"
+        message="Estas a punto de ir a nuestro catalogo en Distrito Moda. Continuamos?"
+        tone="info"
+        confirmLabel="Si, continuar"
+        cancelLabel="No, volver"
+        onClose={() => setIsCatalogConfirmOpen(false)}
+        onCancel={() => setIsCatalogConfirmOpen(false)}
+        onConfirm={() => {
+          setIsCatalogConfirmOpen(false);
+          openExternalUrl(catalogUrl);
+        }}
+        zIndex={220}
       />
+      <Suspense fallback={<div className="fixed inset-0 z-[180] bg-black/70" />}>
+        <ShopMapModal
+          open={isMapOpen}
+          onClose={() => setIsMapOpen(false)}
+          focusName={shop.name}
+          focusLat={shop.addressDetails?.lat}
+          focusLng={shop.addressDetails?.lng}
+          focusKeys={[
+            shop.name,
+            shop.email,
+            shop.razonSocial,
+            shop.cuit,
+            shop.id,
+            shop.addressDetails?.legacyUser,
+            shop.addressDetails?.legacyUid,
+          ].filter(Boolean) as string[]}
+        />
+      </Suspense>
     </>
   );
 };

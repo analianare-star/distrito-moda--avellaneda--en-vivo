@@ -1,6 +1,10 @@
-import React, { useEffect } from "react";
-import { Dashboard } from "../../Dashboard";
+import React, { useEffect, Suspense } from "react";
 import { NotificationItem, Shop, Stream } from "../../../types";
+
+const Dashboard = React.lazy(async () => {
+  const mod = await import("../../Dashboard");
+  return { default: mod.Dashboard };
+});
 
 // MerchantPage fija la pestaña activa del panel tienda.
 // MerchantPage pins the active shop dashboard tab.
@@ -54,24 +58,26 @@ export const MerchantPage: React.FC<MerchantPageProps> = ({
   }, [activeTab, tab, onTabChange]);
 
   return (
-    <Dashboard
-      currentShop={currentShop}
-      streams={streams}
-      onStreamCreate={onStreamCreate}
-      onStreamUpdate={onStreamUpdate}
-      onStreamDelete={onStreamDelete}
-      onShopUpdate={onShopUpdate}
-      onExtendStream={onExtendStream}
-      onBuyQuota={onBuyQuota}
-      onReelChange={onReelChange}
-      onRefreshData={onRefreshData}
-      activeTab={activeTab}
-      onTabChange={onTabChange}
-      notifications={notifications}
-      onMarkNotificationRead={onMarkNotificationRead}
-      onMarkAllNotificationsRead={onMarkAllNotificationsRead}
-      isPreview={isPreview}
-      adminOverride={adminOverride}
-    />
+    <Suspense fallback={<div className="min-h-[50vh] w-full animate-pulse bg-white" />}>
+      <Dashboard
+        currentShop={currentShop}
+        streams={streams}
+        onStreamCreate={onStreamCreate}
+        onStreamUpdate={onStreamUpdate}
+        onStreamDelete={onStreamDelete}
+        onShopUpdate={onShopUpdate}
+        onExtendStream={onExtendStream}
+        onBuyQuota={onBuyQuota}
+        onReelChange={onReelChange}
+        onRefreshData={onRefreshData}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        notifications={notifications}
+        onMarkNotificationRead={onMarkNotificationRead}
+        onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+        isPreview={isPreview}
+        adminOverride={adminOverride}
+      />
+    </Suspense>
   );
 };

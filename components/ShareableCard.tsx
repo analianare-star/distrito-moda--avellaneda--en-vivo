@@ -1,10 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { Shop, Stream } from '../types';
+import { StreamStatus } from '../types';
 import { Instagram, Globe, Download, Phone, MapPin, CalendarDays } from 'lucide-react';
 import { Button } from './Button';
 import { LogoBubble } from './LogoBubble';
-import { toPng } from 'html-to-image';
-import { jsPDF } from 'jspdf';
 import dmLogo from '../img/logo.svg';
 
 // ShareableCard builds the downloadable shop profile card.
@@ -25,7 +24,8 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
   const primaryWa = shop.whatsappLines && shop.whatsappLines.length > 0 ? shop.whatsappLines[0] : null;
   const catalogUrl = 'https://www.distritomoda.com.ar';
 
-  const buildFallbackPdf = () => {
+  const buildFallbackPdf = async () => {
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: [360, 640] });
     doc.setFillColor(20, 20, 20);
     doc.rect(0, 0, 360, 640, 'F');
@@ -70,6 +70,8 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
       link.click();
     };
     try {
+      const { toPng } = await import('html-to-image');
+      const { jsPDF } = await import('jspdf');
       const rect = cardRef.current.getBoundingClientRect();
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
@@ -91,7 +93,7 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ shop, stream, mode
       }
     } catch (_error) {
       try {
-        const fallback = buildFallbackPdf();
+        const fallback = await buildFallbackPdf();
         fallback.save(`tarjeta-${safeName || 'tienda'}.pdf`);
         onNotify?.('Tarjeta descargada', 'Se generó un PDF simplificado.', 'success');
       } catch (_fallbackError) {

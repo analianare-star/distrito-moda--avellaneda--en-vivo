@@ -1,9 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Film, ShoppingCart, X } from "lucide-react";
 import { Button } from "../Button";
-import { api } from "../../services/api";
-import { MercadoPagoWallet } from "./MercadoPagoWallet";
+import { createMercadoPagoPreference, fetchPurchasesByShop } from "../../domains/purchases";
 import styles from "./ShopPurchaseModal.module.css";
+
+const MercadoPagoWallet = React.lazy(async () => {
+  const mod = await import("./MercadoPagoWallet");
+  return { default: mod.MercadoPagoWallet };
+});
 
 type PurchaseType = "LIVE_PACK" | "REEL_PACK";
 type PurchaseStep = "SELECT" | "SUMMARY" | "PAY";
@@ -96,7 +100,7 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const data = await api.createMercadoPagoPreference({
+      const data = await createMercadoPagoPreference({
         type: product.type,
         quantity: product.quantity,
         shopId,
@@ -138,7 +142,7 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
     pollRef.current = window.setInterval(async () => {
       attempts += 1;
       try {
-        const purchases = await api.fetchPurchasesByShop(shopId);
+        const purchases = await fetchPurchasesByShop(shopId);
         const purchase = purchases?.find(
           (item: any) => item?.purchaseId === purchaseId || item?.id === purchaseId
         );
@@ -281,9 +285,9 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
           <div className={styles.paySection}>
             {stablePreferenceId ? (
               <div className={styles.mpContainer}>
-                <MercadoPagoWallet
-                  preferenceId={stablePreferenceId}
-                />
+                <Suspense fallback={<div className="min-h-[120px] w-full rounded-2xl bg-white/80" />}>
+                  <MercadoPagoWallet preferenceId={stablePreferenceId} />
+                </Suspense>
                 {purchaseId && (
                   <p className={styles.purchaseNote}>
                     Compra #{purchaseId} en proceso. Cuando el pago se apruebe,

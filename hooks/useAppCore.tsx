@@ -8,19 +8,21 @@ import {
   UserContext,
   ViewMode,
 } from "../types";
-import { api } from "../services/api";
-import { useMerchantActions } from "./useMerchantActions";
-import { useClientSelectors } from "./useClientSelectors";
-import { useClientViewActions } from "./useClientViewActions";
+import { fetchNotifications } from "../domains/notifications";
+import {
+  useClientActions,
+  useClientGate,
+  useClientSelectors,
+  useClientViewActions,
+} from "../features/client";
+import { useMerchantActions } from "../features/merchant";
+import { useAdminPreview } from "../features/admin";
 import { useAppData } from "./useAppData";
 import { useRoleRouteSync } from "./useRoleRouteSync";
 import { useAuthState, type AuthProfile } from "./useAuthState";
 import { useNoticeState } from "./useNoticeState";
-import { useClientGate } from "./useClientGate";
-import { useAdminPreview } from "./useAdminPreview";
 import { AdminTab, MerchantTab } from "../navigation";
 import { useRoleNavigation } from "./useRoleNavigation";
-import { useClientActions } from "./useClientActions";
 import { useLoginFlow } from "./useLoginFlow";
 import { useRoleViewProps } from "./useRoleViewProps";
 import { useRoleAccess } from "./useRoleAccess";
@@ -182,7 +184,7 @@ export const useAppCore = () => {
   };
   const refreshNotifications = async (profile?: AuthProfile | null) => {
     if (!profile?.authUserId) return;
-    const data = await api.fetchNotifications(profile.authUserId);
+    const data = await fetchNotifications(profile.authUserId);
     setNotifications(Array.isArray(data) ? data : []);
   };
 

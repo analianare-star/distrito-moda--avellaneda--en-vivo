@@ -21,6 +21,9 @@ interface NoticeModalProps {
   onClose: () => void;
   confirmLabel?: string;
   onConfirm?: () => void;
+  cancelLabel?: string;
+  onCancel?: () => void;
+  zIndex?: number;
 }
 
 export const NoticeModal: React.FC<NoticeModalProps> = ({
@@ -31,12 +34,16 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({
   onClose,
   confirmLabel,
   onConfirm,
+  cancelLabel,
+  onCancel,
+  zIndex,
 }) => {
   if (!isOpen) return null;
   const toneStyles = TONE_STYLES[tone];
+  const showCancel = Boolean(cancelLabel || onCancel);
 
   return (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} style={zIndex ? { zIndex } : undefined}>
       <div className={styles.card}>
         <button
           onClick={onClose}
@@ -49,18 +56,35 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({
           {title}
         </div>
         <p className={styles.message}>{message}</p>
-        <Button
-          className="mt-6 w-full"
-          onClick={() => {
-            if (onConfirm) {
-              onConfirm();
-              return;
-            }
-            onClose();
-          }}
-        >
-          {confirmLabel || 'Entendido'}
-        </Button>
+        <div className={styles.actions}>
+          {showCancel && (
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                if (onCancel) {
+                  onCancel();
+                  return;
+                }
+                onClose();
+              }}
+            >
+              {cancelLabel || 'Cancelar'}
+            </Button>
+          )}
+          <Button
+            className="flex-1"
+            onClick={() => {
+              if (onConfirm) {
+                onConfirm();
+                return;
+              }
+              onClose();
+            }}
+          >
+            {confirmLabel || 'Entendido'}
+          </Button>
+        </div>
       </div>
     </div>
   );

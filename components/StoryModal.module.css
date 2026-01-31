@@ -12,8 +12,60 @@
   --story-footer-height: 140px;
 }
 
+.cubeStage {
+  @apply absolute inset-0;
+  perspective: 1200px;
+  overflow: hidden;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.cube {
+  @apply absolute inset-0;
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  transition: none;
+}
+
+.cubeDragging {
+  transition: none;
+}
+
+.cubeSnapping {
+  transition: transform 360ms ease;
+}
+
+.cubeFace {
+  @apply absolute inset-0;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.faceFront {
+  transform: rotateY(0deg) translateZ(var(--cube-depth));
+}
+
+.faceRight {
+  transform: rotateY(90deg) translateZ(var(--cube-depth));
+}
+
+.faceLeft {
+  transform: rotateY(-90deg) translateZ(var(--cube-depth));
+}
+
+.faceContent {
+  @apply absolute inset-0 bg-black;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.faceDisabled {
+  pointer-events: none;
+}
+
 .progressRow {
   @apply absolute top-0 left-0 right-0 z-30 flex gap-1 px-3 pt-3;
+  transform: translateZ(0);
 }
 
 .progressTrack {
@@ -27,6 +79,7 @@
 
 .header {
   @apply absolute top-0 left-0 right-0 px-4 pt-8 pb-2 bg-gradient-to-b from-black/80 to-transparent z-[50] flex items-center gap-3;
+  transform: translateZ(0);
 }
 
 .avatarWrap {
@@ -63,6 +116,8 @@
 
 .content {
   @apply absolute inset-0 bg-black flex items-center justify-center;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .contentBackdrop {
@@ -85,6 +140,7 @@
   @apply w-full h-full object-cover;
   transform: scale(1.02);
   transition: transform 0.4s ease;
+  backface-visibility: hidden;
 }
 
 .contentIcon {
@@ -105,6 +161,7 @@
 
 .footer {
   @apply absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent z-[55] flex flex-col gap-3;
+  transform: translateZ(0);
 }
 
 .footerActions {

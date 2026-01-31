@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ShopDetailModal } from "../../components/ShopDetailModal";
-import { StoryModal } from "../../components/StoryModal";
 import { Shop, Stream, Reel, UserContext, NotificationItem } from "../../types";
 import { ClientHomePage } from "../../components/pages/client/ClientHomePage";
 import { ClientShopsPage } from "../../components/pages/client/ClientShopsPage";
@@ -10,9 +9,14 @@ import { ClientMapPage } from "../../components/pages/client/ClientMapPage";
 import { ClientVerticalFeedPage } from "../../components/pages/client/ClientVerticalFeedPage";
 import { EmptyState } from "../../components/EmptyState";
 
+const StoryModal = React.lazy(async () => {
+  const mod = await import("../../components/StoryModal");
+  return { default: mod.StoryModal };
+});
+
 // ClientView muestra la experiencia publica y de cliente.
 // ClientView renders the public and client experience.
-interface ClientViewProps {
+export interface ClientViewProps {
   isLoading: boolean;
   hasFetchError: boolean;
   brandLogo: string;
@@ -374,16 +378,18 @@ export const ClientView: React.FC<ClientViewProps> = ({
       )}
 
       {selectedReel && (
-        <StoryModal
-          reel={selectedReel}
-          reels={activeReels}
-          onNavigate={onViewReel}
-          onClose={onCloseReel}
-          onNotify={onNotify}
-          isSeen={user.viewedReels.includes(selectedReel.id)}
-          canClientInteract={canClientInteract}
-          onRequireLogin={onRequireLogin}
-        />
+        <Suspense fallback={<div className="fixed inset-0 z-[140] bg-black/80" />}>
+          <StoryModal
+            reel={selectedReel}
+            reels={activeReels}
+            onNavigate={onViewReel}
+            onClose={onCloseReel}
+            onNotify={onNotify}
+            isSeen={user.viewedReels.includes(selectedReel.id)}
+            canClientInteract={canClientInteract}
+            onRequireLogin={onRequireLogin}
+          />
+        </Suspense>
       )}
     </section>
   );

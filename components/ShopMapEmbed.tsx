@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import modalStyles from "./ShopMapModal.module.css";
 import styles from "./ShopMapEmbed.module.css";
 

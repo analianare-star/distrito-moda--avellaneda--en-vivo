@@ -1,7 +1,8 @@
 import { useEffect, type Dispatch, type SetStateAction, type MutableRefObject } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
-import { api } from "../services/api";
+import { fetchAuthMe, createClientMe } from "../domains/auth";
+import { fetchClientState } from "../domains/clients";
 import { NotificationItem, UserContext, ViewMode } from "../types";
 
 export type AuthProfile = {
@@ -64,7 +65,7 @@ export const useAuthState = ({
           email: fbUser.email || prev.email,
         }));
         void (async () => {
-          const profile = await api.fetchAuthMe();
+          const profile = await fetchAuthMe();
           if (profile?.userType) {
             setAuthProfile(profile);
             if (profile.userType === "ADMIN") {
@@ -81,11 +82,11 @@ export const useAuthState = ({
               if (isAdminRoute(currentPath) || isShopRoute(currentPath)) {
                 navigateTo("/", true);
               }
-              await api.createClientMe({
+              await createClientMe({
                 displayName: fbUser.displayName || undefined,
                 avatarUrl: fbUser.photoURL || undefined,
               });
-              const clientState = await api.fetchClientState();
+              const clientState = await fetchClientState();
               if (clientState) {
                 setUser((prev) => ({
                   ...prev,

@@ -7,7 +7,7 @@ import { MerchantPage } from "../../components/pages/merchant/MerchantPage";
 // MerchantView wraps the shop dashboard with semantic structure.
 type MerchantTab = "RESUMEN" | "VIVOS" | "REELS" | "REDES" | "PERFIL";
 
-interface MerchantViewProps {
+export interface MerchantViewProps {
   currentShop: Shop;
   streams: Stream[];
   onStreamCreate: (stream: Stream) => Promise<boolean>;

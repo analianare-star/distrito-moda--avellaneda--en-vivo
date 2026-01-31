@@ -1,9 +1,13 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { CLIENT_NAV_ITEMS } from "../../../navigation";
 import { Shop, Stream, StreamStatus, UserContext, NotificationItem } from "../../../types";
 import { LogoBubble } from "../../LogoBubble";
-import { ShopMapEmbed } from "../../ShopMapEmbed";
 import panelStyles from "./ClientHomePage.module.css";
+
+const ShopMapEmbed = React.lazy(async () => {
+  const mod = await import("../../ShopMapEmbed");
+  return { default: mod.ShopMapEmbed };
+});
 
 interface ClientDesktopPanelProps {
   brandLogo: string;
@@ -439,7 +443,11 @@ export const ClientDesktopPanel: React.FC<ClientDesktopPanelProps> = ({
         <p className={panelStyles.panelMapCopy}>
           Descubre tiendas activas y puntos clave dentro de Avellaneda.
         </p>
-        {isDesktop ? <ShopMapEmbed /> : null}
+        {isDesktop ? (
+          <Suspense fallback={<div className="min-h-[220px] w-full rounded-2xl bg-white/80" />}>
+            <ShopMapEmbed />
+          </Suspense>
+        ) : null}
         <button
           type="button"
           className={panelStyles.panelMapCta}

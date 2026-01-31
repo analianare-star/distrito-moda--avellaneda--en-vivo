@@ -1,7 +1,10 @@
 // TestPanel offers admin QA controls for staging flows and data resets.
 import React, { useState } from 'react';
 import { Button } from './Button';
-import { api } from '../services/api';
+import { loginUser } from '../domains/auth';
+import { updateStreamTime } from '../domains/streams';
+import { buyQuota } from '../domains/shops';
+import { resetSystem } from '../domains/testpanel';
 import { Shop, Stream, UserContext } from '../types';
 import { User, Clock, AlertTriangle, RefreshCw, ShoppingCart, Lock } from 'lucide-react';
 import { NoticeModal } from './NoticeModal';
@@ -43,7 +46,7 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
             return;
         }
 
-        const user = await api.loginUser(`usuario_${selectedUserId}@test.com`, selectedUserId);
+        const user = await loginUser(`usuario_${selectedUserId}@test.com`, selectedUserId);
         onUserLogin(user);
         notify('Identidad aplicada', `Logueado como: ${user.name} (ID: ${user.id})`, 'success');
     };
@@ -53,7 +56,7 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
             notify('Falta seleccionar', 'Selecciona un vivo para aplicar la simulación.', 'warning');
             return;
         }
-        await api.updateStreamTime(selectedStreamId, parseInt(timeOffset));
+        await updateStreamTime(selectedStreamId, parseInt(timeOffset));
         onRefreshData();
         notify('Tiempo actualizado', `Vivo actualizado a H0 + ${timeOffset} minutos.`, 'success');
     };
@@ -67,7 +70,7 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
             notify('Falta seleccionar', 'Selecciona una tienda para simular la compra.', 'warning');
             return;
         }
-        await api.buyQuota(selectedShopId, 1);
+        await buyQuota(selectedShopId, 1);
         onRefreshData();
         notify('Compra simulada', 'Cupo comprado simulado.', 'success');
     };
@@ -201,7 +204,7 @@ export const TestPanel: React.FC<TestPanelProps> = ({ streams, shops, onRefreshD
                                 className="flex-1 bg-red-600 hover:bg-red-700 border-none"
                                 onClick={async () => {
                                     setConfirmReset(false);
-                                    await api.resetSystem();
+        await resetSystem();
                                     onRefreshData();
                                     notify('Sistema restablecido', 'La base de prueba volvió a su estado inicial.', 'success');
                                 }}

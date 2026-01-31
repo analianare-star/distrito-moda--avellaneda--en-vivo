@@ -1,15 +1,50 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { Button } from './Button';
 import { LayoutDashboard, Radio, Store, AlertTriangle, CheckCircle, XCircle, Edit, AlertOctagon, BarChart3, Search, Eye, EyeOff, PlayCircle, StopCircle, X, Film, Plus, Save, MapPin, CreditCard, User, Lock, ShoppingBag, Calendar, Globe } from 'lucide-react';
 import { StreamStatus, DataIntegrityStatus, Stream, Shop, Reel } from '../types';
-import { api } from '../services/api';
+import { fetchAllReelsAdmin, reactivateReel, hideReel } from '../domains/reels';
+import { fetchReportsAdmin, resolveReportAdmin, rejectReportAdmin } from '../domains/reports';
+import { fetchPurchaseRequests, approvePurchase, rejectPurchase } from '../domains/purchases';
+import { fetchNotificationsAdmin, markNotificationRead, runNotifications } from '../domains/notifications';
+import { updateStream, cancelStream, banStream, runStreamsLifecycle } from '../domains/streams';
+import {
+  togglePenalty,
+  activateShop,
+  rejectShop,
+  suspendAgenda,
+  liftAgendaSuspension,
+  resetShopPassword,
+  assignShopOwner,
+  deleteShop,
+  createShop,
+  buyStreamQuota,
+  buyReelQuota,
+} from '../domains/shops';
+import { runSanctions, fetchSystemStatus } from '../domains/system';
 
 // AdminDashboard centralizes moderation, governance, and system operations.
 // AdminDashboard centraliza moderación, gobernanza y operaciones del sistema.
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { NoticeModal } from './NoticeModal';
 import styles from './AdminDashboard.module.css';
+
+const AdminAdminTab = React.lazy(async () => {
+  const mod = await import('./admin-tabs/AdminAdminTab');
+  return { default: mod.default };
+});
+const AdminReportsTab = React.lazy(async () => {
+  const mod = await import('./admin-tabs/AdminReportsTab');
+  return { default: mod.default };
+});
+const AdminReelsTab = React.lazy(async () => {
+  const mod = await import('./admin-tabs/AdminReelsTab');
+  return { default: mod.default };
+});
+const AdminShopsTab = React.lazy(async () => {
+  const mod = await import('./admin-tabs/AdminShopsTab');
+  return { default: mod.default };
+});
 
 type AdminTab = 'DASHBOARD' | 'AGENDA' | 'STREAMS' | 'SHOPS' | 'REELS' | 'REPORTS' | 'ADMIN';
 
@@ -278,27 +313,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       if (needsReels) {
           setReelsLoading(true);
-          api.fetchAllReelsAdmin().then(setReels).finally(() => setReelsLoading(false));
+          fetchAllReelsAdmin().then(setReels).finally(() => setReelsLoading(false));
       }
       if (needsReports) {
           setReportsLoading(true);
-          api.fetchReportsAdmin().then(setReports).finally(() => setReportsLoading(false));
+          fetchReportsAdmin().then(setReports).finally(() => setReportsLoading(false));
       }
       if (needsAdmin) {
           setPurchasesLoading(true);
-          api.fetchPurchaseRequests(purchaseStatusFilter === 'ALL' ? undefined : purchaseStatusFilter)
+          fetchPurchaseRequests(purchaseStatusFilter === 'ALL' ? undefined : purchaseStatusFilter)
             .then(setPurchaseRequests)
             .finally(() => setPurchasesLoading(false));
 
           setNotificationsLoading(true);
-          api.fetchNotificationsAdmin({
+          fetchNotificationsAdmin({
               limit: 50,
               unreadOnly: notificationFilter === 'UNREAD',
               type: notificationType,
           }).then(setAdminNotifications).finally(() => setNotificationsLoading(false));
 
           setSystemStatusLoading(true);
-          api.fetchSystemStatus()
+          fetchSystemStatus()
               .then(setSystemStatus)
               .catch(() => setSystemStatus(null))
               .finally(() => setSystemStatusLoading(false));
@@ -369,7 +404,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           if (newStatus === StreamStatus.LIVE) {
                 updates.startedAt = Date.now();
           }
-          await api.updateStream({ ...stream, ...updates, isAdminOverride: true });
+          await updateStream({ ...stream, ...updates, isAdminOverride: true });
           onRefreshData();
       }
   };
@@ -377,7 +412,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const forceExtend = async (streamId: string) => {
       const stream = streams.find(s => s.id === streamId);
       if (!stream) return;
-      await api.updateStream({ ...stream, extensionCount: (stream.extensionCount || 0) + 1, isAdminOverride: true });
+      await updateStream({ ...stream, extensionCount: (stream.extensionCount || 0) + 1, isAdminOverride: true });
       onRefreshData();
   };
 
@@ -385,7 +420,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       if (sanctionsRunning) return;
       setSanctionsRunning(true);
       try {
-          const result = await api.runSanctions();
+          const result = await runSanctions();
           setSanctionsSummary(result);
           setNotice({
               title: 'Motor ejecutado',
@@ -408,7 +443,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       if (notificationsRunning) return;
       setNotificationsRunning(true);
       try {
-          const result = await api.runNotifications(15);
+          const result = await runNotifications(15);
           setNotificationsSummary(result);
           setNotice({
               title: 'Notificaciones ejecutadas',
@@ -430,7 +465,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       if (streamsLifecycleRunning) return;
       setStreamsLifecycleRunning(true);
       try {
-          const result = await api.runStreamsLifecycle();
+          const result = await runStreamsLifecycle();
           setStreamsLifecycleSummary(result);
           setNotice({
               title: 'Ciclo de vivos ejecutado',
@@ -450,7 +485,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const refreshAdminNotifications = async () => {
-      const data = await api.fetchNotificationsAdmin({
+      const data = await fetchNotificationsAdmin({
           limit: 50,
           unreadOnly: notificationFilter === 'UNREAD',
           type: notificationType,
@@ -459,7 +494,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const markNotificationRead = async (id: string) => {
-      await api.markNotificationRead(id);
+      await markNotificationRead(id);
       setAdminNotifications((prev) => prev.map((note) => (note.id === id ? { ...note, read: true } : note)));
   };
 
@@ -483,7 +518,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           confirmLabel: 'Guardar',
           onConfirm: async ([url]) => {
               if (!url) return;
-              await api.updateStream({ ...stream, url, isAdminOverride: true });
+              await updateStream({ ...stream, url, isAdminOverride: true });
               onRefreshData();
           },
       });
@@ -502,7 +537,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           onConfirm: async ([value]) => {
               if (!value) return;
               const iso = new Date(value).toISOString();
-              await api.updateStream({ ...stream, fullDateISO: iso, forceScheduleUpdate: true, isAdminOverride: true });
+              await updateStream({ ...stream, fullDateISO: iso, forceScheduleUpdate: true, isAdminOverride: true });
               onRefreshData();
           },
       });
@@ -512,7 +547,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const toggleVisibility = async (streamId: string) => {
     const stream = streams.find(s => s.id === streamId);
     if(stream) {
-        await api.updateStream({ ...stream, isVisible: !stream.isVisible });
+        await updateStream({ ...stream, isVisible: !stream.isVisible });
         onRefreshData();
     }
   };
@@ -524,7 +559,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           placeholders: ['Motivo...'],
           confirmLabel: 'Cancelar vivo',
           onConfirm: async ([reason]) => {
-              await api.cancelStream(streamId, reason || undefined);
+              await cancelStream(streamId, reason || undefined);
               onRefreshData();
           },
       });
@@ -538,7 +573,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           placeholders: ['Motivo...'],
           confirmLabel: 'Bloquear vivo',
           onConfirm: async ([reason]) => {
-              await api.banStream(streamId, reason || undefined);
+              await banStream(streamId, reason || undefined);
               onRefreshData();
           },
       });
@@ -546,12 +581,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const togglePenalty = async (shopId: string) => {
-      await api.togglePenalty(shopId);
+      await togglePenalty(shopId);
       onRefreshData();
   };
 
   const activateShop = async (shopId: string) => {
-      await api.activateShop(shopId);
+      await activateShop(shopId);
       onRefreshData();
   };
 
@@ -562,7 +597,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           placeholders: ['Motivo...'],
           confirmLabel: 'Rechazar',
           onConfirm: async ([reason]) => {
-              await api.rejectShop(shopId, reason || undefined);
+              await rejectShop(shopId, reason || undefined);
               onRefreshData();
           },
       });
@@ -578,7 +613,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           confirmLabel: 'Suspender',
           onConfirm: async ([reason, daysRaw]) => {
               const days = Number(daysRaw || 7);
-              await api.suspendAgenda(shopId, reason || undefined, isNaN(days) ? 7 : days);
+              await suspendAgenda(shopId, reason || undefined, isNaN(days) ? 7 : days);
               onRefreshData();
           },
       });
@@ -586,7 +621,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const liftSuspension = async (shopId: string) => {
-      await api.liftAgendaSuspension(shopId);
+      await liftAgendaSuspension(shopId);
       onRefreshData();
   };
 
@@ -596,7 +631,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           message: 'Se generará un enlace para definir una nueva clave.',
           confirmLabel: 'Restablecer',
           onConfirm: async () => {
-              const result = await api.resetShopPassword(shopId);
+              const result = await resetShopPassword(shopId);
               if (result?.resetLink) {
                   let copied = false;
                   try {
@@ -638,7 +673,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   });
                   return;
               }
-              await api.assignShopOwner(shopId, { email: trimmedEmail });
+              await assignShopOwner(shopId, { email: trimmedEmail });
               setNotice({
                   title: 'Dueño asignado',
                   message: 'La tienda quedó vinculada al nuevo dueño.',
@@ -657,7 +692,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           confirmLabel: 'Eliminar definitivamente',
           onConfirm: async () => {
               try {
-                  await api.deleteShop(shop.id);
+                  await deleteShop(shop.id);
                   setShops((prev) => prev.filter((item) => item.id !== shop.id));
                   setNotice({
                       title: 'Tienda eliminada',
@@ -678,11 +713,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const toggleReelHide = async (reel: Reel) => {
       if (reel.status === 'HIDDEN') {
-          await api.reactivateReel(reel.id);
+          await reactivateReel(reel.id);
       } else {
-          await api.hideReel(reel.id);
+          await hideReel(reel.id);
       }
-      api.fetchAllReelsAdmin().then(setReels);
+      fetchAllReelsAdmin().then(setReels);
   };
 
   const togglePaymentMethod = (method: string) => {
@@ -779,7 +814,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           slug: formData.name.toLowerCase().replace(/\s+/g, '-')
       };
 
-      const result = await api.createShop(payload);
+      const result = await createShop(payload);
       if (result.success) {
           setNotice({
               title: 'Tienda creada',
@@ -887,9 +922,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           return;
       }
       if (quotaType === 'STREAM') {
-          await api.buyStreamQuota(quotaShopId, quotaAmount);
+          await buyStreamQuota(quotaShopId, quotaAmount);
       } else {
-          await api.buyReelQuota(quotaShopId, quotaAmount);
+          await buyReelQuota(quotaShopId, quotaAmount);
       }
       setNotice({
           title: 'Cupos asignados',
@@ -902,7 +937,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const refreshSystemStatus = async () => {
       setSystemStatusLoading(true);
       try {
-          const data = await api.fetchSystemStatus();
+          const data = await fetchSystemStatus();
           setSystemStatus(data);
       } catch (error) {
           setSystemStatus(null);
@@ -921,13 +956,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           return;
       }
       try {
-          await api.approvePurchase(purchaseId);
+          await approvePurchase(purchaseId);
           setNotice({
               title: 'Compra aprobada',
               message: 'La solicitud fue aprobada y los cupos se acreditaron.',
               tone: 'success',
           });
-          const data = await api.fetchPurchaseRequests('PENDING');
+          const data = await fetchPurchaseRequests('PENDING');
           setPurchaseRequests(data);
           onRefreshData();
       } catch (error: any) {
@@ -955,13 +990,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           confirmLabel: 'Rechazar',
           onConfirm: async ([reason]) => {
               try {
-                  await api.rejectPurchase(purchaseId, reason || undefined);
+                  await rejectPurchase(purchaseId, reason || undefined);
                   setNotice({
                       title: 'Compra rechazada',
                       message: 'La solicitud fue rechazada.',
                       tone: 'info',
                   });
-                  const data = await api.fetchPurchaseRequests('PENDING');
+                  const data = await fetchPurchaseRequests('PENDING');
                   setPurchaseRequests(data);
                   onRefreshData();
               } catch (error: any) {
@@ -1525,877 +1560,109 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
 
             {activeTab === 'REPORTS' && (
-                <div className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Reportes</h2>
-                    <div className={styles.sectionFilters}>
-                        <input
-                            type="text"
-                            placeholder="Buscar vivo o tienda..."
-                            value={reportQuery}
-                            onChange={(e) => setReportQuery(e.target.value)}
-                            className={styles.sectionInput}
-                        />
-                        <select
-                            value={reportStatusFilter}
-                            onChange={(e) => setReportStatusFilter(e.target.value as any)}
-                            className={styles.sectionSelect}
-                        >
-                            <option value="ALL">Todos</option>
-                            <option value="OPEN">Abiertos</option>
-                            <option value="RESOLVED">Resueltos</option>
-                            <option value="DISMISSED">Rechazados</option>
-                        </select>
-                    </div>
-                    <div className={styles.tableCard}>
-                        <div className={styles.tableMobile}>
-                            {reportsLoading ? (
-                                Array.from({ length: 4 }).map((_, index) => (
-                                    <div key={index} className={styles.skeletonItem}>
-                                        <div className={styles.skeletonLineLg} />
-                                        <div className={styles.skeletonLineMd} />
-                                        <div className={styles.skeletonLineFull} />
-                                    </div>
-                                ))
-                            ) : filteredReports.length > 0 ? (
-                                filteredReports.map((report) => (
-                                    <div key={report.id} className={styles.listItem}>
-                                        <div>
-                                            <p className={styles.listTitle}>{report?.stream?.title || report.streamId}</p>
-                                            <p className={styles.listMeta}>{report?.stream?.shop?.name || 'Sin tienda'}</p>
-                                        </div>
-                                        <div className={`${styles.listRow} ${styles.listRowSmall}`}>
-                                            <span className={styles.listStatus}>{formatReportStatus(report.status)}</span>
-                                            <span className={styles.listMeta}>{report.reason || 'Sin motivo'}</span>
-                                        </div>
-                                        <div className={styles.listActionsRight}>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={async () => {
-                                                    try {
-                                                        await api.resolveReportAdmin(report.id);
-                                                        const next = reports.filter((item) => item.id !== report.id);
-                                                        setReports(next);
-                                                    } catch (error: any) {
-                                                        setNotice({
-                                                            title: 'Error al resolver',
-                                                            message: error?.message || 'No se pudo resolver el reporte.',
-                                                            tone: 'error',
-                                                        });
-                                                    }
-                                                }}
-                                            >
-                                                Resolver
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="secondary"
-                                                onClick={() => {
-                                                    setConfirmDialog({
-                                                        title: 'Rechazar reporte',
-                                                        message: 'El reporte quedara marcado como rechazado. Esta accion no se puede deshacer.',
-                                                        confirmLabel: 'Rechazar',
-                                                        onConfirm: async () => {
-                                                            try {
-                                                                await api.rejectReportAdmin(report.id);
-                                                                const next = reports.filter((item) => item.id !== report.id);
-                                                                setReports(next);
-                                                            } catch (error: any) {
-                                                                setNotice({
-                                                                    title: 'Error al rechazar',
-                                                                    message: error?.message || 'No se pudo rechazar el reporte.',
-                                                                    tone: 'error',
-                                                                });
-                                                            }
-                                                        },
-                                                    });
-                                                }}
-                                            >
-                                                Rechazar
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className={styles.emptyText}>Sin reportes abiertos.</div>
-                            )}
-                        </div>
-                        <div className={styles.tableDesktop}>
-                            <table className={styles.table}>
-                                <thead className={styles.tableHead}>
-                                    <tr>
-                                        <th className={styles.tableHeadCell}>Vivo</th>
-                                        <th className={styles.tableHeadCell}>Estado</th>
-                                        <th className={styles.tableHeadCell}>Motivo</th>
-                                        <th className={`${styles.tableHeadCell} ${styles.tableHeadCellRight}`}>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody className={styles.tableBody}>
-                                    {reportsLoading ? (
-                                        Array.from({ length: 6 }).map((_, index) => (
-                                            <tr key={index} className={styles.skeletonRow}>
-                                                <td className={styles.skeletonCell}>
-                                                    <div className={styles.skeletonBlockLg} />
-                                                    <div className={styles.skeletonBlockMd} />
-                                                </td>
-                                                <td className={styles.skeletonCell}>
-                                                    <div className={styles.skeletonBlockSm} />
-                                                </td>
-                                                <td className={styles.skeletonCell}>
-                                                    <div className={styles.skeletonBlockWide} />
-                                                </td>
-                                                <td className={`${styles.skeletonCell} ${styles.tableCellRight}`}>
-                                                    <div className={styles.skeletonBlockButton} />
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : filteredReports.length > 0 ? (
-                                        filteredReports.map((report) => (
-                                            <tr key={report.id}>
-                                                <td className={styles.tableCell}>
-                                                    <p className={styles.reportTitle}>{report?.stream?.title || report.streamId}</p>
-                                                    <p className={styles.reportMeta}>{report?.stream?.shop?.name || 'Sin tienda'}</p>
-                                                </td>
-                                                <td className={`${styles.tableCell} ${styles.reportStatus}`}>{formatReportStatus(report.status)}</td>
-                                                <td className={styles.tableCell}>
-                                                    <p className={styles.reportReason}>{report.reason || 'Sin motivo'}</p>
-                                                </td>
-                                                <td className={`${styles.tableCell} ${styles.tableCellRight}`}>
-                                                    <div className={styles.tableActions}>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={async () => {
-                                                                try {
-                                                                    await api.resolveReportAdmin(report.id);
-                                                                    const next = reports.filter((item) => item.id !== report.id);
-                                                                    setReports(next);
-                                                                } catch (error: any) {
-                                                                    setNotice({
-                                                                        title: 'Error al resolver',
-                                                                        message: error?.message || 'No se pudo resolver el reporte.',
-                                                                        tone: 'error',
-                                                                    });
-                                                                }
-                                                            }}
-                                                        >
-                                                            Resolver
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="secondary"
-                                                            onClick={() => {
-                                                                setConfirmDialog({
-                                                                    title: 'Rechazar reporte',
-                                                                    message: 'El reporte quedara marcado como rechazado. Esta accion no se puede deshacer.',
-                                                                    confirmLabel: 'Rechazar',
-                                                                    onConfirm: async () => {
-                                                                        try {
-                                                                            await api.rejectReportAdmin(report.id);
-                                                                            const next = reports.filter((item) => item.id !== report.id);
-                                                                            setReports(next);
-                                                                        } catch (error: any) {
-                                                                            setNotice({
-                                                                                title: 'Error al rechazar',
-                                                                                message: error?.message || 'No se pudo rechazar el reporte.',
-                                                                                tone: 'error',
-                                                                            });
-                                                                        }
-                                                                    },
-                                                                });
-                                                            }}
-                                                        >
-                                                            Rechazar
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={4} className={styles.emptyText}>Sin reportes abiertos.</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+              <Suspense fallback={<div className={styles.section} />}>
+                <AdminReportsTab
+                  reportQuery={reportQuery}
+                  setReportQuery={setReportQuery}
+                  reportStatusFilter={reportStatusFilter}
+                  setReportStatusFilter={setReportStatusFilter}
+                  reportsLoading={reportsLoading}
+                  filteredReports={filteredReports}
+                  reports={reports}
+                  formatReportStatus={formatReportStatus}
+                  resolveReportAdmin={resolveReportAdmin}
+                  rejectReportAdmin={rejectReportAdmin}
+                  setReports={setReports}
+                  setNotice={setNotice}
+                  setConfirmDialog={setConfirmDialog}
+                />
+              </Suspense>
             )}
 
             {activeTab === 'SHOPS' && (
-                 <div className={styles.section}>
-                    <div className={styles.shopsHeader}>
-                        <h2 className={styles.sectionTitle}>Tiendas</h2>
-                        <div className={styles.shopsActions}>
-                            <button
-                                onClick={() => setShopFilter(shopFilter === 'PENDING_VERIFICATION' ? 'ALL' : 'PENDING_VERIFICATION')}
-                                className={`${styles.shopFilterButton} ${shopFilter === 'PENDING_VERIFICATION' ? styles.shopFilterActive : styles.shopFilterInactive}`}
-                            >
-                                Pendientes ({pendingShops.length})
-                            </button>
-                            <Button onClick={openCreateModal} className={styles.adminPrimaryButton}>
-                                <Plus size={18} className={styles.buttonIcon} /> Nueva Tienda
-                            </Button>
-                            <Button
-                                variant="outline"
-                                onClick={onPreviewClient}
-                                className={styles.adminOutlineButton}
-                            >
-                                <Eye size={16} className={styles.buttonIcon} /> Ver como cliente
-                            </Button>
-                        </div>
-                    </div>
-                    <div className={styles.sectionFilters}>
-                        <input
-                            type="text"
-                            placeholder="Buscar tienda..."
-                            value={shopQuery}
-                            onChange={(e) => setShopQuery(e.target.value)}
-                            className={styles.sectionInput}
-                        />
-                        <select
-                            value={shopFilter}
-                            onChange={(e) => setShopFilter(e.target.value as any)}
-                            className={styles.sectionSelect}
-                        >
-                            <option value="ALL">Todos los estados</option>
-                            <option value="PENDING_VERIFICATION">Pendientes</option>
-                            <option value="ACTIVE">Activas</option>
-                            <option value="AGENDA_SUSPENDED">Suspendidas</option>
-                            <option value="HIDDEN">Ocultas</option>
-                            <option value="BANNED">Bloqueadas</option>
-                        </select>
-                    </div>
-                    <div className={styles.tableCard}>
-                        <div className={styles.tableMobile}>
-                            {filteredShops.length > 0 ? (
-                              filteredShops.map((shop) => {
-                                const status = shop.status || 'ACTIVE';
-                                return (
-                                    <div key={shop.id} className={styles.shopCard}>
-                                        <div className={styles.shopHeader}>
-                                            <div>
-                                                <p className={styles.shopName}>{shop.name}</p>
-                                                <p className={styles.shopPlan}>{shop.plan}</p>
-                                            </div>
-                                            <span className={`${styles.shopStatusBadge} ${
-                                                status === 'ACTIVE' ? styles.shopStatusActive :
-                                                status === 'PENDING_VERIFICATION' ? styles.shopStatusPending :
-                                                status === 'AGENDA_SUSPENDED' ? styles.shopStatusSuspended :
-                                                styles.shopStatusBlocked
-                                            }`}>{formatShopStatus(status)}</span>
-                                        </div>
-                                        <div className={`${styles.listRow} ${styles.listMeta}`}>
-                                            <span>Integridad</span>
-                                            <span className={`${styles.integrityBadge} ${
-                                                shop.dataIntegrity === 'COMPLETE' ? styles.integrityComplete :
-                                                shop.dataIntegrity === 'MINIMAL' ? styles.integrityMinimal :
-                                                styles.integrityMissing
-                                            }`}>{formatIntegrity(shop.dataIntegrity)}</span>
-                                        </div>
-                                        <div className={`${styles.listRow} ${styles.listMeta}`}>
-                                            <span>Penalización</span>
-                                            <button
-                                                onClick={() => togglePenalty(shop.id)}
-                                                className={`${styles.penaltyButton} ${shop.isPenalized ? styles.penaltyActive : styles.penaltyInactive}`}
-                                            >
-                                                {shop.isPenalized ? 'ACTIVA' : 'No'}
-                                            </button>
-                                        </div>
-                                        <div className={styles.listActions}>
-                                            {status === 'PENDING_VERIFICATION' && (
-                                                <>
-                                                  <button onClick={() => activateShop(shop.id)} className={`${styles.tinyButton} ${styles.tinySuccess}`}>Activar</button>
-                                                  <button onClick={() => rejectShop(shop.id)} className={`${styles.tinyButton} ${styles.tinyDanger}`}>Rechazar</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
-                                                </>
-                                            )}
-                                            {status === 'ACTIVE' && (
-                                                <>
-                                                  <button onClick={() => suspendAgenda(shop.id)} className={`${styles.tinyButton} ${styles.tinyWarn}`}>Suspender Agenda</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
-                                                </>
-                                            )}
-                                            {status === 'AGENDA_SUSPENDED' && (
-                                                <>
-                                                  <button onClick={() => liftSuspension(shop.id)} className={`${styles.tinyButton} ${styles.tinyInfo}`}>Levantar Sancion</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
-                                                </>
-                                            )}
-                                            {(status === 'HIDDEN' || status === 'BANNED') && (
-                                                <>
-                                                  <button onClick={() => activateShop(shop.id)} className={`${styles.tinyButton} ${styles.tinySuccess}`}>Reactivar</button>
-                                                  <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
-                                                </>
-                                            )}
-                                            <button onClick={() => assignOwner(shop.id)} className={`${styles.tinyButton} ${styles.tinyIndigo}`}>
-                                                Asignar dueño
-                                            </button>
-                                            <button
-                                                onClick={() => openEditShop(shop)}
-                                                className={`${styles.tinyButton} ${styles.tinyOutline}`}
-                                            >
-                                                Editar datos
-                                            </button>
-                                            <button
-                                                onClick={() => onPreviewShop(shop.id)}
-                                                className={`${styles.tinyButton} ${styles.tinyOutline}`}
-                                            >
-                                                Ver como tienda
-                                            </button>
-                                            <button
-                                                onClick={() => deleteShop(shop)}
-                                                className={`${styles.tinyButton} ${styles.tinyDanger}`}
-                                            >
-                                                Eliminar
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                              })
-                            ) : (
-                              <div className={styles.emptyText}>Sin resultados.</div>
-                            )}
-                        </div>
-                        <div className={styles.tableDesktop}>
-                            <table className={styles.table}>
-                                <thead className={styles.tableHead}>
-                                    <tr>
-                                        <th className={styles.tableHeadCell}>Tienda</th>
-                                        <th className={styles.tableHeadCell}>Plan</th>
-                                        <th className={styles.tableHeadCell}>Estado</th>
-                                        <th className={styles.tableHeadCell}>Integridad</th>
-                                        <th className={styles.tableHeadCell}>Penalización</th>
-                                        <th className={`${styles.tableHeadCell} ${styles.tableHeadCellRight}`}>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody className={styles.tableBody}>
-                                    {filteredShops.length > 0 ? (
-                                      filteredShops.map(shop => {
-                                        const status = shop.status || 'ACTIVE';
-                                        return (
-                                        <tr key={shop.id}>
-                                            <td className={`${styles.tableCell} ${styles.tableTitle}`}>{shop.name}</td>
-                                            <td className={styles.tableCell}>{shop.plan}</td>
-                                            <td className={styles.tableCell}>
-                                                <span className={`${styles.shopStatusBadge} ${
-                                                    status === 'ACTIVE' ? styles.shopStatusActive :
-                                                    status === 'PENDING_VERIFICATION' ? styles.shopStatusPending :
-                                                    status === 'AGENDA_SUSPENDED' ? styles.shopStatusSuspended :
-                                                    styles.shopStatusBlocked
-                                                }`}>{formatShopStatus(status)}</span>
-                                            </td>
-                                            <td className={styles.tableCell}>
-                                                <span className={`${styles.integrityBadge} ${
-                                                    shop.dataIntegrity === 'COMPLETE' ? styles.integrityComplete :
-                                                    shop.dataIntegrity === 'MINIMAL' ? styles.integrityMinimal :
-                                                    styles.integrityMissing
-                                                }`}>{formatIntegrity(shop.dataIntegrity)}</span>
-                                            </td>
-                                            <td className={styles.tableCell}>
-                                                <button
-                                                    onClick={() => togglePenalty(shop.id)}
-                                                    className={`${styles.penaltyButton} ${shop.isPenalized ? styles.penaltyActive : styles.penaltyInactive}`}
-                                                >
-                                                    {shop.isPenalized ? 'ACTIVA' : 'No'}
-                                                </button>
-                                            </td>
-                                            <td className={`${styles.tableCell} ${styles.tableCellRight}`}>
-                                                <div className={styles.tableActions}>
-                                                    {status === 'PENDING_VERIFICATION' && (
-                                                        <>
-                                                          <button onClick={() => activateShop(shop.id)} className={`${styles.tinyButton} ${styles.tinySuccess}`}>Activar</button>
-                                                          <button onClick={() => rejectShop(shop.id)} className={`${styles.tinyButton} ${styles.tinyDanger}`}>Rechazar</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
-                                                        </>
-                                                    )}
-                                                    {status === 'ACTIVE' && (
-                                                        <>
-                                                          <button onClick={() => suspendAgenda(shop.id)} className={`${styles.tinyButton} ${styles.tinyWarn}`}>Suspender Agenda</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
-                                                        </>
-                                                    )}
-                                                    {status === 'AGENDA_SUSPENDED' && (
-                                                        <>
-                                                          <button onClick={() => liftSuspension(shop.id)} className={`${styles.tinyButton} ${styles.tinyInfo}`}>Levantar Sancion</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
-                                                        </>
-                                                    )}
-                                                    {(status === 'HIDDEN' || status === 'BANNED') && (
-                                                        <>
-                                                          <button onClick={() => activateShop(shop.id)} className={`${styles.tinyButton} ${styles.tinySuccess}`}>Reactivar</button>
-                                                          <button onClick={() => resetPassword(shop.id)} className={`${styles.tinyButton} ${styles.tinyNeutral}`}>Restablecer clave</button>
-                                                        </>
-                                                    )}
-                                                    <button onClick={() => assignOwner(shop.id)} className={`${styles.tinyButton} ${styles.tinyIndigo}`}>
-                                                        Asignar dueño
-                                                    </button>
-                                                    <button
-                                                        onClick={() => openEditShop(shop)}
-                                                        className={`${styles.tinyButton} ${styles.tinyOutline}`}
-                                                    >
-                                                        Editar datos
-                                                    </button>
-                                                    <button
-                                                        onClick={() => onPreviewShop(shop.id)}
-                                                        className={`${styles.tinyButton} ${styles.tinyOutline}`}
-                                                    >
-                                                        Ver como tienda
-                                                    </button>
-                                                    <button
-                                                        onClick={() => deleteShop(shop)}
-                                                        className={`${styles.tinyButton} ${styles.tinyDanger}`}
-                                                    >
-                                                        Eliminar
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                      )})
-                                    ) : (
-                                        <tr>
-                                          <td colSpan={6} className={styles.emptyText}>Sin resultados.</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+              <Suspense fallback={<div className={styles.section} />}>
+                <AdminShopsTab
+                  shopFilter={shopFilter}
+                  setShopFilter={setShopFilter}
+                  shopQuery={shopQuery}
+                  setShopQuery={setShopQuery}
+                  pendingShops={pendingShops}
+                  filteredShops={filteredShops}
+                  formatShopStatus={formatShopStatus}
+                  formatIntegrity={formatIntegrity}
+                  togglePenalty={togglePenalty}
+                  activateShop={activateShop}
+                  rejectShop={rejectShop}
+                  resetPassword={resetPassword}
+                  suspendAgenda={suspendAgenda}
+                  liftSuspension={liftSuspension}
+                  assignOwner={assignOwner}
+                  openEditShop={openEditShop}
+                  onPreviewShop={onPreviewShop}
+                  deleteShop={deleteShop}
+                  openCreateModal={openCreateModal}
+                  onPreviewClient={onPreviewClient}
+                />
+              </Suspense>
             )}
 
             {activeTab === 'REELS' && (
-                <div className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Control de Reels</h2>
-                    <div className={styles.tableCard}>
-                        <div className={styles.tableMobile}>
-                            {reels.map((reel) => (
-                                <div key={reel.id} className={styles.reelRow}>
-                                    <div className={styles.reelHeader}>
-                                        <div className={styles.reelShop}>
-                                            <div className={styles.reelAvatar}>
-                                                <img src={reel.shopLogo} alt={reel.shopName} loading="lazy" decoding="async" className={styles.reelAvatarImg} />
-                                            </div>
-                                            <div>
-                                                <p className={styles.reelShopName}>{reel.shopName}</p>
-                                                <p className={styles.reelDate}>{new Date(reel.createdAtISO).toLocaleDateString()}</p>
-                                            </div>
-                                        </div>
-                                        <span className={styles.reelPlatform}>{reel.platform}</span>
-                                    </div>
-                                    <div className={styles.reelStats}>
-                                        <span className={`${styles.reelStatusBadge} ${
-                                            reel.status === 'ACTIVE' ? styles.reelStatusActive :
-                                            reel.status === 'EXPIRED' ? styles.reelStatusExpired :
-                                            styles.reelStatusHidden
-                                        }`}>
-                                            {formatReelStatus(reel.status)}
-                                        </span>
-                                        <span className={styles.reelViews}>{reel.views || 0} vistas</span>
-                                    </div>
-                                    <div className={styles.reelFooter}>
-                                        {reel.origin === 'EXTRA' && (
-                                            <span className={styles.reelExtra}>EXTRA</span>
-                                        )}
-                                        <button
-                                            onClick={() => toggleReelHide(reel)}
-                                            className={`${styles.reelToggleButton} ${reel.status === 'HIDDEN' ? styles.reelToggleOn : styles.reelToggleOff}`}
-                                        >
-                                            {reel.status === 'HIDDEN' ? 'Reactivar' : 'Ocultar'}
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className={styles.tableDesktop}>
-                            <table className={styles.table}>
-                                <thead className={styles.tableHead}>
-                                    <tr>
-                                        <th className={styles.tableHeadCell}>Tienda</th>
-                                        <th className={styles.tableHeadCell}>Plataforma</th>
-                                        <th className={styles.tableHeadCell}>Estado</th>
-                                        <th className={styles.tableHeadCell}>Vistas</th>
-                                        <th className={`${styles.tableHeadCell} ${styles.tableHeadCellRight}`}>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody className={styles.tableBody}>
-                                    {reels.map(reel => (
-                                        <tr key={reel.id}>
-                                            <td className={styles.tableCell}>
-                                                <div className={styles.reelShop}>
-                                                    <div className={styles.reelAvatar}>
-                                                      <img src={reel.shopLogo} alt={reel.shopName} loading="lazy" decoding="async" className={styles.reelAvatarImg}/>
-                                                    </div>
-                                                    <div>
-                                                        <p className={styles.reelShopName}>{reel.shopName}</p>
-                                                        <p className={styles.reportMeta}>{new Date(reel.createdAtISO).toLocaleDateString()}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className={styles.tableCell}>{reel.platform}</td>
-                                            <td className={styles.tableCell}>
-                                                <span className={`${styles.reelStatusBadge} ${
-                                                    reel.status === 'ACTIVE' ? styles.reelStatusActive :
-                                                    reel.status === 'EXPIRED' ? styles.reelStatusExpired :
-                                                    styles.reelStatusHidden
-                                                }`}>
-                                                    {formatReelStatus(reel.status)}
-                                                </span>
-                                                {reel.origin === 'EXTRA' && <span className={styles.reelExtra}>EXTRA</span>}
-                                            </td>
-                                            <td className={styles.tableCell}>{reel.views || 0}</td>
-                                            <td className={`${styles.tableCell} ${styles.tableCellRight}`}>
-                                                <button 
-                                                    onClick={() => toggleReelHide(reel)}
-                                                    className={`${styles.reelToggleButton} ${reel.status === 'HIDDEN' ? styles.reelToggleOn : styles.reelToggleOff}`}
-                                                >
-                                                    {reel.status === 'HIDDEN' ? 'Reactivar' : 'Ocultar'}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+              <Suspense fallback={<div className={styles.section} />}>
+                <AdminReelsTab
+                  reels={reels}
+                  formatReelStatus={formatReelStatus}
+                  toggleReelHide={toggleReelHide}
+                />
+              </Suspense>
             )}
 
             {activeTab === 'ADMIN' && (
-                <div className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Administrativo</h2>
-                    <div className={styles.adminGrid}>
-                        <div className={styles.adminCard}>
-                            <div className={styles.adminCardHeader}>
-                                <h3 className={styles.adminCardTitle}>Solicitudes de Compra</h3>
-                            </div>
-                            <p className={styles.adminCardSubtitle}>Bandeja de solicitudes pendientes (PENDING).</p>
-                            {!isSuperadmin && (
-                                <p className={styles.adminCardSubtitle}>Solo SUPERADMIN puede aprobar o rechazar compras.</p>
-                            )}
-                            <div className={styles.adminCardStack}>
-                                <input
-                                    type="text"
-                                    placeholder="Buscar tienda..."
-                                    value={purchaseQuery}
-                                    onChange={(e) => setPurchaseQuery(e.target.value)}
-                                    className={styles.adminField}
-                                />
-                                <select
-                                    value={purchaseStatusFilter}
-                                    onChange={(e) => setPurchaseStatusFilter(e.target.value as any)}
-                                    className={styles.adminFieldWhite}
-                                >
-                                    <option value="PENDING">Pendientes</option>
-                                    <option value="APPROVED">Aprobadas</option>
-                                    <option value="REJECTED">Rechazadas</option>
-                                    <option value="ALL">Todas</option>
-                                </select>
-                            </div>
-                            {purchasesLoading ? (
-                                <div className={styles.adminListStack}>
-                                    {Array.from({ length: 3 }).map((_, index) => (
-                                        <div key={index} className={styles.adminNoteSkeleton}>
-                                            <div className={styles.adminNoteSkeletonLineMd} />
-                                            <div className={styles.adminNoteSkeletonLineXs} />
-                                            <div className={styles.adminNoteSkeletonLineSm} />
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : filteredPurchases.length === 0 ? (
-                                <div className={styles.adminEmpty}>
-                                    Sin solicitudes registradas.
-                                </div>
-                            ) : (
-                                <div className={styles.adminListStack}>
-                                    {filteredPurchases.map((req) => (
-                                        <div key={req.purchaseId} className={styles.adminRequestItem}>
-                                            <div className={styles.adminRequestHeader}>
-                                                <div>
-                                                    <p className={styles.adminRequestTitle}>{req.shop?.name || 'Tienda'}</p>
-                                                    <p className={styles.adminRequestMeta}>
-                                                        {req.type === 'LIVE_PACK' ? 'Cupos de vivos' : req.type === 'REEL_PACK' ? 'Cupos de historias' : req.type}
-                                                    </p>
-                                                </div>
-                                                <span className={`${styles.purchaseStatusBadge} ${
-                                                    req.status === 'APPROVED'
-                                                      ? styles.purchaseApproved
-                                                      : req.status === 'REJECTED'
-                                                      ? styles.purchaseRejected
-                                                      : styles.purchasePending
-                                                }`}>
-                                                    {formatPurchaseStatus(req.status)}
-                                                </span>
-                                            </div>
-                                            <div className={styles.adminRequestFooter}>
-                                                <span className={styles.adminRequestQty}>Cantidad: <span className={styles.adminRequestQtyValue}>{req.quantity}</span></span>
-                                                <div className={styles.adminRequestActions}>
-                                                    <button
-                                                        onClick={() => handleRejectPurchase(req.purchaseId)}
-                                                        className={`${styles.adminActionReject} ${!isSuperadmin ? styles.adminActionDisabled : ''}`}
-                                                        disabled={!isSuperadmin}
-                                                        title={!isSuperadmin ? 'Solo SUPERADMIN' : 'Rechazar'}
-                                                    >
-                                                        Rechazar
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleApprovePurchase(req.purchaseId)}
-                                                        className={`${styles.adminActionApprove} ${!isSuperadmin ? styles.adminActionDisabled : ''}`}
-                                                        disabled={!isSuperadmin}
-                                                        title={!isSuperadmin ? 'Solo SUPERADMIN' : 'Aprobar'}
-                                                    >
-                                                        Aprobar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        <div className={styles.adminCard}>
-                            <h3 className={styles.adminCardTitle}>Asignación Manual de Cupos</h3>
-                            <p className={styles.adminCardSubtitle}>Compensación manual (solo Superadmin).</p>
-                            {!isSuperadmin && (
-                                <p className={styles.adminCardSubtitle}>Solo SUPERADMIN puede asignar cupos manuales.</p>
-                            )}
-                            <form
-                                onSubmit={handleAssignQuota}
-                                className={`${styles.adminForm} ${!isSuperadmin ? styles.adminFormDisabled : ''}`}
-                            >
-                                <select
-                                    value={quotaShopId}
-                                    onChange={(e) => setQuotaShopId(e.target.value)}
-                                    className={styles.adminInput}
-                                    disabled={!isSuperadmin}
-                                >
-                                    <option value="">Seleccionar tienda...</option>
-                                    {shops.map(shop => (
-                                        <option key={shop.id} value={shop.id}>{shop.name}</option>
-                                    ))}
-                                </select>
-                                <select
-                                    value={quotaType}
-                                    onChange={(e) => setQuotaType(e.target.value as any)}
-                                    className={styles.adminInput}
-                                    disabled={!isSuperadmin}
-                                >
-                                    <option value="STREAM">Vivos</option>
-                                    <option value="REEL">Reels</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    value={quotaAmount}
-                                    onChange={(e) => setQuotaAmount(parseInt(e.target.value || '0', 10))}
-                                    className={styles.adminInput}
-                                    min={1}
-                                    disabled={!isSuperadmin}
-                                />
-                                <Button
-                                    type="submit"
-                                    className={styles.adminActionButton}
-                                    disabled={!isSuperadmin}
-                                >
-                                    Asignar Cupos
-                                </Button>
-                            </form>
-                        </div>
-                    </div>
-                    <div className={styles.adminCard}>
-                        <div className={styles.adminToggleRow}>
-                            <div>
-                                <h3 className={styles.adminCardTitle}>Actuar como Distrito Moda</h3>
-                                <p className={styles.adminCardSubtitle}>Publicar vivos y reels oficiales destacados.</p>
-                            </div>
-                            <label className={`${styles.adminToggleLabel} ${!isSuperadmin ? styles.adminToggleDisabled : ''}`}>
-                                <input
-                                    type="checkbox"
-                                    checked={officialMode}
-                                    onChange={() => setOfficialMode(!officialMode)}
-                                    className={styles.adminToggleInput}
-                                    disabled={!isSuperadmin}
-                                />
-                                Modo Oficial
-                            </label>
-                        </div>
-                    </div>
-                    <div className={styles.adminCard}>
-                        <div className={styles.adminCardHeader}>
-                            <div>
-                                <h3 className={styles.adminCardTitle}>Estado del sistema</h3>
-                                <p className={styles.adminCardSubtitle}>Cron de notificaciones, sanciones y vivos.</p>
-                            </div>
-                            <button
-                                className={styles.adminUpdateButton}
-                                onClick={refreshSystemStatus}
-                                disabled={systemStatusLoading}
-                            >
-                                {systemStatusLoading ? 'Actualizando...' : 'Actualizar'}
-                            </button>
-                        </div>
-                        {systemStatusLoading ? (
-                            <div className={styles.adminPulseRow}>
-                                <div className={styles.adminPulseLineSm} />
-                                <div className={styles.adminPulseLineMd} />
-                                <div className={styles.adminPulseLineLg} />
-                            </div>
-                        ) : systemStatus ? (
-                            <div className={styles.adminInfoGrid}>
-                                <div className={styles.adminInfoCard}>
-                                    <p className={styles.adminInfoLabel}>Notificaciones</p>
-                                    <p className={`${styles.systemState} ${systemStatus.notifications?.enabled ? styles.systemStateOn : styles.systemStateOff}`}>
-                                        {systemStatus.notifications?.enabled ? 'Activo' : 'Inactivo'}
-                                    </p>
-                                    <p className={styles.adminInfoValue}>
-                                        Intervalo {systemStatus.notifications?.intervalMinutes ?? '-'} min · Ventana {systemStatus.notifications?.windowMinutes ?? '-'} min
-                                    </p>
-                                </div>
-                                <div className={styles.adminInfoCard}>
-                                    <p className={styles.adminInfoLabel}>Sanciones</p>
-                                    <p className={`${styles.systemState} ${systemStatus.sanctions?.enabled ? styles.systemStateOn : styles.systemStateOff}`}>
-                                        {systemStatus.sanctions?.enabled ? 'Activo' : 'Inactivo'}
-                                    </p>
-                                    <p className={styles.adminInfoValue}>
-                                        Intervalo {systemStatus.sanctions?.intervalMinutes ?? '-'} min
-                                    </p>
-                                </div>
-                                <div className={styles.adminInfoCard}>
-                                    <p className={styles.adminInfoLabel}>Ciclo de vivos</p>
-                                    <p className={`${styles.systemState} ${systemStatus.streams?.enabled ? styles.systemStateOn : styles.systemStateOff}`}>
-                                        {systemStatus.streams?.enabled ? 'Activo' : 'Inactivo'}
-                                    </p>
-                                    <p className={styles.adminInfoValue}>
-                                        Intervalo {systemStatus.streams?.intervalMinutes ?? '-'} min
-                                    </p>
-                                </div>
-                                <div className={styles.adminInfoFooter}>
-                                    Entorno: {systemStatus.nodeEnv || '-'} · {systemStatus.serverTime ? new Date(systemStatus.serverTime).toLocaleString('es-AR') : ''}
-                                </div>
-                            </div>
-                        ) : (
-                            <p className={styles.adminEmptyText}>Sin datos de sistema.</p>
-                        )}
-                    </div>
-                    <div className={styles.adminCard}>
-                        <div className={styles.adminCardHeader}>
-                            <div>
-                                <h3 className={styles.adminCardTitle}>Ciclo de vivos</h3>
-                                <p className={styles.adminCardSubtitle}>Arranca y finaliza vivos segun agenda.</p>
-                            </div>
-                            <span className={styles.adminActionBadge}>
-                                Activo
-                            </span>
-                        </div>
-                        <Button className={styles.adminActionButton} onClick={runStreamsLifecycle} disabled={streamsLifecycleRunning}>
-                            {streamsLifecycleRunning ? 'Procesando...' : 'Ejecutar ciclo'}
-                        </Button>
-                        {streamsLifecycleSummary && (
-                          <p className={styles.adminActionNote}>
-                            Ultima corrida: {streamsLifecycleSummary.started ?? 0} iniciados · {streamsLifecycleSummary.finished ?? 0} finalizados.
-                          </p>
-                        )}
-                    </div>
-                    <div className={styles.adminCard}>
-                        <div className={styles.adminCardHeader}>
-                            <div>
-                                <h3 className={styles.adminCardTitle}>Motor de sanciones</h3>
-                                <p className={styles.adminCardSubtitle}>Ejecuta la corrida del motor (Paso 7).</p>
-                            </div>
-                            <span className={styles.adminActionBadge}>
-                                Activo
-                            </span>
-                        </div>
-                        <Button className={styles.adminActionButton} onClick={runSanctions} disabled={sanctionsRunning}>
-                            {sanctionsRunning ? 'Ejecutando...' : 'Ejecutar motor'}
-                        </Button>
-                        {sanctionsSummary && (
-                          <p className={styles.adminActionNote}>
-                            Última corrida: {sanctionsSummary.candidates ?? 0} candidatos · {sanctionsSummary.sanctioned ?? 0} sancionados.
-                          </p>
-                        )}
-                    </div>
-                    <div className={styles.adminCard}>
-                        <div className={styles.adminCardHeader}>
-                            <div>
-                                <h3 className={styles.adminCardTitle}>Notificaciones</h3>
-                                <p className={styles.adminCardSubtitle}>Cola y estados del sistema.</p>
-                            </div>
-                            <span className={styles.adminActionBadge}>
-                                Activo
-                            </span>
-                        </div>
-                        <Button className={styles.adminActionButton} onClick={runNotifications} disabled={notificationsRunning}>
-                            {notificationsRunning ? 'Procesando...' : 'Ejecutar cola'}
-                        </Button>
-                        {notificationsSummary && (
-                          <p className={styles.adminActionNote}>
-                            Última corrida: {notificationsSummary.created ?? 0} creadas · {notificationsSummary.skipped ?? 0} omitidas.
-                          </p>
-                        )}
-                        <div className={styles.adminTagRow}>
-                          <select
-                            value={notificationFilter}
-                            onChange={(e) => setNotificationFilter(e.target.value as any)}
-                            className={styles.notificationFilterSelect}
-                          >
-                            <option value="UNREAD">No leídas</option>
-                            <option value="ALL">Todas</option>
-                          </select>
-                          <select
-                            value={notificationType}
-                            onChange={(e) => setNotificationType(e.target.value as any)}
-                            className={styles.notificationFilterSelect}
-                          >
-                            <option value="ALL">Todos los tipos</option>
-                            <option value="SYSTEM">Sistema</option>
-                            <option value="REMINDER">Recordatorio</option>
-                            <option value="PURCHASE">Compra</option>
-                          </select>
-                          <button
-                            className={styles.notificationRefreshButton}
-                            onClick={refreshAdminNotifications}
-                          >
-                            Actualizar
-                          </button>
-                        </div>
-                        <div className={styles.adminNoteList}>
-                          {notificationsLoading ? (
-                            Array.from({ length: 4 }).map((_, index) => (
-                              <div key={index} className={styles.adminNoteSkeleton}>
-                                <div className={styles.adminNoteSkeletonLineSm} />
-                                <div className={styles.adminNoteSkeletonLineMd} />
-                                <div className={styles.adminNoteSkeletonLineXs} />
-                              </div>
-                            ))
-                          ) : adminNotifications.length === 0 ? (
-                            <p className={styles.adminNoteEmpty}>No hay notificaciones para mostrar.</p>
-                          ) : (
-                            adminNotifications.map((note) => (
-                              <div key={note.id} className={styles.adminNoteItem}>
-                                <div className={styles.adminNoteHeader}>
-                                  <span className={`${styles.notificationTypeBadge} ${note.read ? styles.notificationTypeRead : styles.notificationTypeUnread}`}>
-                                    {formatNotificationType(note.type)}
-                                  </span>
-                                  <span className={styles.adminNoteDate}>{formatNotificationDate(note.createdAt)}</span>
-                                </div>
-                                <p className={`${styles.notificationMessage} ${note.read ? styles.notificationMessageRead : styles.notificationMessageUnread}`}>
-                                  {note.message}
-                                </p>
-                                <div className={styles.adminNoteFooter}>
-                                  <span>{note.user?.email || 'Usuario sin email'}</span>
-                                  {!note.read && (
-                                    <button className={styles.adminNoteAction} onClick={() => markNotificationRead(note.id)}>
-                                      Marcar leído
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                    </div>
-                </div>
+              <Suspense fallback={<div className={styles.section} />}>
+                <AdminAdminTab
+                  isSuperadmin={isSuperadmin}
+                  purchaseQuery={purchaseQuery}
+                  setPurchaseQuery={setPurchaseQuery}
+                  purchaseStatusFilter={purchaseStatusFilter}
+                  setPurchaseStatusFilter={setPurchaseStatusFilter}
+                  purchasesLoading={purchasesLoading}
+                  filteredPurchases={filteredPurchases}
+                  formatPurchaseStatus={formatPurchaseStatus}
+                  handleRejectPurchase={handleRejectPurchase}
+                  handleApprovePurchase={handleApprovePurchase}
+                  quotaShopId={quotaShopId}
+                  setQuotaShopId={setQuotaShopId}
+                  quotaType={quotaType}
+                  setQuotaType={setQuotaType}
+                  quotaAmount={quotaAmount}
+                  setQuotaAmount={setQuotaAmount}
+                  handleAssignQuota={handleAssignQuota}
+                  shops={shops}
+                  officialMode={officialMode}
+                  setOfficialMode={setOfficialMode}
+                  refreshSystemStatus={refreshSystemStatus}
+                  systemStatusLoading={systemStatusLoading}
+                  systemStatus={systemStatus}
+                  streamsLifecycleRunning={streamsLifecycleRunning}
+                  runStreamsLifecycle={runStreamsLifecycle}
+                  streamsLifecycleSummary={streamsLifecycleSummary}
+                  sanctionsRunning={sanctionsRunning}
+                  runSanctions={runSanctions}
+                  sanctionsSummary={sanctionsSummary}
+                  notificationsRunning={notificationsRunning}
+                  runNotifications={runNotifications}
+                  notificationsSummary={notificationsSummary}
+                  notificationFilter={notificationFilter}
+                  setNotificationFilter={setNotificationFilter}
+                  notificationType={notificationType}
+                  setNotificationType={setNotificationType}
+                  refreshAdminNotifications={refreshAdminNotifications}
+                  notificationsLoading={notificationsLoading}
+                  adminNotifications={adminNotifications}
+                  formatNotificationType={formatNotificationType}
+                  formatNotificationDate={formatNotificationDate}
+                  markNotificationRead={markNotificationRead}
+                />
+              </Suspense>
             )}
         </main>
       </div>

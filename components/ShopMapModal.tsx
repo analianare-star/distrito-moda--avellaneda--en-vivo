@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { X } from 'lucide-react';
 import styles from './ShopMapModal.module.css';
 

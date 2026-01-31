@@ -40,6 +40,7 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
   const listRef = useRef<HTMLDivElement | null>(null);
   const isScrollingRef = useRef(false);
   const touchStartRef = useRef<number | null>(null);
+  const touchDeltaRef = useRef(0);
   const scrollTimerRef = useRef<number | null>(null);
   const initialIndex = useMemo(
     () => Math.max(0, streams.findIndex((item) => item.id === activeStreamId)),
@@ -63,6 +64,7 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
     if (!list) return;
     let frame = 0;
     const onScroll = () => {
+      if (isScrollingRef.current) return;
       if (frame) return;
       frame = window.requestAnimationFrame(() => {
         frame = 0;
@@ -83,6 +85,7 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
     const list = listRef.current;
     if (!list) return;
     const bounded = Math.max(0, Math.min(nextIndex, streams.length - 1));
+    setActiveIndex(bounded);
     list.scrollTo({ top: bounded * list.clientHeight, behavior });
     if (scrollTimerRef.current) {
       window.clearTimeout(scrollTimerRef.current);
@@ -93,35 +96,50 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
     }, 400);
   };
 
-  const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    if (isScrollingRef.current) return;
-    const direction = event.deltaY > 0 ? 1 : -1;
-    if (!direction) return;
-    scrollToIndex(activeIndex + direction);
-  };
-
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    touchStartRef.current = event.touches[0]?.clientY ?? null;
-  };
-
-  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (touchStartRef.current === null) return;
-    event.preventDefault();
-  };
-
-  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (touchStartRef.current === null || isScrollingRef.current) {
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const onWheel = (event: WheelEvent) => {
+      if (isScrollingRef.current) return;
+      const direction = event.deltaY > 0 ? -1 : 1;
+      if (!direction) return;
+      event.preventDefault();
+      scrollToIndex(activeIndex + direction);
+    };
+    const onTouchStartNative = (event: TouchEvent) => {
+      touchStartRef.current = event.touches[0]?.clientY ?? null;
+      touchDeltaRef.current = 0;
+    };
+    const onTouchMoveNative = (event: TouchEvent) => {
+      if (touchStartRef.current === null) return;
+      const currentY = event.touches[0]?.clientY ?? touchStartRef.current;
+      touchDeltaRef.current = touchStartRef.current - currentY;
+      event.preventDefault();
+    };
+    const onTouchEndNative = () => {
+      if (touchStartRef.current === null || isScrollingRef.current) {
+        touchStartRef.current = null;
+        touchDeltaRef.current = 0;
+        return;
+      }
+      const delta = touchDeltaRef.current;
       touchStartRef.current = null;
-      return;
-    }
-    const endY = event.changedTouches[0]?.clientY ?? touchStartRef.current;
-    const delta = touchStartRef.current - endY;
-    touchStartRef.current = null;
-    if (Math.abs(delta) < 30) return;
-    const direction = delta > 0 ? 1 : -1;
-    scrollToIndex(activeIndex + direction);
-  };
+      touchDeltaRef.current = 0;
+      if (Math.abs(delta) < 40) return;
+      const direction = delta > 0 ? 1 : -1;
+      scrollToIndex(activeIndex + direction);
+    };
+    list.addEventListener("wheel", onWheel, { passive: false });
+    list.addEventListener("touchstart", onTouchStartNative, { passive: true });
+    list.addEventListener("touchmove", onTouchMoveNative, { passive: false });
+    list.addEventListener("touchend", onTouchEndNative, { passive: true });
+    return () => {
+      list.removeEventListener("wheel", onWheel);
+      list.removeEventListener("touchstart", onTouchStartNative);
+      list.removeEventListener("touchmove", onTouchMoveNative);
+      list.removeEventListener("touchend", onTouchEndNative);
+    };
+  }, [activeIndex, streams.length]);
 
   useEffect(() => {
     const current = streams[activeIndex];
@@ -145,10 +163,6 @@ export const LiveQueueModal: React.FC<LiveQueueModalProps> = ({
         <div
           ref={listRef}
           className={styles.scroller}
-          onWheel={handleWheel}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
         >
           {streams.map((stream) => (
             <div key={stream.id} className={styles.slide}>

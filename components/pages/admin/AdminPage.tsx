@@ -1,6 +1,10 @@
-import React, { useEffect } from "react";
-import { AdminDashboard } from "../../AdminDashboard";
+import React, { useEffect, Suspense } from "react";
 import { Shop, Stream } from "../../../types";
+
+const AdminDashboard = React.lazy(async () => {
+  const mod = await import("../../AdminDashboard");
+  return { default: mod.AdminDashboard };
+});
 
 // AdminPage fija la pestaña activa para el panel.
 // AdminPage pins the active tab for the admin panel.
@@ -40,18 +44,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   }, [activeTab, tab, onTabChange]);
 
   return (
-    <AdminDashboard
-      streams={streams}
-      setStreams={setStreams}
-      shops={shops}
-      setShops={setShops}
-      onRefreshData={onRefreshData}
-      activeTab={activeTab}
-      onTabChange={onTabChange}
-      onPreviewClient={onPreviewClient}
-      onPreviewShop={onPreviewShop}
-      onShopUpdate={onShopUpdate}
-      adminRole={adminRole}
-    />
+    <Suspense fallback={<div className="min-h-[50vh] w-full animate-pulse bg-white" />}>
+      <AdminDashboard
+        streams={streams}
+        setStreams={setStreams}
+        shops={shops}
+        setShops={setShops}
+        onRefreshData={onRefreshData}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        onPreviewClient={onPreviewClient}
+        onPreviewShop={onPreviewShop}
+        onShopUpdate={onShopUpdate}
+        adminRole={adminRole}
+      />
+    </Suspense>
   );
 };

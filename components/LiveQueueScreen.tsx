@@ -37,6 +37,10 @@ export const LiveQueueScreen: React.FC<LiveQueueScreenProps> = ({
   onNotify,
 }) => {
   const listRef = useRef<HTMLDivElement | null>(null);
+  const isScrollingRef = useRef(false);
+  const touchStartRef = useRef<number | null>(null);
+  const touchDeltaRef = useRef(0);
+  const scrollTimerRef = useRef<number | null>(null);
   const initialIndex = useMemo(
     () => Math.max(0, streams.findIndex((item) => item.id === activeStreamId)),
     [activeStreamId, streams]
@@ -59,6 +63,7 @@ export const LiveQueueScreen: React.FC<LiveQueueScreenProps> = ({
     if (!list) return;
     let frame = 0;
     const onScroll = () => {
+      if (isScrollingRef.current) return;
       if (frame) return;
       frame = window.requestAnimationFrame(() => {
         frame = 0;
@@ -74,6 +79,66 @@ export const LiveQueueScreen: React.FC<LiveQueueScreenProps> = ({
       if (frame) window.cancelAnimationFrame(frame);
     };
   }, [activeIndex]);
+
+  const scrollToIndex = (nextIndex: number, behavior: ScrollBehavior = "smooth") => {
+    const list = listRef.current;
+    if (!list) return;
+    const bounded = Math.max(0, Math.min(nextIndex, streams.length - 1));
+    setActiveIndex(bounded);
+    list.scrollTo({ top: bounded * list.clientHeight, behavior });
+    if (scrollTimerRef.current) {
+      window.clearTimeout(scrollTimerRef.current);
+    }
+    isScrollingRef.current = true;
+    scrollTimerRef.current = window.setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 400);
+  };
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const onWheel = (event: WheelEvent) => {
+      if (isScrollingRef.current) return;
+      const direction = event.deltaY > 0 ? -1 : 1;
+      if (!direction) return;
+      event.preventDefault();
+      scrollToIndex(activeIndex + direction);
+    };
+    const onTouchStartNative = (event: TouchEvent) => {
+      touchStartRef.current = event.touches[0]?.clientY ?? null;
+      touchDeltaRef.current = 0;
+    };
+    const onTouchMoveNative = (event: TouchEvent) => {
+      if (touchStartRef.current === null) return;
+      const currentY = event.touches[0]?.clientY ?? touchStartRef.current;
+      touchDeltaRef.current = touchStartRef.current - currentY;
+      event.preventDefault();
+    };
+    const onTouchEndNative = () => {
+      if (touchStartRef.current === null || isScrollingRef.current) {
+        touchStartRef.current = null;
+        touchDeltaRef.current = 0;
+        return;
+      }
+      const delta = touchDeltaRef.current;
+      touchStartRef.current = null;
+      touchDeltaRef.current = 0;
+      if (Math.abs(delta) < 40) return;
+      const direction = delta > 0 ? 1 : -1;
+      scrollToIndex(activeIndex + direction);
+    };
+    list.addEventListener("wheel", onWheel, { passive: false });
+    list.addEventListener("touchstart", onTouchStartNative, { passive: true });
+    list.addEventListener("touchmove", onTouchMoveNative, { passive: false });
+    list.addEventListener("touchend", onTouchEndNative, { passive: true });
+    return () => {
+      list.removeEventListener("wheel", onWheel);
+      list.removeEventListener("touchstart", onTouchStartNative);
+      list.removeEventListener("touchmove", onTouchMoveNative);
+      list.removeEventListener("touchend", onTouchEndNative);
+    };
+  }, [activeIndex, streams.length]);
 
   useEffect(() => {
     const current = streams[activeIndex];
@@ -93,7 +158,10 @@ export const LiveQueueScreen: React.FC<LiveQueueScreenProps> = ({
       <button className={styles.closeButton} onClick={onClose} aria-label="Cerrar">
         <X size={28} />
       </button>
-      <div ref={listRef} className={styles.scroller}>
+      <div
+        ref={listRef}
+        className={styles.scroller}
+      >
         {streams.map((stream) => (
           <section key={stream.id} className={styles.slide}>
             <div className={styles.slideInner}>
